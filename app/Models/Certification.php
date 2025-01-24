@@ -10,7 +10,7 @@ class Certification extends Model
     use HasFactory;
 
     protected $fillable = ['patient_id', 'medecin_id', 'type', 'date_certification', 'status'];
-
+//cordeonnées medecin
     public function patient()
     {
         return $this->belongsTo(Patient::class);

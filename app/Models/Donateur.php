@@ -10,6 +10,7 @@ class Donateur extends Model
     use HasFactory;
 
     protected $fillable = ['nom', 'type'];
+    //cin ou passport
 
     public function dons()
     {

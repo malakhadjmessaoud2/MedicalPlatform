@@ -10,7 +10,8 @@ class Assurance extends Model
     use HasFactory;
 
     protected $fillable = ['nom', 'type_couverture'];
-
+// relation medecin
+// 
     public function patients()
     {
         return $this->belongsToMany(Patient::class);
