@@ -41,10 +41,6 @@ Route::prefix('dashboard/pharmacie')->group(function () {
 
 
 });
-
-
-// ... routes existantes ...
-
 // Routes pour le dashboard donateur
 Route::prefix('dashboard/donateur')->group(function () {
     // Dashboard principal donateur
@@ -86,4 +82,62 @@ Route::prefix('dashboard/donateur')->group(function () {
     Route::get('/aide', function () {
         return view('dashDonateur.aide.index');
     })->name('donateur.aide');
+});
+
+Route::prefix('dashboard/medecin')->group(function () {
+    // Dashboard principal médecin
+    Route::get('/', function () {
+        return view('dashMedecin.index');
+    })->name('dashboard.medecin');
+
+    // Gestion des patients
+    Route::get('/patients', function () {
+        return view('dashMedecin.gestionPatient.index');
+    })->name('medecin.patients');
+    // Gestion des dossier
+    Route::get('/dossier', function () {
+        return view('dashMedecin.gestionPatient.dossierMedical');
+    })->name('medecin.dossiermedical');
+
+    // Agenda & Rendez-vous
+    Route::get('/agenda', function () {
+        return view('dashMedecin.AgendaRendezvous.index');
+    })->name('medecin.agenda');
+
+    // Traitements & Suivis
+    Route::get('/traitements', function () {
+        return view('dashMedecin.SuiviTraitements.index');
+    })->name('medecin.traitements');
+
+    // Gestion des Prestations
+    Route::get('/prestations', function () {
+        return view('dashMedecin.gestionPrestations.index');
+    })->name('medecin.prestations');
+
+    // Communication & Assistance
+    Route::get('/communication', function () {
+        return view('dashMedecin.communication.index');
+    })->name('medecin.communication');
+});
+
+Route::prefix('dashboard/patient')->group(function () {
+    // Dashboard patient
+    Route::get('/', function () {
+        return view('dashPatient.index');
+    })->name('dashboard.patient');
+
+    // Achat médicaments
+    Route::get('/medicaments', function () {
+        return view('dashPatient.achatMedicament.index');
+    })->name('patient.medicaments');
+
+    // Commandes
+    Route::get('/commandes', function () {
+        return view('dashPatient.commandes.index');
+    })->name('patient.commandes');
+
+    // Dons médicaux
+    Route::get('/dons', function () {
+        return view('dashPatient.dons.index');
+    })->name('patient.dons');
 });
