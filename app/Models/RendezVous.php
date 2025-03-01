@@ -4,20 +4,53 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class RendezVous extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['date', 'status', 'patient_id', 'medecin_id'];
+    protected $table = 'rendez_vous';
+
+    protected $fillable = [
+        'patient_id',
+        'medecin_id',
+        'date_debut',
+        'date_fin',
+        'type',
+        'description',
+        'titre',
+        'statut',
+        'couleur',
+        'est_bloque',
+        'notes'
+    ];
+
+    protected $casts = [
+        'date_debut' => 'datetime',
+        'date_fin' => 'datetime',
+        'est_bloque' => 'boolean',
+    ];
+
+    public function medecin()
+    {
+        return $this->belongsTo(Medecin::class);
+    }
 
     public function patient()
     {
         return $this->belongsTo(Patient::class);
     }
 
-    public function medecin()
+    public function getCouleurAttribute($value)
     {
-        return $this->belongsTo(Medecin::class);
+        if ($value) return $value;
+
+        return match($this->type) {
+            'consultation' => '#10B981', // vert
+            'suivi' => '#F59E0B',       // jaune
+            'urgence' => '#EF4444',     // rouge
+            default => '#6B7280'         // gris
+        };
     }
 }

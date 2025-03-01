@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\PharmacieController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\RendezVousController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -37,9 +38,6 @@ Route::prefix('dashboard/pharmacie')->group(function () {
     Route::get('/demandes-dons', function () {
         return view('dashPharmacie.demandesDons.index');
     })->name('dashPharmacie.demandesDons');
-
-
-
 });
 // Routes pour le dashboard donateur
 Route::prefix('dashboard/donateur')->group(function () {
@@ -94,15 +92,27 @@ Route::prefix('dashboard/medecin')->group(function () {
     Route::get('/patients', function () {
         return view('dashMedecin.gestionPatient.index');
     })->name('medecin.patients');
-    // Gestion des dossier
+
+    // Gestion des dossiers
     Route::get('/dossier', function () {
         return view('dashMedecin.gestionPatient.dossierMedical');
     })->name('medecin.dossiermedical');
 
     // Agenda & Rendez-vous
-    Route::get('/agenda', function () {
-        return view('dashMedecin.AgendaRendezvous.index');
-    })->name('medecin.agenda');
+    Route::get('/agenda', [RendezVousController::class, 'index'])->name('medecin.agenda');
+
+    // Récupération des événements
+    Route::get('/rendez-vous/evenements', [RendezVousController::class, 'getEvenements'])
+        ->name('rendez-vous.evenements');
+
+    Route::post('/rendez-vous', [RendezVousController::class, 'store'])->name('rendez-vous.store');
+    // Mise à jour d'un rendez-vous
+    Route::put('/rendez-vous/{rendezVous}', [RendezVousController::class, 'update'])
+        ->name('rendez-vous.update');
+
+    // Suppression d'un rendez-vous
+    Route::delete('/rendez-vous/{rendezVous}', [RendezVousController::class, 'destroy'])
+        ->name('rendez-vous.destroy');
 
     // Traitements & Suivis
     Route::get('/traitements', function () {
@@ -118,6 +128,8 @@ Route::prefix('dashboard/medecin')->group(function () {
     Route::get('/communication', function () {
         return view('dashMedecin.communication.index');
     })->name('medecin.communication');
+
+    Route::get('/patients/search', [RendezVousController::class, 'getPatients'])->name('patients.search');
 });
 
 Route::prefix('dashboard/patient')->group(function () {
