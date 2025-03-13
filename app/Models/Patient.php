@@ -9,7 +9,15 @@ class Patient extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['nom', 'prenom', 'date_naissance'];
+    protected $fillable = ['user_id', 'nom', 'prenom', 'dateNaissance'];
+
+    /**
+     * Relation avec le modèle User
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 
     public function rendezVous()
     {
@@ -35,6 +43,7 @@ class Patient extends Model
     {
         return $this->hasOne(DossierMedical::class);
     }
+
     public function assurances()
     {
         return $this->belongsToMany(Assurance::class);

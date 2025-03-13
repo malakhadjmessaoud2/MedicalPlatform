@@ -4,10 +4,52 @@ use App\Http\Controllers\PharmacieController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RendezVousController;
 
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\RegisteredUserController;
+
+
+
 Route::get('/', function () {
     return view('welcome');
 });
 
+Route::middleware(['guest'])->group(function () {
+    Route::get('/login', [AuthenticatedSessionController::class, 'create'])
+        ->name('login');
+
+    Route::post('/login', [AuthenticatedSessionController::class, 'store']);
+
+    Route::get('/register', function () {
+        return view('auth.register-choice');
+    })->name('register');
+
+    Route::get('/register/medecin', [App\Http\Controllers\Auth\RegisteredUserController::class, 'createMedecin'])
+        ->name('register.medecin');
+
+    Route::get('/register/patient', [App\Http\Controllers\Auth\RegisteredUserController::class, 'createPatient'])
+        ->name('register.patient');
+
+    Route::get('/register/pharmacie', [App\Http\Controllers\Auth\RegisteredUserController::class, 'createPharmacie'])
+        ->middleware('guest')
+        ->name('register.pharmacie');
+
+    Route::get('/register/donateur', [App\Http\Controllers\Auth\RegisteredUserController::class, 'createDonateur'])
+        ->middleware('guest')
+        ->name('register.donateur');
+
+    Route::post('/register', [App\Http\Controllers\Auth\RegisteredUserController::class, 'store'])
+        ->name('register.store');
+});
+
+Route::middleware([
+    'auth:sanctum',
+    config('jetstream.auth_session'),
+    'verified',
+])->group(function () {
+    Route::get('/dashboard', function () {
+        return view('dashboard');
+    })->name('dashboard');
+});
 
 Route::prefix('dashboard/pharmacie')->group(function () {
     //dashboard pharmacie
@@ -81,8 +123,9 @@ Route::prefix('dashboard/donateur')->group(function () {
         return view('dashDonateur.aide.index');
     })->name('donateur.aide');
 });
+Route::prefix('dashboard/medecin')->middleware(['auth', 'role:medecin'])->group(function () {
 
-Route::prefix('dashboard/medecin')->group(function () {
+    Route::resource('rendez-vous', RendezVousController::class);
     // Dashboard principal médecin
     Route::get('/', function () {
         return view('dashMedecin.index');
@@ -99,20 +142,13 @@ Route::prefix('dashboard/medecin')->group(function () {
     })->name('medecin.dossiermedical');
 
     // Agenda & Rendez-vous
-    Route::get('/agenda', [RendezVousController::class, 'index'])->name('medecin.agenda');
-
-    // Récupération des événements
-    Route::get('/rendez-vous/evenements', [RendezVousController::class, 'getEvenements'])
-        ->name('rendez-vous.evenements');
-
-    Route::post('/rendez-vous', [RendezVousController::class, 'store'])->name('rendez-vous.store');
-    // Mise à jour d'un rendez-vous
-    Route::put('/rendez-vous/{rendezVous}', [RendezVousController::class, 'update'])
-        ->name('rendez-vous.update');
-
-    // Suppression d'un rendez-vous
-    Route::delete('/rendez-vous/{rendezVous}', [RendezVousController::class, 'destroy'])
-        ->name('rendez-vous.destroy');
+    Route::controller(RendezVousController::class)->group(function () {
+        Route::get('/agenda', 'index')->name('medecin.agenda');
+        Route::get('/rendez-vous/evenements', 'getEvenements')->name('rendez-vous.evenements');
+        Route::post('/rendez-vous', 'store')->name('rendez-vous.store');
+        Route::put('/rendez-vous/{rendezVous}', 'update')->name('rendez-vous.update');
+        Route::delete('/rendez-vous/{rendezVous}', 'destroy')->name('rendez-vous.destroy');
+    });
 
     // Traitements & Suivis
     Route::get('/traitements', function () {
@@ -130,9 +166,24 @@ Route::prefix('dashboard/medecin')->group(function () {
     })->name('medecin.communication');
 
     Route::get('/patients/search', [RendezVousController::class, 'getPatients'])->name('patients.search');
+    // Routes pour les rendez-vous
+    Route::get('/rendez-vous', [RendezVousController::class, 'index'])->name('medecin.rendez-vous.index');
+
+    // API pour les opérations CRUD sur les rendez-vous
+    Route::get('/api/rendez-vous', [RendezVousController::class, 'getEvenements'])->name('medecin.rendez-vous.evenements');
+    Route::post('/api/rendez-vous', [RendezVousController::class, 'store'])->name('medecin.rendez-vous.store');
+    Route::get('/api/rendez-vous/{rendezVous}', [RendezVousController::class, 'show'])->name('medecin.rendez-vous.show');
+    Route::put('/api/rendez-vous/{rendezVous}', [RendezVousController::class, 'update'])->name('medecin.rendez-vous.update');
+    Route::delete('/api/rendez-vous/{rendezVous}', [RendezVousController::class, 'destroy'])->name('medecin.rendez-vous.destroy');
+
+    // Ajouter cette route pour gérer le changement de statut
+    Route::put('/api/rendez-vous/{rendezVous}/statut', [RendezVousController::class, 'updateStatus'])->name('medecin.rendez-vous.updateStatus');
+
+    // API pour récupérer la liste des patients
+    Route::get('/api/patients', [RendezVousController::class, 'getPatients'])->name('medecin.patients.list');
 });
 
-Route::prefix('dashboard/patient')->group(function () {
+Route::prefix('dashboard/patient')->middleware(['auth', 'role:patient'])->group(function () {
     // Dashboard patient
     Route::get('/', function () {
         return view('dashPatient.index');
@@ -153,3 +204,5 @@ Route::prefix('dashboard/patient')->group(function () {
         return view('dashPatient.dons.index');
     })->name('patient.dons');
 });
+
+

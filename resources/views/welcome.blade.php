@@ -21,7 +21,7 @@
         }
 
         .gradient-text {
-            background: linear-gradient(90deg, #0d9488, #0891b2, #2563eb);
+            background: linear-gradient(90deg, #14e75b, #125c91, #10B981);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-size: 200% auto;
@@ -60,6 +60,39 @@
             0% { transform: translateX(-100%); opacity: 0; }
             100% { transform: translateX(0); opacity: 1; }
         }
+
+        .typewriter {
+            overflow: hidden;
+            border-right: .15em solid #10d060;
+            white-space: nowrap;
+            animation: typing 3.5s steps(40, end),
+                       blink-caret .75s step-end infinite;
+        }
+
+        @keyframes typing {
+            from { width: 0 }
+            to { width: 100% }
+        }
+
+        @keyframes blink-caret {
+            from, to { border-color: transparent }
+            50% { border-color: #10B981; }
+        }
+
+        .animate-fade-in-up {
+            animation: fadeInUp 1s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-teal-50 via-blue-50 to-white">
@@ -76,10 +109,10 @@
                     <a href="#" class="text-gray-600 hover:text-teal-600 transition-all duration-300 hover:scale-110">Accueil</a>
                     <a href="#" class="text-gray-600 hover:text-teal-600 transition-all duration-300 hover:scale-110">Services</a>
                     <a href="#" class="text-gray-600 hover:text-teal-600 transition-all duration-300 hover:scale-110">Contact</a>
-                    <a href="#" class="bg-teal-600 text-white px-6 py-2 rounded-full hover:bg-teal-700 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl">
+                    <a href="{{ route('login') }}" class="bg-[#4dabb4] text-white px-6 py-2 rounded-full hover:bg-[#4dabb4]/80 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl">
                         Connexion
                     </a>
-                    <a href="#" class="border-2 border-teal-600 text-teal-600 px-6 py-2 rounded-full hover:bg-teal-600 hover:text-white transform hover:scale-105 transition-all duration-300">
+                    <a href="{{ route('register') }}" class="border-2 border-[#4dabb4] text-[#4dabb4] px-6 py-2 rounded-full hover:bg-[#4dabb4] hover:text-white transform hover:scale-105 transition-all duration-300">
                         Inscription
                     </a>
                 </div>
@@ -205,7 +238,7 @@
 
         .typewriter {
             overflow: hidden;
-            border-right: .15em solid teal;
+            border-right: .15em solid #10B981;
             white-space: nowrap;
             animation: typing 3.5s steps(40, end),
                        blink-caret .75s step-end infinite;
@@ -218,7 +251,7 @@
 
         @keyframes blink-caret {
             from, to { border-color: transparent }
-            50% { border-color: teal; }
+            50% { border-color: #10B981; }
         }
 
         .animate-fade-in-up {

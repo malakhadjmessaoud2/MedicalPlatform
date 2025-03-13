@@ -1,5 +1,6 @@
 // console.log('app.js chargé');
 import './bootstrap';
+import './agenda'; // Importez votre fichier agenda.js
 
 // Import FullCalendar et ses plugins
 import { Calendar } from '@fullcalendar/core';
@@ -7,6 +8,7 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import listPlugin from '@fullcalendar/list';
 import interactionPlugin from '@fullcalendar/interaction';
+import frLocale from '@fullcalendar/core/locales/fr';
 
 // Rendre les plugins disponibles globalement
 window.Calendar = Calendar;
@@ -14,6 +16,7 @@ window.dayGridPlugin = dayGridPlugin;
 window.timeGridPlugin = timeGridPlugin;
 window.listPlugin = listPlugin;
 window.interactionPlugin = interactionPlugin;
+window.frLocale = frLocale;
 
 // Initialiser FullCalendar lorsque le DOM est chargé
 document.addEventListener('DOMContentLoaded', function() {
@@ -35,4 +38,19 @@ document.addEventListener('DOMContentLoaded', function() {
         calendar.render();
         window.calendar = calendar;
     }
+});
+
+// Initialiser les tooltips et popovers
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialiser les tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.forEach(function(tooltipTriggerEl) {
+        new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Initialiser les popovers
+    const popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+    popoverTriggerList.forEach(function(popoverTriggerEl) {
+        new bootstrap.Popover(popoverTriggerEl);
+    });
 });

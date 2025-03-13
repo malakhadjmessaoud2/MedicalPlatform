@@ -9,7 +9,15 @@ class Medecin extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['nom', 'prenom', 'specialite'];
+    protected $fillable = ['user_id', 'nom', 'prenom', 'specialite'];
+
+    /**
+     * Relation avec le modèle User
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 
     public function rendezVous()
     {
@@ -29,4 +37,5 @@ class Medecin extends Model
     public function dossiersMedicaux()
     {
         return $this->hasMany(DossierMedical::class);
-    }}
+    }
+}

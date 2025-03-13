@@ -12,8 +12,8 @@ import Pusher from "pusher-js";
 window.Pusher = Pusher;
 
 // Configuration Pusher
-const pusherKey = '7807be1909553259daf8';
-const pusherCluster = 'mt1';
+const pusherKey = import.meta.env.VITE_PUSHER_APP_KEY;
+const pusherCluster = import.meta.env.VITE_PUSHER_APP_CLUSTER;
 
 window.Echo = new Echo({
     broadcaster: 'pusher',

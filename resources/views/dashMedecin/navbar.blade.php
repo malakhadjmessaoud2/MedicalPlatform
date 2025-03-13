@@ -126,13 +126,60 @@
             <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"></span>
         </div>
 
-        <!-- Profile -->
-        <div class="w-9 h-9 rounded-full overflow-hidden">
-            <img
-                src="https://randomuser.me/api/portraits/men/32.jpg"
-                alt="Profile"
-                class="w-full h-full object-cover"
-            >
+        <!-- Profile Dropdown -->
+        <div class="relative" x-data="{ open: false }">
+            <button @click="open = !open" class="flex items-center space-x-2 focus:outline-none">
+                <div class="w-9 h-9 rounded-full overflow-hidden">
+                    @if(Auth::user()->profile_photo_path)
+                        <img src="{{ Storage::url(Auth::user()->profile_photo_path) }}" alt="{{ Auth::user()->name }}" class="w-full h-full object-cover">
+                    @else
+                        <div class="w-full h-full flex items-center justify-center bg-gray-300 text-gray-600">
+                            {{ substr(Auth::user()->name, 0, 1) }}
+                        </div>
+                    @endif
+                </div>
+                <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+            </button>
+
+            <!-- Dropdown Menu -->
+            <div x-show="open"
+                 @click.away="open = false"
+                 x-transition:enter="transition ease-out duration-100"
+                 x-transition:enter-start="transform opacity-0 scale-95"
+                 x-transition:enter-end="transform opacity-100 scale-100"
+                 x-transition:leave="transition ease-in duration-75"
+                 x-transition:leave-start="transform opacity-100 scale-100"
+                 x-transition:leave-end="transform opacity-0 scale-95"
+                 class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+
+                <!-- Account Management -->
+                <div class="block px-4 py-2 text-xs text-gray-400">
+                    {{ __('Gestion du compte') }}
+                </div>
+
+                <x-dropdown-link href="{{ route('profile.show') }}">
+                    {{ __('Profil') }}
+                </x-dropdown-link>
+
+                @if (Laravel\Jetstream\Jetstream::hasApiFeatures())
+                    <x-dropdown-link href="{{ route('api-tokens.index') }}">
+                        {{ __('API Tokens') }}
+                    </x-dropdown-link>
+                @endif
+
+                <div class="border-t border-gray-100"></div>
+
+                <!-- Authentication -->
+                <form method="POST" action="{{ route('logout') }}" x-data>
+                    @csrf
+                    <x-dropdown-link href="{{ route('logout') }}"
+                             @click.prevent="$root.submit();">
+                        {{ __('Déconnexion') }}
+                    </x-dropdown-link>
+                </form>
+            </div>
         </div>
     </div>
 </nav>
