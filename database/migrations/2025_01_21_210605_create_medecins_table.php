@@ -17,6 +17,11 @@ return new class extends Migration
             $table->string('nom');
             $table->string('prenom');
             $table->string('specialite');
+            $table->string('adresse_cabinet')->nullable();
+            $table->integer('experience')->nullable()->default(0);
+            $table->text('formation')->nullable();
+            $table->string('langues')->nullable();
+            $table->integer('score')->default(0);
             $table->timestamps();
         });
     }

@@ -189,6 +189,13 @@ Route::prefix('dashboard/patient')->middleware(['auth', 'role:patient'])->group(
         return view('dashPatient.index');
     })->name('dashboard.patient');
 
+    // Rendez-vous
+    Route::get('/rendezvous/create', function () {
+        return view('dashPatient.rendezvous.create');
+    })->name('patient.rendezvousCreate');
+    Route::get('/rendezvous', [RendezVousController::class, 'indexPatient'])
+        ->name('patient.rendezvous');
+
     // Achat médicaments
     Route::get('/medicaments', function () {
         return view('dashPatient.achatMedicament.index');
@@ -203,6 +210,20 @@ Route::prefix('dashboard/patient')->middleware(['auth', 'role:patient'])->group(
     Route::get('/dons', function () {
         return view('dashPatient.dons.index');
     })->name('patient.dons');
+
+    // Ajout de la route pour récupérer les médecins par spécialité
+    Route::get('/api/medecins', [RendezVousController::class, 'getMedecinsBySpecialite'])
+        ->name('patient.medecins.by.specialite');
+
+    Route::get('/rendez-vous', [RendezVousController::class, 'indexPatient'])->name('patient.rendez-vous.index');
+    Route::put('/rendez-vous/{rendezVous}/cancel', [RendezVousController::class, 'cancelRendezVous'])->name('patient.rendez-vous.cancel');
+});
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::post('/patient/rendez-vous', [RendezVousController::class, 'store'])
+        ->name('patient.rendez-vous.store');
+    Route::get('/patient/rendez-vous', [RendezVousController::class, 'indexPatient'])
+        ->name('patient.rendez-vous.index');
 });
 
 

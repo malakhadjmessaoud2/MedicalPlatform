@@ -8,28 +8,10 @@
             <h1 class="text-2xl sm:text-4xl font-bold">
                 TABLEAU DE B<span class="text-[#b9ff66]">O</span>RD
             </h1>
-            <div class="flex gap-2 sm:gap-4">
-                <button class="bg-black text-white rounded-full px-3 sm:px-4 py-1.5 sm:py-2.5 flex items-center gap-2 hover:bg-black/90 transition-all text-sm sm:text-base">
-                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none">
-                        <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                    </svg>
-                    <span>Nouveau Patient</span>
-                </button>
-                <button class="bg-red-500 text-white rounded-full px-3 sm:px-4 py-1.5 sm:py-2.5 flex items-center gap-2 hover:bg-red-600 transition-all text-sm sm:text-base">
-                    <span>🚨 Mode Urgence</span>
-                </button>
-            </div>
+
         </div>
 
-        <!-- Notifications -->
-        <div class="relative">
-            <button class="p-2 hover:bg-gray-100 rounded-full relative">
-                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-                </svg>
-                <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">8</span>
-            </button>
-        </div>
+
     </div>
 
     <!-- Main Grid Layout -->
@@ -217,138 +199,55 @@
             </div>
         </div>
 
-        <!-- Right Column - Alerts and Notifications -->
+        <!-- Right Column - Quick Actions -->
         <div class="lg:col-span-4 space-y-6">
-            <!-- Alerts -->
+            <!-- Quick Actions -->
             <div class="bg-white p-4 sm:p-6 rounded-[20px] shadow-sm">
                 <div class="flex items-center justify-between mb-4 sm:mb-6">
-                    <h2 class="text-xl font-bold">Alertes</h2>
-                    <span class="bg-red-100 text-red-800 px-2 sm:px-3 py-1 rounded-full text-sm">3 nouvelles</span>
+                    <h2 class="text-xl font-bold">Actions Rapides</h2>
                 </div>
-                <div class="space-y-3 sm:space-y-4">
-                    <div class="flex items-center gap-3 p-2 sm:p-3 bg-red-50 rounded-lg">
-                        <span class="p-2 bg-red-100 rounded-full text-red-600">⚠️</span>
-                        <div>
-                            <h4 class="font-medium">5 prescriptions à renouveler</h4>
-                            <p class="text-sm text-gray-500">Échéance proche</p>
+                <div class="space-y-3">
+                    <div class="p-3 rounded-lg hover:bg-gray-50 transition-all cursor-pointer">
+                        <div class="flex items-center gap-3">
+                            <span class="p-2 bg-blue-100 rounded-full">📋</span>
+                            <div>
+                                <h4 class="font-medium">Ordonnances</h4>
+                                <p class="text-sm text-gray-500">Gérer et créer des ordonnances</p>
+                            </div>
                         </div>
                     </div>
-                    <div class="flex items-center gap-3 p-2 sm:p-3 bg-blue-50 rounded-lg">
-                        <span class="p-2 bg-blue-100 rounded-full text-blue-600">📊</span>
-                        <div>
-                            <h4 class="font-medium">3 résultats d'analyses reçus</h4>
-                            <p class="text-sm text-gray-500">À examiner</p>
+
+                    <div class="p-3 rounded-lg hover:bg-gray-50 transition-all cursor-pointer">
+                        <div class="flex items-center gap-3">
+                            <span class="p-2 bg-green-100 rounded-full">💊</span>
+                            <div>
+                                <h4 class="font-medium">Prescriptions</h4>
+                                <p class="text-sm text-gray-500">Prescrire des médicaments</p>
+                            </div>
                         </div>
                     </div>
-                    <div class="flex items-center gap-3 p-2 sm:p-3 bg-yellow-50 rounded-lg">
-                        <span class="p-2 bg-yellow-100 rounded-full text-yellow-600">⏰</span>
-                        <div>
-                            <h4 class="font-medium">2 rappels patients</h4>
-                            <p class="text-sm text-gray-500">Suivi post-consultation</p>
+
+                    <div class="p-3 rounded-lg hover:bg-gray-50 transition-all cursor-pointer">
+                        <div class="flex items-center gap-3">
+                            <span class="p-2 bg-yellow-100 rounded-full">📊</span>
+                            <div>
+                                <h4 class="font-medium">Analyses</h4>
+                                <p class="text-sm text-gray-500">Résultats et demandes d'analyses</p>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <!-- Upcoming Appointments -->
-            <div class="bg-white p-4 sm:p-6 rounded-[20px] shadow-sm">
-                <h2 class="text-xl font-bold mb-4 sm:mb-6">Prochains Rendez-vous</h2>
-                <div class="space-y-3 sm:space-y-4">
-                    <div class="p-3 sm:p-4 bg-[#b9ff66] rounded-lg">
-                        <div class="flex items-center gap-3 mb-2">
-                            <span class="text-sm font-medium">14:30</span>
-                            <span class="px-2 py-1 bg-white/50 rounded-full text-xs">Consultation</span>
-                        </div>
-                        <h4 class="font-medium">Pierre Martin</h4>
-                        <p class="text-sm text-gray-700">Suivi traitement</p>
-                    </div>
-                    <!-- Repeat for other appointments -->
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Quick Actions Section -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-12">
-        <div class="bg-white p-4 sm:p-6 rounded-[20px] hover:shadow-lg transition-shadow cursor-pointer">
-            <div class="flex items-center gap-4 mb-4">
-                <span class="p-3 bg-blue-100 rounded-full">📋</span>
-                <h3 class="font-bold">Ordonnances</h3>
-            </div>
-            <p class="text-sm text-gray-600">Gérer et créer des ordonnances</p>
-        </div>
-        <div class="bg-white p-6 rounded-[20px] hover:shadow-lg transition-shadow cursor-pointer">
-            <div class="flex items-center gap-4 mb-4">
-                <span class="p-3 bg-green-100 rounded-full">💊</span>
-                <h3 class="font-bold">Prescriptions</h3>
-            </div>
-            <p class="text-sm text-gray-600">Prescrire des médicaments</p>
-        </div>
-        <div class="bg-white p-6 rounded-[20px] hover:shadow-lg transition-shadow cursor-pointer">
-            <div class="flex items-center gap-4 mb-4">
-                <span class="p-3 bg-yellow-100 rounded-full">📊</span>
-                <h3 class="font-bold">Analyses</h3>
-            </div>
-            <p class="text-sm text-gray-600">Résultats et demandes d'analyses</p>
-        </div>
-        <div class="bg-white p-6 rounded-[20px] hover:shadow-lg transition-shadow cursor-pointer">
-            <div class="flex items-center gap-4 mb-4">
-                <span class="p-3 bg-purple-100 rounded-full">📅</span>
-                <h3 class="font-bold">Planning</h3>
-            </div>
-            <p class="text-sm text-gray-600">Gérer votre agenda</p>
-        </div>
-    </div>
-
-    <!-- Upcoming Appointments Section -->
-    <div class="mb-12">
-        <div class="flex items-center justify-between mb-6">
-            <div class="flex items-center gap-3">
-                <h2 class="text-2xl font-bold">Rendez-vous à venir</h2>
-                <span class="bg-white px-3 py-1 rounded-full text-sm">5 RDV</span>
-            </div>
-        </div>
-
-        <!-- Appointments Grid -->
-        <div class="grid gap-4">
-            <div class="bg-[#b9ff66] rounded-[30px] p-6">
-                <div class="flex justify-between items-start">
-                    <div class="flex gap-3">
-                        <img src="https://randomuser.me/api/portraits/men/3.jpg" alt="" class="w-12 h-12 rounded-full">
-                        <div>
-                            <h3 class="font-semibold text-lg">Pierre Martin</h3>
-                            <p class="text-sm text-gray-700">Consultation de suivi</p>
+                    <div class="p-3 rounded-lg hover:bg-gray-50 transition-all cursor-pointer">
+                        <div class="flex items-center gap-3">
+                            <span class="p-2 bg-purple-100 rounded-full">📅</span>
+                            <div>
+                                <h4 class="font-medium">Planning</h4>
+                                <p class="text-sm text-gray-500">Gérer votre agenda</p>
+                            </div>
                         </div>
                     </div>
                 </div>
-
-                <div class="mt-6">
-                    <div class="flex items-center gap-2">
-                        <span class="text-xl font-semibold">14:30 - Consultation</span>
-                    </div>
-                    <div class="flex items-center gap-2 mt-2">
-                        <span class="text-sm text-gray-700">Durée: 30 minutes</span>
-                    </div>
-                </div>
             </div>
-
-            <!-- Repeat for other appointments -->
-        </div>
-    </div>
-
-    <!-- Calendar Section -->
-    <div class="mb-12 bg-white rounded-[30px] p-6">
-        <div class="flex items-center justify-between mb-6">
-            <h2 class="text-2xl font-bold">Planning de la semaine</h2>
-            <div class="flex gap-4">
-                <button class="px-4 py-2 bg-[#b9ff66] rounded-full">Aujourd'hui</button>
-                <button class="px-4 py-2 border rounded-full">Vue Semaine</button>
-                <button class="px-4 py-2 border rounded-full">Vue Mois</button>
-            </div>
-        </div>
-        <!-- Placeholder for calendar -->
-        <div class="h-64 border rounded-lg p-4">
-            <!-- Calendar integration here -->
         </div>
     </div>
 
@@ -502,43 +401,7 @@
             </div>
         </div>
     </div>
-    <!-- Centre de notifications -->
-    <div class="mb-12">
-        <div class="flex items-center justify-between mb-6">
-            <h2 class="text-2xl font-bold">Centre de notifications</h2>
-            <button class="text-sm text-gray-500 hover:text-gray-700">Tout marquer comme lu</button>
-        </div>
 
-        <div class="bg-white rounded-[20px] divide-y">
-            <!-- Notification item -->
-            <div class="p-4 hover:bg-gray-50 transition-colors flex items-center gap-4">
-                <div class="bg-blue-100 p-3 rounded-full">
-                    <svg class="w-6 h-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                    </svg>
-                </div>
-                <div class="flex-1">
-                    <h4 class="font-medium">Nouveaux résultats d'analyses</h4>
-                    <p class="text-sm text-gray-500">Patient: Marie Dupont - Analyses sanguines</p>
-                </div>
-                <span class="text-sm text-gray-400">Il y a 2h</span>
-            </div>
-
-            <!-- Notification item -->
-            <div class="p-4 hover:bg-gray-50 transition-colors flex items-center gap-4">
-                <div class="bg-yellow-100 p-3 rounded-full">
-                    <svg class="w-6 h-6 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                </div>
-                <div class="flex-1">
-                    <h4 class="font-medium">Rappel: Renouvellement ordonnance</h4>
-                    <p class="text-sm text-gray-500">Patient: Jean Martin - Traitement diabète</p>
-                </div>
-                <span class="text-sm text-gray-400">Il y a 5h</span>
-            </div>
-        </div>
-    </div>
 
     <!-- JavaScript pour le modal -->
     <script>

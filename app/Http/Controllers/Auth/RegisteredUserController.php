@@ -46,6 +46,9 @@ class RegisteredUserController extends Controller
         if ($request->role === 'medecin') {
             $request->validate([
                 'specialite' => ['required', 'string', 'max:255'],
+                'adresse_cabinet' => ['required', 'string', 'max:255'],
+                'experience' => ['nullable', 'integer', 'min:0'],
+                'formation' => ['nullable', 'string'],
             ]);
         } elseif ($request->role === 'patient') {
             $request->validate([
@@ -63,23 +66,53 @@ class RegisteredUserController extends Controller
 
         // Traiter la photo de profil si elle est fournie
         if ($request->hasFile('profile_photo')) {
-            // Vérifier que le dossier de stockage existe et est accessible en écriture
-            $storagePath = storage_path('app/public/profile-photos');
-            if (!file_exists($storagePath)) {
-                mkdir($storagePath, 0755, true);
-            }
+            try {
+                // S'assurer que le dossier existe
+                $storagePath = storage_path('app/public/profile-photos');
+                if (!file_exists($storagePath)) {
+                    mkdir($storagePath, 0755, true);
+                }
 
-            // Utiliser la méthode de Jetstream pour mettre à jour la photo de profil
-            $user->updateProfilePhoto($request->file('profile_photo'));
+                // Stocker directement le fichier dans le dossier public
+                $filename = $request->file('profile_photo')->store('profile-photos', 'public');
+
+                // Mettre à jour le chemin dans la base de données
+                $user->profile_photo_path = $filename;
+                $user->save();
+
+                // Log pour débogage
+                \Log::info('Photo de profil enregistrée: ' . $filename);
+            } catch (\Exception $e) {
+                \Log::error('Erreur lors de l\'enregistrement de la photo: ' . $e->getMessage());
+            }
         }
 
         // Créer l'enregistrement correspondant selon le rôle
         if ($request->role === 'medecin') {
+            // Traitement des langues
+            $languesArray = [];
+            if ($request->has('langues') && is_array($request->langues)) {
+                $languesArray = $request->langues;
+            }
+
+            // Ajouter la langue "autre" si elle est cochée et remplie
+            if ($request->has('langues_autre') && $request->has('langues_autre_texte') && !empty($request->langues_autre_texte)) {
+                $languesArray[] = $request->langues_autre_texte;
+            }
+
+            // Convertir le tableau de langues en chaîne de caractères
+            $langues = !empty($languesArray) ? implode(', ', $languesArray) : '';
+
             Medecin::create([
                 'user_id' => $user->id,
                 'nom' => $request->name,
                 'prenom' => $request->prenom,
                 'specialite' => $request->specialite,
+                'adresse_cabinet' => $request->adresse_cabinet,
+                'experience' => $request->experience,
+                'formation' => $request->formation,
+                'langues' => $langues,
+                'score' => 0,
             ]);
         } elseif ($request->role === 'patient') {
             Patient::create([

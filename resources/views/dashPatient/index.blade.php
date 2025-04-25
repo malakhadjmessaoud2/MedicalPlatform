@@ -6,13 +6,12 @@
     <div class="flex justify-between items-center mb-12">
         <div class="flex items-center gap-8">
             <h1 class="text-4xl font-bold">
-                PHAR<span class="text-[#b9ff66]">MA</span>CARE
-            </h1>
+                TABLEAU DE B<span class="text-[#b9ff66]">O</span>RD            </h1>
 
         </div>
 
         <!-- Statistiques -->
-        <div class="flex gap-12">
+        {{-- <div class="flex gap-12">
             <div class="text-center relative">
                 <span class="text-4xl font-bold">12</span>
                 <span class="absolute -top-1 -right-4 text-xs bg-[#b9ff66] px-1.5 rounded-full">+2</span>
@@ -28,7 +27,7 @@
                 <span class="absolute -top-1 -right-4 text-xs bg-orange-200 px-1.5 rounded-full">+1</span>
                 <div class="text-gray-500 text-sm mt-1">Dons</div>
             </div>
-        </div>
+        </div> --}}
     </div>
 <!-- Section Dossier Médical -->
 <div class="mb-12">
@@ -141,27 +140,6 @@
                 </div>
             </div>
 
-            <!-- Actions rapides -->
-            <div class="mt-6 flex items-center justify-between">
-                <div class="flex -space-x-2">
-                    <img src="path/to/medicine1.jpg" alt="Médicament 1" class="w-8 h-8 rounded-full border-2 border-white">
-                    <img src="path/to/medicine2.jpg" alt="Médicament 2" class="w-8 h-8 rounded-full border-2 border-white">
-                    <img src="path/to/medicine3.jpg" alt="Médicament 3" class="w-8 h-8 rounded-full border-2 border-white">
-                    <span class="w-8 h-8 rounded-full bg-gray-100 border-2 border-white flex items-center justify-center text-sm text-gray-500">+2</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <button class="p-2 hover:bg-[#66FFED]/10 rounded-full transition-colors">
-                        <svg class="w-5 h-5 text-[#D2D2D2] hover:text-[#66FFED]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                        </svg>
-                    </button>
-                    <button class="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                        <svg class="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-                        </svg>
-                    </button>
-                </div>
-            </div>
         </div>
 
         <!-- Carte Consultation -->

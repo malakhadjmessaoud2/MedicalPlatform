@@ -13,17 +13,15 @@ class RendezVous extends Model
     protected $table = 'rendez_vous';
 
     protected $fillable = [
-        'patient_id',
         'medecin_id',
+        'patient_id',
+        'titre',
         'date_debut',
         'date_fin',
-        'type',
         'description',
-        'titre',
+        'type',
         'statut',
-        'couleur',
-        'est_bloque',
-        'notes'
+        'family_info'
     ];
 
     protected $casts = [

@@ -100,8 +100,16 @@ class RendezVousController extends Controller
             $patients = Patient::select('id', 'nom', 'prenom')->orderBy('nom')->get();
 
             return view('dashMedecin.AgendaRendezvous.index', compact(
-                'rendezVous', 'selectedDate', 'view', 'startDate', 'endDate',
-                'stats', 'heuresTravail', 'moisActuel', 'joursCalendrier', 'patients'
+                'rendezVous',
+                'selectedDate',
+                'view',
+                'startDate',
+                'endDate',
+                'stats',
+                'heuresTravail',
+                'moisActuel',
+                'joursCalendrier',
+                'patients'
             ));
         } catch (\Exception $e) {
             Log::error('Erreur dans l\'affichage de l\'agenda: ' . $e->getMessage());
@@ -115,10 +123,7 @@ class RendezVousController extends Controller
     public function getEvenements()
     {
         try {
-            // Récupérer l'utilisateur connecté
             $user = Auth::user();
-
-            // Récupérer le médecin associé à l'utilisateur
             $medecin = $user->medecin;
 
             if (!$medecin) {
@@ -127,59 +132,54 @@ class RendezVousController extends Controller
                 ], 404);
             }
 
-            // Récupérer tous les rendez-vous du médecin
             $rendezVous = RendezVous::where('medecin_id', $medecin->id)
                 ->with('patient:id,nom,prenom')
                 ->get();
 
-            // Formater les rendez-vous pour FullCalendar
-            $events = $rendezVous->map(function($rdv) {
-                // Déterminer la couleur en fonction du type et du statut
-                $backgroundColor = '#3788d8'; // Couleur par défaut (bleu)
-                $borderColor = '#3788d8';
-                $textColor = '#ffffff';
+            $events = $rendezVous->map(function ($rdv) {
+                // Configurer les dates avec le fuseau horaire de Tunis
+                $dateDebut = Carbon::parse($rdv->date_debut)->timezone('Africa/Tunis');
+                $dateFin = Carbon::parse($rdv->date_fin)->timezone('Africa/Tunis');
 
-                // Couleurs selon le type
-                if ($rdv->type === 'consultation') {
-                    $backgroundColor = '#4299e1'; // Bleu
-                    $borderColor = '#2b6cb0';
-                } elseif ($rdv->type === 'suivi') {
-                    $backgroundColor = '#48bb78'; // Vert
-                    $borderColor = '#2f855a';
-                } elseif ($rdv->type === 'urgence') {
-                    $backgroundColor = '#f56565'; // Rouge
-                    $borderColor = '#c53030';
-                }
-
-                // Modifier l'apparence selon le statut
-                if ($rdv->statut === 'annulé') {
-                    $backgroundColor = '#a0aec0'; // Gris
-                    $borderColor = '#718096';
-                } elseif ($rdv->statut === 'en_attente') {
-                    $backgroundColor = '#ecc94b'; // Jaune
-                    $borderColor = '#d69e2e';
-                }
-
-                // Construire le titre avec le nom du patient
                 $patientNom = $rdv->patient ? $rdv->patient->nom . ' ' . $rdv->patient->prenom : 'Patient inconnu';
                 $title = $rdv->titre . ' - ' . $patientNom;
+
+                // Déterminer les couleurs selon le type et le statut
+                $backgroundColor = match($rdv->type) {
+                    'consultation' => '#4299e1',
+                    'suivi' => '#48bb78',
+                    'urgence' => '#f56565',
+                    default => '#3788d8'
+                };
+
+                $borderColor = $backgroundColor;
+
+                if ($rdv->statut === 'annulé') {
+                    $backgroundColor = '#a0aec0';
+                    $borderColor = '#718096';
+                } elseif ($rdv->statut === 'en_attente') {
+                    $backgroundColor = '#ecc94b';
+                    $borderColor = '#d69e2e';
+                }
 
                 return [
                     'id' => $rdv->id,
                     'title' => $title,
-                    'start' => $rdv->date_debut->toIso8601String(),
-                    'end' => $rdv->date_fin->toIso8601String(),
+                    'start' => $dateDebut->format('Y-m-d\TH:i:s'),
+                    'end' => $dateFin->format('Y-m-d\TH:i:s'),
                     'backgroundColor' => $backgroundColor,
                     'borderColor' => $borderColor,
-                    'textColor' => $textColor,
+                    'textColor' => '#ffffff',
                     'extendedProps' => [
                         'patient_id' => $rdv->patient_id,
                         'patient_nom' => $patientNom,
                         'type' => $rdv->type,
                         'statut' => $rdv->statut,
-                        'description' => $rdv->description
+                        'description' => $rdv->description,
+                        'heure_debut' => $dateDebut->format('H:i'),
+                        'heure_fin' => $dateFin->format('H:i')
                     ],
-                    'editable' => $rdv->statut !== 'annulé', // Rendre non modifiable les RDV annulés
+                    'editable' => $rdv->statut !== 'annulé',
                     'durationEditable' => $rdv->statut !== 'annulé'
                 ];
             });
@@ -188,7 +188,7 @@ class RendezVousController extends Controller
         } catch (\Exception $e) {
             Log::error('Erreur lors de la récupération des événements: ' . $e->getMessage());
             return response()->json([
-                'error' => 'Erreur lors de la récupération des événements: ' . $e->getMessage()
+                'error' => 'Erreur lors de la récupération des événements'
             ], 500);
         }
     }
@@ -198,63 +198,49 @@ class RendezVousController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'patient_id' => 'required|exists:patients,id',
-            'titre' => 'required|string|max:255',
-            'date_debut' => 'required|date',
-            'heure_debut' => 'required|string',
-            'duree' => 'required|integer|min:15',
-            'type' => 'required|in:consultation,suivi,urgence',
-            'statut' => 'required|in:confirmé,en_attente,annulé',
-            'description' => 'nullable|string'
-        ]);
-
         try {
-            // Récupérer l'utilisateur connecté
-            $user = Auth::user();
+            // Valider les données
+            $validated = $request->validate([
+                'medecin_id' => 'required|exists:medecins,id',
+                'date_rdv' => 'required|date|after_or_equal:today',
+                'heure_debut' => 'required',
+                'description' => 'required|string|min:10',
+                'type' => 'required|in:consultation,suivi,urgent',
+            ]);
 
-            // Récupérer le médecin associé à l'utilisateur
-            $medecin = $user->medecin;
-
-            if (!$medecin) {
-                return redirect()->back()
-                    ->with('error', 'Profil médecin non trouvé pour cet utilisateur')
-                    ->withInput();
+            // Récupérer le patient connecté
+            $patient = Auth::user()->patient;
+            if (!$patient) {
+                throw new \Exception('Profil patient non trouvé');
             }
 
-            // Convertir la date et l'heure en objet Carbon
-            $dateDebut = Carbon::parse($validated['date_debut'] . ' ' . $validated['heure_debut']);
-
-            // Calculer la date de fin en ajoutant la durée (convertie en minutes)
-            $dateFin = $dateDebut->copy()->addMinutes((int) $validated['duree']);
+            // Créer la date de début sans conversion de fuseau horaire
+            $dateDebut = Carbon::parse($validated['date_rdv'] . ' ' . $validated['heure_debut']);
+            $dateFin = $dateDebut->copy()->addMinutes(30);
 
             // Créer le rendez-vous
             $rendezVous = RendezVous::create([
-                'medecin_id' => $medecin->id, // Utiliser l'ID du modèle Medecin
-                'patient_id' => $validated['patient_id'],
-                'titre' => $validated['titre'],
+                'medecin_id' => $validated['medecin_id'],
+                'patient_id' => $patient->id,
+                'titre' => ucfirst($validated['type']) . ' - ' . $patient->nom . ' ' . $patient->prenom,
                 'date_debut' => $dateDebut,
                 'date_fin' => $dateFin,
+                'description' => $validated['description'],
                 'type' => $validated['type'],
-                'statut' => $validated['statut'],
-                'description' => $validated['description'] ?? null
+                'statut' => 'en_attente'
             ]);
 
-            // Charger la relation patient pour l'événement
-            $rendezVous->load('patient:id,nom,prenom');
-
-            // Diffuser l'événement
+            // Émettre l'événement pour mettre à jour le calendrier du médecin
             broadcast(new RendezVousModifie($rendezVous, 'created'))->toOthers();
 
-            return redirect()->route('medecin.agenda', [
-                'date' => $dateDebut->format('Y-m-d'),
-                'view' => 'day'
-            ])->with('success', 'Rendez-vous créé avec succès');
+            return redirect()->route('patient.rendez-vous.index')
+                ->with('success', 'Votre rendez-vous a été créé avec succès et est en attente de confirmation par le médecin.');
+
         } catch (\Exception $e) {
             Log::error('Erreur lors de la création du rendez-vous: ' . $e->getMessage());
             return redirect()->back()
-                ->with('error', 'Erreur lors de la création du rendez-vous: ' . $e->getMessage())
-                ->withInput();
+                ->withInput()
+                ->with('error', 'Une erreur est survenue lors de la création du rendez-vous: ' . $e->getMessage());
         }
     }
 
@@ -425,7 +411,7 @@ class RendezVousController extends Controller
             ->select('id', 'nom', 'prenom')
             ->limit(10)
             ->get()
-            ->map(function($patient) {
+            ->map(function ($patient) {
                 return [
                     'id' => $patient->id,
                     'text' => $patient->nom . ' ' . $patient->prenom
@@ -468,6 +454,221 @@ class RendezVousController extends Controller
             Log::error('Erreur lors de la mise à jour du statut: ' . $e->getMessage());
             return response()->json([
                 'error' => 'Erreur lors de la mise à jour du statut: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Récupère les médecins par spécialité
+     */
+    public function getMedecinsBySpecialite(Request $request)
+    {
+        try {
+            $specialite = $request->query('specialite');
+
+            if (!$specialite) {
+                return response()->json([
+                    'error' => 'La spécialité est requise'
+                ], 400);
+            }
+
+            $medecins = Medecin::where('specialite', $specialite)
+                ->with(['user:id,profile_photo_path'])
+                ->get()
+                ->map(function ($medecin) {
+                    return [
+                        'id' => $medecin->id,
+                        'nom' => $medecin->nom,
+                        'prenom' => $medecin->prenom,
+                        'specialite' => $medecin->specialite,
+                        'adresse_cabinet' => $medecin->adresse_cabinet,
+                        'experience' => $medecin->experience,
+                        'langues' => $medecin->langues_array,
+                        'score' => $medecin->score,
+                        'profile_photo_url' => $medecin->user ? $medecin->user->profile_photo_url : null
+                    ];
+                });
+
+            return response()->json([
+                'medecins' => $medecins,
+                'count' => $medecins->count()
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de la récupération des médecins: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Erreur lors de la récupération des médecins'
+            ], 500);
+        }
+    }
+
+    public function getCreneauxDisponibles(Request $request, Medecin $medecin)
+    {
+        try {
+            // Valider la date
+            $request->validate([
+                'date' => 'required|date|after_or_equal:today',
+            ]);
+
+            $selectedDate = Carbon::parse($request->date);
+
+            // Vérifier si c'est un jour de travail (lundi-vendredi)
+            if ($selectedDate->isWeekend()) {
+                return response()->json([
+                    'error' => 'Les rendez-vous ne sont pas disponibles le weekend'
+                ], 400);
+            }
+
+            // Définir les heures de travail (8h-18h)
+            $startWorkHour = 8;
+            $endWorkHour = 18;
+            $creneauDuration = 30; // durée en minutes
+
+            // Récupérer les rendez-vous existants pour cette date
+            $rendezVousExistants = RendezVous::where('medecin_id', $medecin->id)
+                ->whereDate('date_debut', $selectedDate)
+                ->where('statut', '!=', 'annulé')
+                ->get();
+
+            // Générer tous les créneaux possibles
+            $creneauxDisponibles = [];
+            $currentTime = $selectedDate->copy()->setHour($startWorkHour)->setMinute(0);
+            $endTime = $selectedDate->copy()->setHour($endWorkHour)->setMinute(0);
+
+            while ($currentTime < $endTime) {
+                $creneauEnd = $currentTime->copy()->addMinutes($creneauDuration);
+
+                // Vérifier si le créneau est déjà pris
+                $estDisponible = true;
+                foreach ($rendezVousExistants as $rdv) {
+                    $rdvDebut = Carbon::parse($rdv->date_debut);
+                    $rdvFin = Carbon::parse($rdv->date_fin);
+
+                    if ($currentTime->between($rdvDebut, $rdvFin) ||
+                        $creneauEnd->between($rdvDebut, $rdvFin) ||
+                        ($currentTime <= $rdvDebut && $creneauEnd >= $rdvFin)) {
+                        $estDisponible = false;
+                        break;
+                    }
+                }
+
+                // Si le créneau est dans le futur et disponible
+                if ($estDisponible && $currentTime > now()) {
+                    $creneauxDisponibles[] = [
+                        'heure_debut' => $currentTime->format('H:i'),
+                        'heure_fin' => $creneauEnd->format('H:i'),
+                        'timestamp_debut' => $currentTime->timestamp,
+                        'timestamp_fin' => $creneauEnd->timestamp
+                    ];
+                }
+
+                $currentTime->addMinutes($creneauDuration);
+            }
+
+            return response()->json([
+                'date' => $selectedDate->format('Y-m-d'),
+                'creneaux_disponibles' => $creneauxDisponibles
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de la récupération des créneaux disponibles: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Erreur lors de la récupération des créneaux disponibles'
+            ], 500);
+        }
+    }
+
+    public function indexPatient()
+    {
+        try {
+            $user = Auth::user();
+            $patient = $user->patient;
+
+            if (!$patient) {
+                return redirect()->route('dashboard')->with('error', 'Profil patient non trouvé');
+            }
+
+            // Récupérer le prochain rendez-vous
+            $prochainRendezVous = RendezVous::with('medecin')
+                ->where('patient_id', $patient->id)
+                ->where('date_debut', '>=', now())
+                ->where('statut', '!=', 'annulé')
+                ->orderBy('date_debut', 'asc')
+                ->first();
+
+            // Récupérer les rendez-vous en attente
+            $rendezVousEnAttente = RendezVous::with('medecin')
+                ->where('patient_id', $patient->id)
+                ->where('date_debut', '>=', now())
+                ->where('statut', 'en_attente')
+                ->orderBy('date_debut', 'asc')
+                ->get();
+
+            // Récupérer l'historique des rendez-vous
+            $historiqueRendezVous = RendezVous::with('medecin')
+                ->where('patient_id', $patient->id)
+                ->where(function($query) {
+                    $query->where('date_debut', '<', now())
+                        ->orWhere('statut', 'annulé');
+                })
+                ->orderBy('date_debut', 'desc')
+                ->paginate(5);
+
+            return view('dashPatient.RendezVous.index', compact(
+                'prochainRendezVous',
+                'rendezVousEnAttente',
+                'historiqueRendezVous'
+            ));
+
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de la récupération des rendez-vous: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Erreur lors de la récupération des rendez-vous');
+        }
+    }
+
+    public function cancelRendezVous(RendezVous $rendezVous)
+    {
+        try {
+            $user = Auth::user();
+            $patient = $user->patient;
+
+            if (!$patient || $rendezVous->patient_id !== $patient->id) {
+                return redirect()->back()->with('error', 'Vous n\'êtes pas autorisé à annuler ce rendez-vous');
+            }
+
+            $rendezVous->update([
+                'statut' => 'annulé'
+            ]);
+
+            // Notifier le médecin de l'annulation
+            broadcast(new RendezVousModifie($rendezVous, 'updated'))->toOthers();
+
+            return redirect()->route('patient.rendez-vous.index')
+                ->with('success', 'Le rendez-vous a été annulé avec succès');
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de l\'annulation du rendez-vous: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Erreur lors de l\'annulation du rendez-vous');
+        }
+    }
+
+    public function getMedecinDetails(Medecin $medecin)
+    {
+        try {
+            return response()->json([
+                'id' => $medecin->id,
+                'nom' => $medecin->nom,
+                'prenom' => $medecin->prenom,
+                'specialite' => $medecin->specialite,
+                'adresse_cabinet' => $medecin->adresse_cabinet,
+                'experience' => $medecin->experience,
+                'langues' => $medecin->langues_array,
+                'score' => $medecin->score,
+                'profile_photo_url' => $medecin->user ? $medecin->user->profile_photo_url : null
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de la récupération des détails du médecin: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Erreur lors de la récupération des détails du médecin'
             ], 500);
         }
     }

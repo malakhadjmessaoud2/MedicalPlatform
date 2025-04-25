@@ -9,7 +9,32 @@ class Medecin extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'nom', 'prenom', 'specialite'];
+    protected $fillable = ['user_id', 'nom', 'prenom', 'specialite',
+        'adresse_cabinet',
+        'experience',
+        'formation',
+        'langues',
+        'score',
+    ];
+        /**
+     * Obtenir un tableau des langues parlées
+     */
+    public function getLanguesArrayAttribute()
+    {
+        if (empty($this->langues)) {
+            return [];
+        }
+
+        return array_map('trim', explode(',', $this->langues));
+    }
+
+    /**
+     * Vérifier si le médecin parle une langue spécifique
+     */
+    public function parleLangne($langue)
+    {
+        return in_array($langue, $this->langues_array);
+    }
 
     /**
      * Relation avec le modèle User

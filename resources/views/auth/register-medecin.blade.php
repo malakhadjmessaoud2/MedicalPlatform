@@ -86,7 +86,14 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
                                     </svg>
                                 </div>
-                                <x-input id="specialite" class="block mt-1 w-full pl-10 border-gray-300 focus:border-[#4dabb4] focus:ring focus:ring-[#4dabb4]/20 transition-all duration-200" type="text" name="specialite" :value="old('specialite')" required placeholder="Cardiologie, Pédiatrie, etc." />
+                                <select id="specialite" name="specialite" class="block mt-1 w-full pl-10 border-gray-300 focus:border-[#4dabb4] focus:ring focus:ring-[#4dabb4]/20 transition-all duration-200 rounded-md shadow-sm" required>
+                                    <option value="" disabled selected>Sélectionnez votre spécialité</option>
+                                    <option value="Médecin de famille" {{ old('specialite') == 'Médecin de famille' ? 'selected' : '' }}>Médecin de famille</option>
+                                    <option value="Généraliste" {{ old('specialite') == 'Généraliste' ? 'selected' : '' }}>Généraliste</option>
+                                    <option value="Psychiatrie" {{ old('specialite') == 'Psychiatrie' ? 'selected' : '' }}>Psychiatrie / Psychologie</option>
+                                    <option value="Pédiatrie" {{ old('specialite') == 'Pédiatrie' ? 'selected' : '' }}>Pédiatrie</option>
+                                    <option value="Nutrition" {{ old('specialite') == 'Nutrition' ? 'selected' : '' }}>Nutrition</option>
+                                </select>
                             </div>
                         </div>
 
@@ -111,6 +118,68 @@
                             </div>
                             <p class="mt-1 text-sm text-gray-500">JPG, PNG ou GIF. Max 1MB.</p>
                         </div>
+
+
+
+                        <!-- Adresse du cabinet -->
+                        <div>
+                            <x-label for="adresse_cabinet" value="{{ __('Adresse du cabinet') }}" class="text-gray-700 font-medium" />
+                            <div class="mt-1 relative rounded-md shadow-sm">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                </div>
+                                <x-input id="adresse_cabinet" class="block mt-1 w-full pl-10 border-gray-300 focus:border-[#4dabb4] focus:ring focus:ring-[#4dabb4]/20 transition-all duration-200" type="text" name="adresse_cabinet" :value="old('adresse_cabinet')" required placeholder="25 Rue de la Santé, Tunis" />
+                            </div>
+                        </div>
+
+                        <!-- Années d'expérience -->
+                        <div>
+                            <x-label for="experience" value="{{ __('Années d expérience') }}" class="text-gray-700 font-medium" />
+                            <div class="mt-1 relative rounded-md shadow-sm">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                                <x-input id="experience" class="block mt-1 w-full pl-10 border-gray-300 focus:border-[#4dabb4] focus:ring focus:ring-[#4dabb4]/20 transition-all duration-200" type="number" name="experience" :value="old('experience')" required min="0" max="70" placeholder="10" />
+                            </div>
+                        </div>
+
+                        <!-- Formation et expérience -->
+                        <div>
+                            <x-label for="formation" value="{{ __('Formation et parcours professionnel') }}" class="text-gray-700 font-medium" />
+                            <div class="mt-1 relative rounded-md shadow-sm">
+                                <textarea id="formation" name="formation" rows="3" class="block w-full border-gray-300 focus:border-[#4dabb4] focus:ring focus:ring-[#4dabb4]/20 transition-all duration-200 rounded-md shadow-sm" placeholder="Décrivez votre formation et votre parcours professionnel">{{ old('formation') }}</textarea>
+                            </div>
+                            <p class="mt-1 text-xs text-gray-500">Diplômes, certifications, postes occupés, etc.</p>
+                        </div>
+
+                        <!-- Langues parlées -->
+<div>
+    <x-label for="langues" value="{{ __('Langues parlées') }}" class="text-gray-700 font-medium" />
+    <div class="mt-1 flex flex-wrap gap-2">
+        <div class="flex items-center">
+            <input id="langue_francais" name="langues[]" type="checkbox" value="Français" class="h-4 w-4 text-[#4dabb4] focus:ring-[#4dabb4] border-gray-300 rounded" {{ is_array(old('langues')) && in_array('Français', old('langues')) ? 'checked' : '' }}>
+            <label for="langue_francais" class="ml-2 text-sm text-gray-700">Français</label>
+        </div>
+        <div class="flex items-center">
+            <input id="langue_arabe" name="langues[]" type="checkbox" value="Arabe" class="h-4 w-4 text-[#4dabb4] focus:ring-[#4dabb4] border-gray-300 rounded" {{ is_array(old('langues')) && in_array('Arabe', old('langues')) ? 'checked' : '' }}>
+            <label for="langue_arabe" class="ml-2 text-sm text-gray-700">Arabe</label>
+        </div>
+        <div class="flex items-center">
+            <input id="langue_anglais" name="langues[]" type="checkbox" value="Anglais" class="h-4 w-4 text-[#4dabb4] focus:ring-[#4dabb4] border-gray-300 rounded" {{ is_array(old('langues')) && in_array('Anglais', old('langues')) ? 'checked' : '' }}>
+            <label for="langue_anglais" class="ml-2 text-sm text-gray-700">Anglais</label>
+        </div>
+        <div class="flex items-center">
+            <input id="langue_autre" name="langues_autre" type="checkbox" class="h-4 w-4 text-[#4dabb4] focus:ring-[#4dabb4] border-gray-300 rounded" {{ old('langues_autre') ? 'checked' : '' }}>
+            <label for="langue_autre" class="ml-2 text-sm text-gray-700">Autre:</label>
+            <input type="text" name="langues_autre_texte" class="ml-2 text-sm border-gray-300 focus:border-[#4dabb4] focus:ring focus:ring-[#4dabb4]/20 rounded-md" placeholder="Précisez" value="{{ old('langues_autre_texte') }}">
+        </div>
+    </div>
+</div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <!-- Mot de passe -->
@@ -140,7 +209,6 @@
                                 </div>
                             </div>
                         </div>
-
                         @if (Laravel\Jetstream\Jetstream::hasTermsAndPrivacyPolicyFeature())
                             <div>
                                 <x-label for="terms">

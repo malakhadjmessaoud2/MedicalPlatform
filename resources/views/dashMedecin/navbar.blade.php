@@ -44,102 +44,119 @@
 
 <nav class="px-4 py-1.5 flex items-center justify-between">
     <!-- Timeline Container -->
-    <div class="bg-black rounded-full flex items-center p-1.5 mx-20 flex-1">
-        <!-- Left Section -->
-        <div class="flex items-center space-x-4">
-            <span class="text-white text-sm font-medium">Votre horaire</span>
-            <button class="flex items-center space-x-2 bg-gray-800/50 rounded-full px-3 py-1">
-                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+    <div class="bg-black rounded-[30px] flex items-center p-3 mx-auto max-w-5xl w-full lg:w-3/4">
+        <!-- Left Section - Schedule Title & Date -->
+        <div class="flex items-center gap-4">
+            <span class="text-white text-base">Votre Horaire</span>
+            <button class="flex items-center gap-2 bg-black/40 rounded-full px-3 py-1.5">
+                <svg class="w-4 h-4 text-white/70" viewBox="0 0 24 24">
+                    <path fill="currentColor" d="M19,4H17V3a1,1,0,0,0-2,0V4H9V3A1,1,0,0,0,7,3V4H5A2,2,0,0,0,3,6V20a2,2,0,0,0,2,2H19a2,2,0,0,0,2-2V6A2,2,0,0,0,19,4Z"/>
                 </svg>
-                <span class="text-white text-sm">28 March</span>
+                <span class="text-white/90">28 March</span>
             </button>
         </div>
 
         <!-- Timeline Section -->
-        <div class="flex-1 mx-4">
-            <div class="bg-[#b9ff66] rounded-full px-6 py-1.5 flex items-center justify-between relative">
-                <!-- Left Consultation -->
-                <div class="bg-black/5 hover:bg-black/10 transition-colors rounded-full flex items-center p-1.5 cursor-pointer">
-                    <img src="https://randomuser.me/api/portraits/men/32.jpg" class="w-7 h-7 rounded-full object-cover" alt="Patient">
-                    <span class="text-black/80 text-sm mx-2">36 min</span>
-                    <button class="p-1 hover:bg-black/5 rounded-full">
-                        <svg class="w-4 h-4 text-black/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7-7 7M3 12h18" />
+        <div class="flex-1 mx-6">
+            <div class="bg-[#b9ff66] rounded-full flex items-center relative h-10">
+                <!-- Left Event -->
+                <div class="flex items-center gap-3 px-4">
+                    <img src="https://randomuser.me/api/portraits/men/32.jpg" class="w-7 h-7 rounded-full" alt="Patient">
+                    <span class="text-black/70">36 min</span>
+                    <button class="hover:bg-black/5 rounded-full p-1">
+                        <svg class="w-4 h-4 text-black/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                         </svg>
                     </button>
                 </div>
 
-                <!-- Séparation semi-transparente -->
-                <div class="h-6 w-px bg-black/5"></div>
-
-                <!-- Center Time -->
-                <span class="text-black/90 font-medium">2:00 pm</span>
-
-                <!-- Middle Section with White Background -->
-                <div class="bg-white rounded-full py-1.5 px-6 flex items-center gap-4 min-w-[240px]">
-
-                    <!-- Middle Avatars -->
-                    <div class=" bg-black/10 transition-colors rounded-full p-1.5 flex -space-x-2 cursor-pointer ">
-                        <img src="https://randomuser.me/api/portraits/men/33.jpg" class="w-7 h-7 rounded-full" alt="Patient 1">
-                        <img src="https://randomuser.me/api/portraits/men/34.jpg" class="w-7 h-7 rounded-full" alt="Patient 2">
+                <!-- Center Event -->
+                <div class="absolute left-1/2 -translate-x-1/2 flex items-center gap-3">
+                    <span class="text-black font-medium">2:00 pm</span>
+                    <div class="bg-white rounded-full py-1.5 px-4 flex items-center gap-4">
+                        <div class="flex -space-x-2">
+                            <img src="https://randomuser.me/api/portraits/men/33.jpg" class="w-7 h-7 rounded-full border-2 border-white" alt="Patient 1">
+                            <img src="https://randomuser.me/api/portraits/men/34.jpg" class="w-7 h-7 rounded-full border-2 border-white" alt="Patient 2">
+                        </div>
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/9/9b/Google_Meet_icon_%282020%29.svg" class="w-5 h-5" alt="Meet">
                     </div>
-                    <!-- Google Meet Button -->
-                    <button class="bg-black/5 transition-colors p-1.5 rounded-full ml-auto">
-                        <svg class="w-4 h-4 text-black/70" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-                        </svg>
-                    </button>
+                    <!-- Current Time Indicator -->
+                    <div class="absolute -top-5 left-1/2 -translate-x-1/2 flex flex-col items-center">
+                        <span class="text-xs text-white bg-black/90 rounded-full px-2 py-0.5">2:15 pm</span>
+                        <div class="w-0.5 h-2 bg-black/90 mt-0.5"></div>
+                    </div>
                 </div>
 
-                <!-- Séparation semi-transparente -->
-                <div class="h-6 w-px bg-black/5"></div>
-
-                <!-- Right Section -->
-                <div class="flex items-center space-x-3">
-                    <span class="text-black/90 font-medium">3:00 pm</span>
-                    <div class="bg-black/10 transition-colors rounded-full p-1.5 flex -space-x-2 cursor-pointer">
+                <!-- Right Event -->
+                <div class="flex items-center gap-3 px-4 ml-auto">
+                    <span class="text-black font-medium">3:00 pm</span>
+                    <div class="flex -space-x-2">
                         <img src="https://randomuser.me/api/portraits/women/32.jpg" class="w-7 h-7 rounded-full" alt="Patient 3">
                         <img src="https://randomuser.me/api/portraits/men/35.jpg" class="w-7 h-7 rounded-full" alt="Patient 4">
                     </div>
+                    <button class="hover:bg-black/5 rounded-full p-1">
+                        <svg class="w-4 h-4 text-black/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </button>
                 </div>
-
-                <!-- Arrow Button -->
-                <button class="p-1.5 hover:bg-black/5 rounded-full transition-colors">
-                    <svg class="w-4 h-4 text-black/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                    </svg>
-                </button>
             </div>
         </div>
     </div>
 
     <!-- Right Actions -->
-    <div class="flex items-center space-x-4 ml-4 mr-8">
+    <div class="flex items-center space-x-4">
         <!-- Notifications -->
-        <div class="relative">
-            <button class="w-9 h-9 rounded-full bg-[#f7f7f7] flex items-center justify-center">
-                <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="relative group">
+            <button class="w-9 h-9 rounded-full bg-white hover:bg-gray-50 flex items-center justify-center transition-colors duration-200 relative">
+                <svg class="w-4 h-4 text-gray-600 group-hover:text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
                 </svg>
+                <!-- Notification Badge -->
+                <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"></span>
             </button>
-            <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"></span>
+            <!-- Notifications Dropdown -->
+            <div class="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg py-2 hidden group-hover:block z-50">
+                <div class="px-4 py-2 border-b border-gray-100">
+                    <h3 class="text-sm font-semibold text-gray-900">Notifications</h3>
+                </div>
+                <div class="max-h-64 overflow-y-auto">
+                    <!-- Notifications List -->
+                    <div class="px-4 py-2 hover:bg-gray-50 cursor-pointer">
+                        <p class="text-sm text-gray-600">Nouveau rendez-vous confirmé</p>
+                        <p class="text-xs text-gray-400">Il y a 5 minutes</p>
+                    </div>
+                </div>
+                <div class="px-4 py-2 border-t border-gray-100">
+                    <a href="#" class="text-xs text-blue-600 hover:text-blue-800">Voir toutes les notifications</a>
+                </div>
+            </div>
         </div>
 
         <!-- Profile Dropdown -->
         <div class="relative" x-data="{ open: false }">
-            <button @click="open = !open" class="flex items-center space-x-2 focus:outline-none">
-                <div class="w-9 h-9 rounded-full overflow-hidden">
+            <button @click="open = !open"
+                    class="flex items-center space-x-3 bg-white hover:bg-gray-50 rounded-full py-1.5 px-3 transition-colors duration-200 focus:outline-none">
+                <!-- Profile Photo -->
+                <div class="w-8 h-8 rounded-full overflow-hidden ring-2 ring-gray-100">
                     @if(Auth::user()->profile_photo_path)
-                        <img src="{{ Storage::url(Auth::user()->profile_photo_path) }}" alt="{{ Auth::user()->name }}" class="w-full h-full object-cover">
+                        <img src="{{ Storage::url(Auth::user()->profile_photo_path) }}"
+                             alt="{{ Auth::user()->name }}"
+                             class="w-full h-full object-cover">
                     @else
-                        <div class="w-full h-full flex items-center justify-center bg-gray-300 text-gray-600">
+                        <div class="w-full h-full flex items-center justify-center bg-[#b9ff66] text-black font-medium">
                             {{ substr(Auth::user()->name, 0, 1) }}
                         </div>
                     @endif
                 </div>
-                <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                <!-- User Info - Visible on larger screens -->
+                <div class="hidden sm:block text-left">
+                    <p class="text-sm font-medium text-gray-700">{{ Auth::user()->name }}</p>
+                    <p class="text-xs text-gray-500">Médecin</p>
+                </div>
+                <!-- Dropdown Arrow -->
+                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                 </svg>
             </button>
 
@@ -152,32 +169,44 @@
                  x-transition:leave="transition ease-in duration-75"
                  x-transition:leave-start="transform opacity-100 scale-100"
                  x-transition:leave-end="transform opacity-0 scale-95"
-                 class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                 class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg py-2 z-50">
 
                 <!-- Account Management -->
-                <div class="block px-4 py-2 text-xs text-gray-400">
-                    {{ __('Gestion du compte') }}
+                <div class="px-4 py-2 border-b border-gray-100">
+                    <p class="text-xs font-medium text-gray-400">COMPTE</p>
                 </div>
 
-                <x-dropdown-link href="{{ route('profile.show') }}">
-                    {{ __('Profil') }}
-                </x-dropdown-link>
+                <a href="{{ route('profile.show') }}"
+                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2">
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                    <span>{{ __('Profil') }}</span>
+                </a>
 
                 @if (Laravel\Jetstream\Jetstream::hasApiFeatures())
-                    <x-dropdown-link href="{{ route('api-tokens.index') }}">
-                        {{ __('API Tokens') }}
-                    </x-dropdown-link>
+                    <a href="{{ route('api-tokens.index') }}"
+                       class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2">
+                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                        </svg>
+                        <span>{{ __('API Tokens') }}</span>
+                    </a>
                 @endif
 
-                <div class="border-t border-gray-100"></div>
+                <div class="border-t border-gray-100 my-1"></div>
 
-                <!-- Authentication -->
+                <!-- Logout -->
                 <form method="POST" action="{{ route('logout') }}" x-data>
                     @csrf
-                    <x-dropdown-link href="{{ route('logout') }}"
-                             @click.prevent="$root.submit();">
-                        {{ __('Déconnexion') }}
-                    </x-dropdown-link>
+                    <button type="submit"
+                            class="w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2"
+                            @click.prevent="$root.submit();">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                        </svg>
+                        <span>{{ __('Déconnexion') }}</span>
+                    </button>
                 </form>
             </div>
         </div>
