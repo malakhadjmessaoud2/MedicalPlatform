@@ -64,8 +64,8 @@ return [
     | is set to "UTC" by default as it is suitable for most use cases.
     |
     */
-
     'timezone' => 'Africa/Tunis',
+    // 'timezone' => env('APP_TIMEZONE', 'Africa/Tunis'),
 
     /*
     |--------------------------------------------------------------------------

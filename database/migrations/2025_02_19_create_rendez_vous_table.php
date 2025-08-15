@@ -19,6 +19,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->string('titre');
             $table->string('statut');
+            $table->string('lien_en_ligne')->nullable();
             $table->timestamps();
         });
     }

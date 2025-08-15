@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Workspace</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="medecin-id" content="{{ Auth::user()->medecin->id ?? '' }}">
+    <meta name="pusher-key" content="{{ config('broadcasting.connections.pusher.key') }}">
+    <meta name="pusher-cluster" content="{{ config('broadcasting.connections.pusher.options.cluster') }}">
 
     <!-- Suppression des CDN FullCalendar car nous utilisons les modules npm -->
     @yield('styles')
@@ -19,7 +22,7 @@
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
     <!-- Vite doit être chargé avant tout script qui utilise les modules importés -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/realtime.js'])
 </head>
 <body class="bg-[#e4e4e4] font-sans">
     <div class="flex h-screen">

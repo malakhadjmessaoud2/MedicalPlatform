@@ -21,7 +21,8 @@ class RendezVous extends Model
         'description',
         'type',
         'statut',
-        'family_info'
+        'family_info',
+        'lien_en_ligne'
     ];
 
     protected $casts = [

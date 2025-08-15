@@ -10,9 +10,18 @@ use Illuminate\Support\Facades\Log;
 use App\Models\Patient;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use Illuminate\Validation\ValidationException;
+use App\Services\ConsultationService;
 
 class RendezVousController extends Controller
 {
+    protected $consultationService;
+
+    public function __construct(ConsultationService $consultationService)
+    {
+        $this->consultationService = $consultationService;
+    }
+
     /**
      * Affiche la page d'agenda avec les rendez-vous
      */
@@ -192,55 +201,223 @@ class RendezVousController extends Controller
             ], 500);
         }
     }
+    public function patientRendezVousStore(Request $request)
+    {
+        // Log pour le débogage
+        Log::info('Données reçues pour création de RDV par patient:', $request->all());
 
+        try {
+            $user = Auth::user();
+            $patient = $user->patient;
+
+            if (!$patient) {
+                return redirect()->route('dashboard')->with('error', 'Profil patient non trouvé');
+            }
+
+            // Validation robuste des données du formulaire
+            $validated = $request->validate([
+                'medecin_id' => 'required|exists:medecins,id',
+                'date_rdv' => 'required|date|after_or_equal:today',
+                'heure_debut' => 'required',
+                'type' => 'required|in:consultation,suivi,urgent',
+                'description' => 'required|string|min:10',
+                'specialite' => 'required|string',
+            ]);
+
+            // Construction des dates avec le bon fuseau horaire
+            $dateDebut = Carbon::createFromFormat('Y-m-d H:i', $validated['date_rdv'] . ' ' . $validated['heure_debut'], 'Africa/Tunis');
+            $dateFin = (clone $dateDebut)->addMinutes(30);
+
+            // Création du rendez-vous en utilisant la méthode `create`
+            $rdv = RendezVous::create([
+                'patient_id' => $patient->id,
+                'medecin_id' => $validated['medecin_id'],
+                'date_debut' => $dateDebut,
+                'date_fin' => $dateFin,
+                'type' => $validated['type'],
+                'description' => $validated['description'],
+                'statut' => 'en_attente',
+                'titre' => 'Rendez-vous de type ' . $validated['type'],
+            ]);
+
+            Log::info('Rendez-vous créé avec succès.', ['id' => $rdv->id]);
+
+            // Redirection vers la liste des rendez-vous avec un message de succès
+            return redirect()->route('patient.rendez-vous.index')
+                             ->with('success', 'Votre demande de rendez-vous a été envoyée avec succès !');
+
+        } catch (ValidationException $e) {
+            // En cas d'erreur de validation, on logue et on redirige avec les erreurs
+            Log::error('Erreur de validation lors de la création du RDV patient:', [
+                'errors' => $e->errors(),
+                'input' => $request->all()
+            ]);
+            return redirect()->back()
+                ->withErrors($e->errors())
+                ->withInput();
+
+        } catch (\Exception $e) {
+            // Pour toute autre erreur, on logue et on affiche un message générique
+            Log::error('Exception générale lors de la création du RDV patient:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'input' => $request->all()
+            ]);
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Une erreur technique est survenue. Veuillez réessayer plus tard.');
+        }
+    }
     /**
      * Enregistre un nouveau rendez-vous
      */
     public function store(Request $request)
     {
+        // Logging pour le débogage
+        Log::info('Données de la requête pour la création de rendez-vous', $request->all());
+
         try {
-            // Valider les données
-            $validated = $request->validate([
-                'medecin_id' => 'required|exists:medecins,id',
-                'date_rdv' => 'required|date|after_or_equal:today',
-                'heure_debut' => 'required',
-                'description' => 'required|string|min:10',
-                'type' => 'required|in:consultation,suivi,urgent',
-            ]);
+            // Vérifier si la requête vient du dashboard médecin ou patient
+            $user = Auth::user();
+            $isPatient = $user->patient !== null;
+            $isMedecin = $user->medecin !== null;
 
-            // Récupérer le patient connecté
-            $patient = Auth::user()->patient;
-            if (!$patient) {
-                throw new \Exception('Profil patient non trouvé');
-            }
+            if ($isPatient) {
+                // Validation pour le dashboard patient
+                $validated = $request->validate([
+                    'medecin_id' => 'required|exists:medecins,id',
+                    'date_rdv' => 'required|date|after_or_equal:today',
+                    'heure_debut' => 'required',
+                    'description' => 'required|string|min:10',
+                    'type' => 'required|in:consultation,suivi,urgent',
+                ]);
 
-            // Créer la date de début sans conversion de fuseau horaire
-            $dateDebut = Carbon::parse($validated['date_rdv'] . ' ' . $validated['heure_debut']);
-            $dateFin = $dateDebut->copy()->addMinutes(30);
+                // Récupérer le patient connecté
+                $patient = $user->patient;
+                if (!$patient) {
+                    throw new \Exception('Profil patient non trouvé');
+                }
+
+                // Créer la date de début avec le fuseau horaire de Tunis
+                $dateDebut = Carbon::createFromFormat('Y-m-d H:i',
+                    $validated['date_rdv'] . ' ' . $validated['heure_debut'],
+                    'Africa/Tunis');
+
+                // Calculer la date de fin (ajouter 30 minutes par défaut)
+                $dateFin = (clone $dateDebut)->addMinutes(30);
 
             // Créer le rendez-vous
             $rendezVous = RendezVous::create([
-                'medecin_id' => $validated['medecin_id'],
-                'patient_id' => $patient->id,
-                'titre' => ucfirst($validated['type']) . ' - ' . $patient->nom . ' ' . $patient->prenom,
+                    'medecin_id' => $validated['medecin_id'],
+                    'patient_id' => $patient->id,
+                    'titre' => ucfirst($validated['type']) . ' - ' . $patient->nom . ' ' . $patient->prenom,
+                    'date_debut' => $dateDebut,
+                    'date_fin' => $dateFin,
+                    'description' => $validated['description'],
+                    'type' => $validated['type'],
+                    'statut' => 'en_attente'
+                ]);
+
+            // Générer le lien de consultation après la création
+            $lienConsultation = $this->consultationService->creerOuRecupererLien($rendezVous);
+
+            } else if ($isMedecin) {
+                // Validation pour le dashboard médecin
+                $validated = $request->validate([
+                    'patient_id' => 'required|exists:patients,id',
+                    'titre' => 'required|string|max:255',
+                    'date_debut' => 'required|date',
+                    'heure_debut' => 'required',
+                    'duree' => 'required|integer|min:15',
+                    'type' => 'required|string',
+                    'statut' => 'required|string',
+                    'description' => 'nullable|string',
+                ]);
+
+                // Convertir explicitement la durée en entier
+                $duree = (int) $validated['duree'];
+                // Récupérer l'ID du médecin connecté
+                $medecin = $user->medecin;
+                if (!$medecin) {
+                    throw new \Exception('Profil médecin non trouvé pour cet utilisateur.');
+                }
+
+                // Création de l'objet DateTime pour la date de début
+                $dateDebut = Carbon::createFromFormat('Y-m-d H:i',
+                    $validated['date_debut'] . ' ' . $validated['heure_debut'],
+                    'Africa/Tunis');
+
+                // Calcul de la date de fin avec la durée explicitement convertie en entier
+                $dateFin = (clone $dateDebut)->addMinutes($duree);
+
+                // Création du rendez-vous
+                $rendezVous = RendezVous::create([
+                    'medecin_id' => $medecin->id,
+                'patient_id' => $validated['patient_id'],
+                'titre' => $validated['titre'],
                 'date_debut' => $dateDebut,
                 'date_fin' => $dateFin,
-                'description' => $validated['description'],
                 'type' => $validated['type'],
-                'statut' => 'en_attente'
+                'statut' => $validated['statut'],
+                    'description' => $validated['description'] ?? null,
+                ]);
+            } else {
+                throw new \Exception('Profil utilisateur non autorisé');
+            }
+
+            // Diffuser l'événement pour les mises à jour en temps réel
+            broadcast(new RendezVousModifie($rendezVous, 'created'));
+
+            // Réponse JSON si la requête attend du JSON
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Rendez-vous créé avec succès',
+                    'rendezvous' => $rendezVous
+                ]);
+            }
+
+            // Redirection en fonction du type d'utilisateur
+            if ($isPatient) {
+                return redirect()->route('patient.rendez-vous.index')
+                    ->with('success', 'Votre rendez-vous a été créé avec succès et est en attente de confirmation par le médecin.');
+            } else {
+                return redirect()->route('medecin.agenda')
+                    ->with('success', 'Le rendez-vous a été créé avec succès');
+            }
+
+        } catch (ValidationException $e) {
+            Log::error('Erreur de validation lors de la création de rendez-vous', [
+                'errors' => $e->errors()
             ]);
 
-            // Émettre l'événement pour mettre à jour le calendrier du médecin
-            broadcast(new RendezVousModifie($rendezVous, 'created'))->toOthers();
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'error' => 'Erreur de validation',
+                    'messages' => $e->errors()
+                ], 422);
+            }
 
-            return redirect()->route('patient.rendez-vous.index')
-                ->with('success', 'Votre rendez-vous a été créé avec succès et est en attente de confirmation par le médecin.');
+            return redirect()->back()
+                ->withErrors($e->errors())
+                ->withInput();
 
         } catch (\Exception $e) {
-            Log::error('Erreur lors de la création du rendez-vous: ' . $e->getMessage());
+            Log::error('Exception lors de la création de rendez-vous', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'error' => 'Une erreur est survenue lors de la création du rendez-vous',
+                    'message' => $e->getMessage()
+                ], 500);
+            }
+
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Une erreur est survenue lors de la création du rendez-vous: ' . $e->getMessage());
+                ->withErrors(['error' => 'Une erreur est survenue lors de la création du rendez-vous: ' . $e->getMessage()]);
         }
     }
 
@@ -277,11 +454,25 @@ class RendezVousController extends Controller
 
             // Si la requête vient d'un drag & drop ou resize dans le calendrier
             if ($request->has('start') && $request->has('end')) {
-                $start = Carbon::parse($request->input('start'));
-                $end = Carbon::parse($request->input('end'));
+                // Corriger le décalage horaire en utilisant le fuseau horaire de Tunis explicitement
+                // Lors du drag & drop, FullCalendar envoie des dates UTC ou dans le fuseau horaire local du navigateur
+                $start = Carbon::parse($request->input('start'))->timezone('Africa/Tunis');
+                $end = Carbon::parse($request->input('end'))->timezone('Africa/Tunis');
 
-                $rendezVous->date_debut = $start;
-                $rendezVous->date_fin = $end;
+                // Convertir en UTC pour le stockage en base de données
+                $rendezVous->date_debut = $start->setTimezone('UTC');
+                $rendezVous->date_fin = $end->setTimezone('UTC');
+
+                Log::info('Mise à jour de rendez-vous par drag & drop', [
+                    'id' => $rendezVous->id,
+                    'date_debut_reçue' => $request->input('start'),
+                    'date_fin_reçue' => $request->input('end'),
+                    'date_debut_parsée' => $start->format('Y-m-d H:i:s'),
+                    'date_fin_parsée' => $end->format('Y-m-d H:i:s'),
+                    'date_debut_UTC' => $rendezVous->date_debut,
+                    'date_fin_UTC' => $rendezVous->date_fin
+                ]);
+
                 $rendezVous->save();
 
                 // Diffuser l'événement
@@ -485,7 +676,8 @@ class RendezVousController extends Controller
                         'experience' => $medecin->experience,
                         'langues' => $medecin->langues_array,
                         'score' => $medecin->score,
-                        'profile_photo_url' => $medecin->user ? $medecin->user->profile_photo_url : null
+                        'profile_photo_url' => $medecin->user ? $medecin->user->profile_photo_url : null,
+                        'formation' => $medecin->formation,
                     ];
                 });
 
@@ -588,16 +780,31 @@ class RendezVousController extends Controller
                 return redirect()->route('dashboard')->with('error', 'Profil patient non trouvé');
             }
 
-            // Récupérer le prochain rendez-vous
-            $prochainRendezVous = RendezVous::with('medecin')
+            // Créer le service de consultation
+            $consultationService = app(\App\Services\ConsultationService::class);
+
+            // Récupérer tous les rendez-vous confirmés (pour permettre le filtrage dans la vue)
+            // Chaque section de la vue applique sa propre logique de filtrage :
+            // - "Prochains rendez-vous" : jusqu'à la date de début
+            // - "Consultations en ligne" : jusqu'à la date de fin
+            // - "Rendez-vous terminés de ce jour" : terminés aujourd'hui
+            $prochainsRendezVous = RendezVous::with('medecin.user')
                 ->where('patient_id', $patient->id)
-                ->where('date_debut', '>=', now())
-                ->where('statut', '!=', 'annulé')
+                ->where('statut', 'confirmé')
                 ->orderBy('date_debut', 'asc')
-                ->first();
+                ->get();
+
+            // Générer les liens de consultation pour chaque rendez-vous
+            foreach ($prochainsRendezVous as $rdv) {
+                // Générer le lien s'il n'existe pas déjà
+                if (!$rdv->lien_en_ligne) {
+                    $lien = $consultationService->creerOuRecupererLien($rdv);
+                    $rdv->lien_en_ligne = $lien;
+                }
+            }
 
             // Récupérer les rendez-vous en attente
-            $rendezVousEnAttente = RendezVous::with('medecin')
+            $rendezVousEnAttente = RendezVous::with('medecin.user')
                 ->where('patient_id', $patient->id)
                 ->where('date_debut', '>=', now())
                 ->where('statut', 'en_attente')
@@ -605,7 +812,7 @@ class RendezVousController extends Controller
                 ->get();
 
             // Récupérer l'historique des rendez-vous
-            $historiqueRendezVous = RendezVous::with('medecin')
+            $historiqueRendezVous = RendezVous::with('medecin.user')
                 ->where('patient_id', $patient->id)
                 ->where(function($query) {
                     $query->where('date_debut', '<', now())
@@ -615,7 +822,7 @@ class RendezVousController extends Controller
                 ->paginate(5);
 
             return view('dashPatient.RendezVous.index', compact(
-                'prochainRendezVous',
+                'prochainsRendezVous',
                 'rendezVousEnAttente',
                 'historiqueRendezVous'
             ));
@@ -663,12 +870,146 @@ class RendezVousController extends Controller
                 'experience' => $medecin->experience,
                 'langues' => $medecin->langues_array,
                 'score' => $medecin->score,
-                'profile_photo_url' => $medecin->user ? $medecin->user->profile_photo_url : null
+                'user' => $medecin->user ? [
+                    'profile_photo_path' => $medecin->user->profile_photo_path,
+                ] : null,
+                'formation' => $medecin->formation
             ]);
         } catch (\Exception $e) {
             Log::error('Erreur lors de la récupération des détails du médecin: ' . $e->getMessage());
             return response()->json([
                 'error' => 'Erreur lors de la récupération des détails du médecin'
+            ], 500);
+        }
+    }
+
+    /**
+     * Récupère les sections HTML du dashboard patient pour les mises à jour AJAX
+     */
+    public function getPatientDashboardSections()
+    {
+        try {
+            $user = Auth::user();
+            $patient = $user->patient;
+
+            if (!$patient) {
+                return response()->json([
+                    'error' => 'Profil patient non trouvé'
+                ], 404);
+            }
+
+            // Récupérer le prochain rendez-vous
+            $prochainRendezVous = RendezVous::with('medecin')
+                ->where('patient_id', $patient->id)
+                ->where('date_debut', '>=', now())
+                ->where('statut', '!=', 'annulé')
+                ->orderBy('date_debut', 'asc')
+                ->first();
+
+            // Récupérer les rendez-vous en attente
+            $rendezVousEnAttente = RendezVous::with('medecin')
+                ->where('patient_id', $patient->id)
+                ->where('date_debut', '>=', now())
+                ->where('statut', 'en_attente')
+                ->orderBy('date_debut', 'asc')
+                ->get();
+
+            // Récupérer l'historique des rendez-vous
+            $historiqueRendezVous = RendezVous::with('medecin')
+                ->where('patient_id', $patient->id)
+                ->where(function($query) {
+                    $query->where('date_debut', '<', now())
+                        ->orWhere('statut', 'annulé');
+                })
+                ->orderBy('date_debut', 'desc')
+                ->paginate(5);
+
+            // Générer le HTML pour chaque section
+            $prochainRdvHtml = view('dashPatient.RendezVous._prochain_rdv', compact('prochainRendezVous'))->render();
+            $rdvEnAttenteHtml = view('dashPatient.RendezVous._rdv_en_attente', compact('rendezVousEnAttente'))->render();
+            $historiqueRdvHtml = view('dashPatient.RendezVous._historique_rdv', compact('historiqueRendezVous'))->render();
+
+            return response()->json([
+                'prochainRdv' => '<div class="mb-8" id="prochain-rdv">' . $prochainRdvHtml . '</div>',
+                'rdvEnAttente' => '<div class="mb-8" id="rdv-en-attente">' . $rdvEnAttenteHtml . '</div>',
+                'historiqueRdv' => '<div id="historique-rdv">' . $historiqueRdvHtml . '</div>'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de la récupération des sections: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Erreur lors de la récupération des sections de rendez-vous: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Affiche le formulaire de création de rendez-vous pour le patient
+     */
+    public function patientRendezVousCreate()
+    {
+        try {
+            $user = Auth::user();
+            $patient = $user->patient;
+
+            if (!$patient) {
+                return redirect()->route('dashboard')->with('error', 'Profil patient non trouvé');
+            }
+
+            return view('dashPatient.RendezVous.create');
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de l\'affichage du formulaire de création: ' . $e->getMessage());
+            return redirect()->route('patient.rendez-vous.index')->with('error', 'Erreur lors du chargement du formulaire');
+        }
+    }
+
+    /**
+     * Crée le lien de consultation pour un rendez-vous
+     */
+    public function creerLienConsultation(RendezVous $rendezVous)
+    {
+        try {
+            // Vérifier que l'utilisateur est autorisé
+            $user = Auth::user();
+            $medecin = $user->medecin;
+
+            if (!$medecin || $rendezVous->medecin_id !== $medecin->id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Vous n\'êtes pas autorisé à créer un lien pour ce rendez-vous'
+                ], 403);
+            }
+
+            // Vérifier que le rendez-vous est confirmé
+            if ($rendezVous->statut !== 'confirmé') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Le rendez-vous doit être confirmé pour créer un lien de consultation'
+                ], 400);
+            }
+
+            // Vérifier que la consultation peut commencer
+            if (!$this->consultationService->consultationPeutCommencer($rendezVous)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'La consultation ne peut pas encore commencer'
+                ], 400);
+            }
+
+            // Créer ou récupérer le lien de consultation
+            $lienConsultation = $this->consultationService->creerOuRecupererLien($rendezVous);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Lien de consultation créé avec succès',
+                'lien_consultation' => $lienConsultation,
+                'consultation_en_cours' => $this->consultationService->consultationEnCours($rendezVous)
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de la création du lien de consultation: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la création du lien de consultation'
             ], 500);
         }
     }

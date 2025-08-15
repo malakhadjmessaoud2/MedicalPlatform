@@ -1,25 +1,6 @@
 @extends('dashMedecin.layout')
 
 @section('content')
-{{-- <div class="container">
-    <h1>Créneaux disponibles pour le Dr. {{ $medecin->nom }} {{ $medecin->prenom }}</h1>
-    <form action="{{ route('medecin.creneaux-disponibles', $medecin) }}" method="GET">
-        <label for="date">Sélectionnez une date :</label>
-        <input type="date" name="date" id="date" value="{{ $selectedDate ?? '' }}">
-        <button type="submit">Voir les créneaux</button>
-    </form>
-
-    @if(isset($creneauxDisponibles))
-        <h2>Créneaux disponibles le {{ $selectedDate }}</h2>
-        <ul>
-            @foreach($creneauxDisponibles as $creneau)
-                <li>{{ $creneau['heure_debut'] }} - {{ $creneau['heure_fin'] }}</li>
-            @endforeach
-        </ul>
-    @else
-        <p>Aucun créneau disponible pour cette date.</p>
-    @endif
-</div> --}}
 <div class="container mx-auto px-4 py-8">
     <div class="flex flex-col md:flex-row justify-between items-start mb-6 gap-4">
         <div>
@@ -306,7 +287,7 @@
                         <div>
                             <p class="text-sm text-gray-500">Date et heure</p>
                             <p class="font-medium">
-                                {{ Carbon\Carbon::parse($rdv->date_debut)->format('d/m/Y') }}<br>
+                                {{ Carbon\Carbon::parse($rdv->date_debut)->translatedFormat('d F Y') }}<br>
                                 {{ Carbon\Carbon::parse($rdv->date_debut)->format('H:i') }} -
                                 {{ Carbon\Carbon::parse($rdv->date_fin)->format('H:i') }}
                             </p>
@@ -494,6 +475,13 @@
 
 @push('scripts')
 <script>
+    function openAddRdvModal() {
+        const modal = document.getElementById('modal-add-rdv');
+        if (modal) {
+            modal.classList.remove('hidden');
+        }
+    }
+
     // Initialisation du mini-calendrier
     document.addEventListener('DOMContentLoaded', function() {
         const miniCalendarEl = document.getElementById('mini-calendar');
@@ -529,37 +517,6 @@
                 miniCalendarEl.classList.toggle('hidden');
             });
         }
-    });
-
-    document.addEventListener('DOMContentLoaded', function() {
-        var calendarEl = document.getElementById('calendar');
-        var calendar = new FullCalendar.Calendar(calendarEl, {
-            initialView: 'timeGridWeek',
-            timeZone: 'Africa/Tunis',
-            locale: frLocale,
-            headerToolbar: {
-                left: 'prev,next today',
-                center: 'title',
-                right: 'dayGridMonth,timeGridWeek,timeGridDay'
-            },
-            slotMinTime: '08:00:00',
-            slotMaxTime: '19:00:00',
-            allDaySlot: false,
-            slotDuration: '00:30:00',
-            eventTimeFormat: {
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: false
-            },
-            events: '/api/evenements',
-            eventDidMount: function(info) {
-                info.el.title = info.event.title + '\n' +
-                               info.event.extendedProps.heure_debut + ' - ' +
-                               info.event.extendedProps.heure_fin;
-            }
-        });
-
-        calendar.render();
     });
 </script>
 @endpush

@@ -71,12 +71,8 @@
                     <div class="relative bg-white rounded-2xl p-6 transition-all duration-300 hover:shadow-xl border border-gray-100 hover:border-[#b9ff66]">
                         <div class="flex items-center gap-4">
                             <div class="w-16 h-16 rounded-xl bg-[#b9ff66]/10 flex items-center justify-center">
-                                <svg class="w-8 h-8 text-[#92cc52]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
-                                    <circle cx="9" cy="7" r="4"></circle>
-                                    <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
-                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                                </svg>
+                                <!-- Icone famille -->
+                                <svg class="w-8 h-8 text-[#92cc52]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M5.5 21v-2a4.5 4.5 0 019 0v2"/><path d="M17 21v-2a4 4 0 00-3-3.87"/><path d="M7 21v-2a4 4 0 013-3.87"/></svg>
                             </div>
                             <div>
                                 <h3 class="text-xl font-semibold">Médecin de famille</h3>
@@ -91,11 +87,8 @@
                     <div class="relative bg-white rounded-2xl p-6 transition-all duration-300 hover:shadow-xl border border-gray-100 hover:border-[#b9ff66]">
                         <div class="flex items-center gap-4">
                             <div class="w-16 h-16 rounded-xl bg-[#b9ff66]/10 flex items-center justify-center">
-                                <svg class="w-8 h-8 text-[#92cc52]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"></path>
-                                    <path d="M8 15v1a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6v-4"></path>
-                                    <circle cx="20" cy="10" r="2"></circle>
-                                </svg>
+                                <!-- Icone stéthoscope -->
+                                <svg class="w-8 h-8 text-[#92cc52]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 3v6a6 6 0 0012 0V3"/><circle cx="6" cy="3" r="2"/><circle cx="18" cy="3" r="2"/><path d="M12 17v4m0 0h4m-4 0H8"/></svg>
                             </div>
                             <div>
                                 <h3 class="text-xl font-semibold">Généraliste</h3>
@@ -110,13 +103,8 @@
                     <div class="relative bg-white rounded-2xl p-6 transition-all duration-300 hover:shadow-xl border border-gray-100 hover:border-[#b9ff66]">
                         <div class="flex items-center gap-4">
                             <div class="w-16 h-16 rounded-xl bg-[#b9ff66]/10 flex items-center justify-center">
-                                <svg class="w-8 h-8 text-[#92cc52]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <circle cx="12" cy="12" r="10"></circle>
-                                    <path d="M12 18.5c-1.2-1.7-2-3.3-2-5.5 0-3.9 2.7-7 6-7 1 0 1.8.6 2.5 1.5"></path>
-                                    <path d="M8 19c-2.8-.5-5-3-5-6 0-2.3 1.8-4 4-4 .3 0 .6 0 .9.1"></path>
-                                    <path d="M12 18.5c1.2-1.7 2-3.3 2-5.5 0-3.9-2.7-7-6-7-1 0-1.8.6-2.5 1.5"></path>
-                                    <path d="M16 19c2.8-.5 5-3 5-6 0-2.3-1.8-4-4-4-.3 0-.6 0-.9.1"></path>
-                                </svg>
+                                <!-- Icone cerveau -->
+                                <svg class="w-8 h-8 text-[#92cc52]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15.5 7A2.5 2.5 0 0013 4.5V4a2 2 0 00-4 0v.5A2.5 2.5 0 005.5 7a2.5 2.5 0 000 5c0 1.38 1.12 2.5 2.5 2.5h8c1.38 0 2.5-1.12 2.5-2.5a2.5 2.5 0 000-5z"/></svg>
                             </div>
                             <div>
                                 <h3 class="text-xl font-semibold">Psychiatrie</h3>
@@ -131,12 +119,8 @@
                     <div class="relative bg-white rounded-2xl p-6 transition-all duration-300 hover:shadow-xl border border-gray-100 hover:border-[#b9ff66]">
                         <div class="flex items-center gap-4">
                             <div class="w-16 h-16 rounded-xl bg-[#b9ff66]/10 flex items-center justify-center">
-                                <svg class="w-8 h-8 text-[#92cc52]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M9 12h6"></path>
-                                    <path d="M12 9v6"></path>
-                                    <path d="M10 16c0 2.5-4 2.5-4 0V8.5C6 7.5 7 6 9 6h6c2 0 3 1.5 3 2.5V16c0 2.5-4 2.5-4 0"></path>
-                                    <path d="M8 22c0-5 8-5 8 0"></path>
-                                </svg>
+                                <!-- Icone enfant -->
+                                <svg class="w-8 h-8 text-[#92cc52]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0112 0v2"/></svg>
                             </div>
                             <div>
                                 <h3 class="text-xl font-semibold">Pédiatrie</h3>
@@ -151,13 +135,8 @@
                     <div class="relative bg-white rounded-2xl p-6 transition-all duration-300 hover:shadow-xl border border-gray-100 hover:border-[#b9ff66]">
                         <div class="flex items-center gap-4">
                             <div class="w-16 h-16 rounded-xl bg-[#b9ff66]/10 flex items-center justify-center">
-                                <svg class="w-8 h-8 text-[#92cc52]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M12 12a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z"></path>
-                                    <path d="M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"></path>
-                                    <path d="M12 20v-4"></path>
-                                    <path d="M4 20v-4"></path>
-                                    <path d="M20 20v-4"></path>
-                                </svg>
+                                <!-- Icone pomme -->
+                                <svg class="w-8 h-8 text-[#92cc52]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 13a4 4 0 01-8 0c0-2.21 1.79-4 4-4s4 1.79 4 4z"/><path d="M12 9V3m0 0a3 3 0 013 3"/></svg>
                             </div>
                             <div>
                                 <h3 class="text-xl font-semibold">Nutrition</h3>
@@ -328,32 +307,6 @@
             </div>
         </div>
 
-        <!-- Dans l'étape de sélection de la date et heure -->
-        <div id="step2" class="hidden">
-            <h3 class="text-lg font-semibold mb-4">Choisissez une date et un créneau</h3>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Sélection de la date -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Date du rendez-vous</label>
-                    <input type="date"
-                           id="date_rdv"
-                           name="date_debut"
-                           class="w-full rounded-lg border-gray-300 focus:border-[#b9ff66] focus:ring focus:ring-[#b9ff66] focus:ring-opacity-50"
-                           min="{{ date('Y-m-d') }}"
-                           onchange="chargerCreneauxDisponibles()">
-                </div>
-
-                <!-- Affichage des créneaux disponibles -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Créneaux disponibles</label>
-                    <div id="creneaux-container" class="grid grid-cols-2 gap-2">
-                        <!-- Les créneaux seront injectés ici dynamiquement -->
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- Navigation buttons -->
         <div class="flex justify-between mt-8">
             <button id="prevBtn" class="px-6 py-2.5 text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors hidden" onclick="goToPreviousStep()">
@@ -370,60 +323,15 @@
         <div class="bg-white rounded-2xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-start mb-4">
                 <h3 class="text-xl font-bold">Fiche détaillée du médecin</h3>
-                <button onclick="closeDoctorDetails()" class="p-2 hover:bg-gray-100 rounded-full">
+                <button type="button" onclick="closeDoctorDetails()" class="p-2 hover:bg-gray-100 rounded-full" id="closeDoctorModalBtn">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
                 </button>
             </div>
-            <!-- Contenu de la fiche détaillée -->
-            <div class="space-y-6">
-                <!-- Info médecin -->
-                <div class="flex items-start gap-4">
-                    <img src="https://randomuser.me/api/portraits/men/1.jpg" alt="Dr. Foulen" class="w-24 h-24 rounded-xl object-cover">
-                    <div>
-                        <h4 class="text-xl font-semibold">Dr. Foulen Ben Foulen</h4>
-                        <p class="text-[#b9ff66] font-medium">Cardiologue</p>
-                        <div class="flex items-center gap-2 mt-1">
-                            <div class="flex text-yellow-400">⭐⭐⭐⭐⭐</div>
-                            <span class="text-sm text-gray-500">(150 avis)</span>
-                        </div>
-                        <p class="text-sm text-gray-600 mt-2">15 ans d'expérience</p>
-                    </div>
-                </div>
-
-                <!-- Détails pratiques -->
-                <div class="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-xl">
-                    <div>
-                        <h5 class="font-medium mb-2">Adresse du cabinet</h5>
-                        <p class="text-sm text-gray-600">123 Rue Example, La Marsa, Tunis</p>
-                    </div>
-                    <div>
-                        <h5 class="font-medium mb-2">Tarifs</h5>
-                        <p class="text-sm text-gray-600">Consultation: 80 TND</p>
-                        <p class="text-sm text-gray-600">Consultation en ligne: 60 TND</p>
-                    </div>
-                </div>
-
-                <!-- Formation et expérience -->
-                <div>
-                    <h5 class="font-medium mb-2">Formation et expérience</h5>
-                    <ul class="space-y-2 text-sm text-gray-600">
-                        <li>• Doctorat en médecine - Faculté de Médecine de Tunis (2005)</li>
-                        <li>• Spécialisation en cardiologie - Hôpital La Rabta (2010)</li>
-                        <li>• Chef de service cardiologie - Clinique Example (2015-2020)</li>
-                    </ul>
-                </div>
-
-                <!-- Langues parlées -->
-                <div>
-                    <h5 class="font-medium mb-2">Langues parlées</h5>
-                    <div class="flex gap-2">
-                        <span class="px-3 py-1 bg-gray-100 rounded-full text-sm">Arabe</span>
-                        <span class="px-3 py-1 bg-gray-100 rounded-full text-sm">Français</span>
-                        <span class="px-3 py-1 bg-gray-100 rounded-full text-sm">Anglais</span>
-                    </div>
-                </div>
+            <!-- Contenu dynamique de la fiche détaillée -->
+            <div class="space-y-6" id="doctorModalContent">
+                <!-- Le contenu sera injecté dynamiquement par JS -->
             </div>
         </div>
     </div>
@@ -453,6 +361,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Gestion du formulaire famille
     setupFamilyForm();
 
+    // Charger le nombre de médecins pour chaque spécialité
+    loadMedecinCounts();
+
     setTimeout(() => {
         isInitialLoad = false;
     }, 500);
@@ -481,7 +392,7 @@ function handleSpecialitySelection(selectedCard, allCards) {
     allCards.forEach(c => {
         const border = c.querySelector('.border');
         if (border) {
-            border.classList.remove('border-[#b9ff66]');
+            border.classList.remove('border-[#b9ff66]', 'shadow-lg');
             border.classList.add('border-gray-100');
         }
     });
@@ -490,11 +401,14 @@ function handleSpecialitySelection(selectedCard, allCards) {
     const selectedBorder = selectedCard.querySelector('.border');
     if (selectedBorder) {
         selectedBorder.classList.remove('border-gray-100');
-        selectedBorder.classList.add('border-[#b9ff66]');
+        selectedBorder.classList.add('border-[#b9ff66]', 'shadow-lg');
     }
 
-    // Mettre à jour la spécialité sélectionnée
+    // Mettre à jour la spécialité sélectionnée et le champ caché correspondant
     selectedSpecialite = selectedCard.dataset.specialite;
+    document.getElementById('selected_specialite').value = selectedSpecialite;
+
+    console.log(`Spécialité sélectionnée : ${selectedSpecialite}`);
     stepValidation[1] = true;
 }
 
@@ -607,25 +521,37 @@ function handleFinalStep() {
     const description = document.getElementById('description').value.trim();
     const appointmentType = document.querySelector('input[name="appointment_type"]:checked')?.value;
 
-    // Validation des champs requis
-    if (!form.medecin_id.value || !form.date_rdv.value || !form.heure_debut.value) {
-        alert('Veuillez sélectionner un médecin, une date et une heure');
-        return;
-    }
-
-    if (!appointmentType) {
-        alert('Veuillez sélectionner un type de rendez-vous');
-        return;
-    }
-
-    if (!description || description.length < 10) {
-        alert('Veuillez fournir une description d\'au moins 10 caractères');
-        return;
-    }
-
-    // Mettre à jour les champs cachés
+    // Mettre à jour les champs cachés restants
     document.getElementById('type').value = appointmentType;
     document.getElementById('description_input').value = description;
+
+    // Log de débogage final avant soumission
+    console.log('--- Début de la soumission du formulaire ---');
+    console.log('ID Médecin:', document.getElementById('medecin_id').value);
+    console.log('Date RDV:', document.getElementById('date_rdv').value);
+    console.log('Heure Début:', document.getElementById('heure_debut').value);
+    console.log('Spécialité:', document.getElementById('selected_specialite').value);
+    console.log('Type:', document.getElementById('type').value);
+    console.log('Description:', document.getElementById('description_input').value);
+    console.log('-------------------------------------------');
+
+    // Validation des champs requis
+    if (!form.medecin_id.value || !form.date_rdv.value || !form.heure_debut.value) {
+        alert('Veuillez sélectionner un médecin, une date et un créneau horaire.');
+        return;
+    }
+    if (!form.specialite.value) {
+        alert('La spécialité n\'a pas été sélectionnée correctement. Veuillez revenir à la première étape.');
+        return;
+    }
+    if (!appointmentType) {
+        alert('Veuillez sélectionner un type de rendez-vous.');
+        return;
+    }
+    if (!description || description.length < 10) {
+        alert('Veuillez fournir un motif de consultation d\'au moins 10 caractères.');
+        return;
+    }
 
     // Désactiver le bouton et montrer le chargement
     const nextBtn = document.getElementById('nextBtn');
@@ -650,35 +576,6 @@ function handlePatientTypeChange(event) {
     if (familyForm) {
         familyForm.classList.toggle('hidden', event.target.value !== 'family');
     }
-}
-
-// Configuration des écouteurs d'événements
-function setupEventListeners() {
-
-    // Sélection de spécialité
-    const specialtyCards = document.querySelectorAll('#step1 .group.cursor-pointer');
-    specialtyCards.forEach(card => {
-        card.addEventListener('click', function() {
-            // Désélectionner toutes les cartes
-            specialtyCards.forEach(c => {
-                c.querySelector('.border').classList.remove('border-[#b9ff66]');
-                c.querySelector('.border').classList.add('border-gray-100');
-            });
-
-            // Sélectionner cette carte
-            this.querySelector('.border').classList.remove('border-gray-100');
-            this.querySelector('.border').classList.add('border-[#b9ff66]');
-
-            // Stocker la spécialité sélectionnée
-            selectedSpecialite = this.dataset.specialite;
-
-            // Valider l'étape
-            stepValidation[1] = true;
-        });
-    });
-
-    // Charger le nombre de médecins pour chaque spécialité
-    loadMedecinCounts();
 }
 
 // Fonction pour charger le nombre de médecins par spécialité
@@ -808,125 +705,75 @@ function setupMedecinSelection() {
 
 // Fonction pour afficher les détails du médecin
 function showDoctorDetails(medecinId) {
-    // Afficher l'indicateur de chargement
     const modal = document.getElementById('doctorModal');
+    const content = document.getElementById('doctorModalContent');
     modal.classList.remove('hidden');
     modal.classList.add('animate-fadeIn');
-
     modal.querySelector('.bg-white').classList.add('animate-scaleIn');
+    content.innerHTML = '<div class="text-center py-8"><div class="spinner"></div><p>Chargement...</p></div>';
 
-    // Récupérer les détails du médecin
-    fetch(`{{ route('patient.medecins.by.specialite') }}?specialite=${encodeURIComponent(selectedSpecialite)}`)
+    fetch(`/api/medecins/${medecinId}`)
         .then(response => response.json())
-        .then(data => {
-            const medecin = data.medecins.find(m => m.id == medecinId);
-
-            if (medecin) {
-                // Mettre à jour le contenu de la modal avec les données dynamiques
-
-                // Info médecin
-                const infoMedecin = modal.querySelector('.flex.items-start.gap-4');
-                if (infoMedecin) {
-                    // Utiliser la photo de profil du médecin ou une image par défaut
-                    const imgSrc = medecin.profile_photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(medecin.prenom+' '+medecin.nom)}&color=7F9CF5&background=EBF4FF`;
-
-                    // Calculer le nombre d'années d'expérience
-                    const experienceText = medecin.experience
-                        ? `${medecin.experience} an${medecin.experience > 1 ? 's' : ''} d'expérience`
-                        : 'Expérience non spécifiée';
-
-                    // Générer un nombre aléatoire d'avis (à remplacer par des données réelles)
-                    const nbAvis = Math.floor(Math.random() * 200) + 10;
-
-                    infoMedecin.innerHTML = `
-                        <img src="${imgSrc}" alt="Dr. ${medecin.prenom} ${medecin.nom}" class="w-24 h-24 rounded-xl object-cover">
-                        <div>
-                            <h4 class="text-xl font-semibold">Dr. ${medecin.prenom} ${medecin.nom}</h4>
-                            <p class="text-[#b9ff66] font-medium">${medecin.specialite}</p>
-                            <div class="flex items-center gap-2 mt-1">
-                                <div class="flex text-yellow-400">${generateStars(medecin.score || 4)}</div>
-                                <span class="text-sm text-gray-500">(${nbAvis} avis)</span>
-                            </div>
-                            <p class="text-sm text-gray-600 mt-2">${experienceText}</p>
-                        </div>
-                    `;
-                }
-
-                // Détails pratiques
-                const detailsPratiques = modal.querySelector('.grid.grid-cols-2.gap-4');
-                if (detailsPratiques) {
-                    // Générer des tarifs dynamiques (à remplacer par des données réelles)
-                    const tarifConsultation = Math.floor(Math.random() * 50) + 50;
-                    const tarifConsultationEnLigne = Math.floor(tarifConsultation * 0.8);
-
-                    detailsPratiques.innerHTML = `
-                        <div>
-                            <h5 class="font-medium mb-2">Adresse du cabinet</h5>
-                            <p class="text-sm text-gray-600">${medecin.adresse_cabinet || 'Adresse non spécifiée'}</p>
-                        </div>
-                        <div>
-                            <h5 class="font-medium mb-2">Tarifs</h5>
-                            <p class="text-sm text-gray-600">Consultation: ${tarifConsultation} TND</p>
-                            <p class="text-sm text-gray-600">Consultation en ligne: ${tarifConsultationEnLigne} TND</p>
-                        </div>
-                    `;
-                }
-
-                // Formation et expérience
-                const formationDiv = modal.querySelector('h5.font-medium + ul').parentElement;
-                if (formationDiv) {
-                    let formationHTML = '<h5 class="font-medium mb-2">Formation et expérience</h5>';
-
-                    if (medecin.formation && medecin.formation.trim() !== '') {
-                        // Traiter la formation comme une liste
-                        const formationItems = medecin.formation.split('\n').filter(item => item.trim() !== '');
-
-                        if (formationItems.length > 0) {
-                            formationHTML += '<ul class="space-y-2 text-sm text-gray-600">';
-                            formationItems.forEach(item => {
-                                formationHTML += `<li>• ${item}</li>`;
-                            });
-                            formationHTML += '</ul>';
-                        } else {
-                            formationHTML += `<p class="text-sm text-gray-600">${medecin.formation}</p>`;
-                        }
-                    } else {
-                        formationHTML += '<p class="text-sm text-gray-600">Information non disponible</p>';
-                    }
-
-                    formationDiv.innerHTML = formationHTML;
-                }
-
-                // Langues parlées
-                const languesDiv = modal.querySelector('h5.font-medium + div.flex').parentElement;
-                if (languesDiv) {
-                    let languesHTML = '<h5 class="font-medium mb-2">Langues parlées</h5>';
-
-                    if (medecin.langues && medecin.langues.length > 0) {
-                        languesHTML += '<div class="flex flex-wrap gap-2">';
-                        medecin.langues.forEach(langue => {
-                            languesHTML += `<span class="px-3 py-1 bg-gray-100 rounded-full text-sm">${langue}</span>`;
-                        });
-                        languesHTML += '</div>';
-                    } else {
-                        languesHTML += '<p class="text-sm text-gray-600">Information non disponible</p>';
-                    }
-
-                    languesDiv.innerHTML = languesHTML;
-                }
+        .then(medecin => {
+            let photoUrl = '';
+            if (medecin.user && medecin.user.profile_photo_path) {
+                const path = medecin.user.profile_photo_path.replace(/^\/+/,'');
+                photoUrl = `${window.location.origin}/storage/${path}`;
+            } else {
+                photoUrl = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(medecin.prenom + ' ' + medecin.nom);
             }
-        })
-        .catch(error => {
-            console.error('Erreur lors du chargement des détails du médecin:', error);
-            modal.querySelector('.space-y-6').innerHTML = `
-                <div class="text-center py-8">
-                    <p class="text-red-500">Erreur lors du chargement des détails du médecin.</p>
-                    <button onclick="closeDoctorDetails()" class="mt-4 px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">
-                        Fermer
-                    </button>
+
+            const experienceText = medecin.experience ? `${medecin.experience} an${medecin.experience > 1 ? 's' : ''} d'expérience` : 'Expérience non spécifiée';
+            const score = medecin.score || 4;
+            const langues = medecin.langues && medecin.langues.length > 0 ? medecin.langues.map(l => `<span class="px-3 py-1 bg-gray-100 rounded-full text-sm">${l}</span>`).join(' ') : '<span class="text-gray-400">Non spécifié</span>';
+            const formation = medecin.formation ? medecin.formation.split('\n').map(item => `<li>• ${item}</li>`).join('') : '<li>Non spécifiée</li>';
+            content.innerHTML = `
+                <div class="flex items-start gap-4">
+                    <img src="${photoUrl}" alt="Photo de Dr. ${medecin.prenom} ${medecin.nom}" class="w-24 h-24 rounded-xl object-cover border-4 border-[#b9ff66]">
+                    <div>
+                        <h4 class="text-xl font-semibold">Dr. ${medecin.prenom} ${medecin.nom}</h4>
+                        <p class="text-[#b9ff66] font-medium">${medecin.specialite}</p>
+                        <div class="flex items-center gap-2 mt-1">
+                            <div class="flex text-yellow-400">${generateStars(score)}</div>
+                            <span class="text-sm text-gray-500">(150 avis)</span>
+                        </div>
+                        <p class="text-sm text-gray-600 mt-2">${experienceText}</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-xl">
+                    <div>
+                        <h5 class="font-medium mb-2">Adresse du cabinet</h5>
+                        <p class="text-sm text-gray-600">${medecin.adresse_cabinet || 'Adresse non spécifiée'}</p>
+                    </div>
+                    <div>
+                        <h5 class="font-medium mb-2">Tarifs</h5>
+                        <p class="text-sm text-gray-600">Consultation: 80 TND</p>
+                        <p class="text-sm text-gray-600">Consultation en ligne: 60 TND</p>
+                    </div>
+                </div>
+                <div>
+                    <h5 class="font-medium mb-2">Formation et expérience</h5>
+                    <ul class="space-y-2 text-sm text-gray-600">${formation}</ul>
+                </div>
+                <div>
+                    <h5 class="font-medium mb-2">Langues parlées</h5>
+                    <div class="flex gap-2">${langues}</div>
                 </div>
             `;
+        })
+        .catch(error => {
+            content.innerHTML = `<div class="text-center py-8"><p class="text-red-500">Erreur lors du chargement des détails du médecin.</p><button onclick="closeDoctorDetails()" class="mt-4 px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Fermer</button></div>`;
         });
+}
+
+// Fonction pour fermer la fiche détaillée du médecin
+function closeDoctorDetails() {
+    const modal = document.getElementById('doctorModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('animate-fadeIn');
+        modal.querySelector('.bg-white').classList.remove('animate-scaleIn');
+    }
 }
 
 // Fonction pour créer une carte de médecin
@@ -936,14 +783,15 @@ function createMedecinCard(medecin) {
     card.dataset.medecinId = medecin.id;
 
     // Utiliser la photo de profil du médecin ou une image par défaut
-    const imgSrc = medecin.profile_photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(medecin.prenom+' '+medecin.nom)}&color=7F9CF5&background=EBF4FF`;
+    const path = medecin.user && medecin.user.profile_photo_path ? medecin.user.profile_photo_path.replace(/^\/+/,'') : null;
+    const photoUrl = path ? `${window.location.origin}/storage/${path}` : `https://ui-avatars.com/api/?name=${encodeURIComponent(medecin.prenom + ' ' + medecin.nom)}&color=7F9CF5&background=EBF4FF`;
 
     // Générer un nombre d'avis dynamique (à remplacer par des données réelles)
     const nbAvis = Math.floor(Math.random() * 200);
 
     card.innerHTML = `
         <div class="flex items-start gap-4 mb-4">
-            <img src="${imgSrc}" alt="Dr. ${medecin.nom}" class="w-16 h-16 rounded-xl object-cover">
+            <img src="${photoUrl}" alt="Dr. ${medecin.nom}" class="w-16 h-16 rounded-xl object-cover border-2 border-gray-100">
             <div>
                 <h3 class="text-lg font-semibold">Dr. ${medecin.prenom} ${medecin.nom}</h3>
                 <p class="text-[#b9ff66] text-sm font-medium">${medecin.specialite}</p>
@@ -1088,26 +936,20 @@ function updateAppointmentSummary(medecinId, date, heure) {
     updateTimeInSummary(heure);
 
     // Charger les informations du médecin
-    fetch(`/api/medecins/${medecinId}`, {
-        method: 'GET',
-        headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-        }
-    })
-    .then(response => {
-        if (!response.ok) throw new Error('Erreur réseau');
-        return response.json();
-    })
-    .then(medecin => {
-        // Mettre à jour les informations du médecin dans le résumé
-        const selectedMedecinName = document.getElementById('selected-medecin-name');
-        const selectedMedecinSpecialite = document.getElementById('selected-medecin-specialite');
-        const selectedMedecinAdresse = document.getElementById('selected-medecin-adresse');
+    fetch(`/api/medecins/${medecinId}`)
+        .then(response => {
+            if (!response.ok) throw new Error('Erreur réseau');
+            return response.json();
+        })
+        .then(medecin => {
+            // Mettre à jour les informations du médecin dans le résumé
+            const selectedMedecinName = document.getElementById('selected-medecin-name');
+            const selectedMedecinSpecialite = document.getElementById('selected-medecin-specialite');
+            const selectedMedecinAdresse = document.getElementById('selected-medecin-adresse');
 
-        if (selectedMedecinName) selectedMedecinName.textContent = `Dr. ${medecin.prenom} ${medecin.nom}`;
-        if (selectedMedecinSpecialite) selectedMedecinSpecialite.textContent = medecin.specialite;
-        if (selectedMedecinAdresse) selectedMedecinAdresse.textContent = medecin.adresse_cabinet || 'Adresse non spécifiée';
+            if (selectedMedecinName) selectedMedecinName.textContent = `Dr. ${medecin.prenom} ${medecin.nom}`;
+            if (selectedMedecinSpecialite) selectedMedecinSpecialite.textContent = medecin.specialite;
+            if (selectedMedecinAdresse) selectedMedecinAdresse.textContent = medecin.adresse_cabinet || 'Adresse non spécifiée';
 
                 // Valider l'étape
                 stepValidation[2] = true;
@@ -1151,13 +993,9 @@ function generateStars(score) {
     const normalizedScore = Math.min(Math.max(score, 0), 5);
 
     // SVG pour les différents types d'étoiles
-    const fullStar = `<svg class="w-4 h-4 text-yellow-400 inline" fill="currentColor" viewBox="0 0 20 20">
-        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-    </svg>`;
+    const fullStar = `<svg class="w-4 h-4 text-yellow-400 inline" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>`;
 
-    const emptyStar = `<svg class="w-4 h-4 text-gray-300 inline" fill="currentColor" viewBox="0 0 20 20">
-        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-    </svg>`;
+    const emptyStar = `<svg class="w-4 h-4 text-gray-300 inline" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>`;
 
     let starsHTML = '';
 

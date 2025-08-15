@@ -10,11 +10,16 @@
             </h1>
             <!-- Informations du patient -->
             <div class="flex items-center gap-4 bg-white p-4 rounded-[20px] shadow-sm">
-                <img src="https://randomuser.me/api/portraits/women/68.jpg"
-                     class="w-12 h-12 rounded-full">
+
+                @php
+                    $photoUrl = $patient->user && $patient->user->profile_photo_path
+                        ? asset('storage/' . $patient->user->profile_photo_path)
+                        : 'https://ui-avatars.com/api/?name=' . urlencode($patient->prenom . ' ' . $patient->nom);
+                @endphp
+                <img src="{{ $photoUrl }}" class="w-12 h-12 rounded-full">
                 <div>
-                    <h2 class="font-bold text-lg">Marie Dupont</h2>
-                    <p class="text-gray-500 text-sm">ID: #12345</p>
+                    <h2 class="font-bold text-lg">{{ $patient->prenom }} {{ $patient->nom }}</h2>
+                    <p class="text-gray-500 text-sm">ID: #{{ $patient->id }}</p>
                 </div>
             </div>
         </div>
@@ -24,65 +29,152 @@
 
     <!-- Contenu principal -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <!-- Informations générales - Colonne gauche -->
+        <!-- Colonne gauche : infos personnelles dynamiques -->
         <div class="lg:col-span-3 space-y-6">
             <!-- Informations personnelles -->
             <div class="bg-white p-6 rounded-[20px] shadow-sm">
                 <h3 class="text-lg font-bold mb-4">Informations Personnelles</h3>
                 <div class="space-y-3">
-                    <div>
-                        <p class="text-sm text-gray-500">Date de naissance</p>
-                        <p class="font-medium">15 Mars 1980 (43 ans)</p>
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-sm text-gray-500">Date de naissance</p>
+                            <p class="font-medium">
+                                {{ isset($patient->dateNaissance) ? \Carbon\Carbon::parse($patient->dateNaissance)->translatedFormat('d F Y') : 'Non renseignée' }}
+                                @if(isset($patient->dateNaissance))
+                                    ({{ \Carbon\Carbon::parse($patient->dateNaissance)->age }} ans)
+                                @endif
+                            </p>
+                        </div>
+                       
                     </div>
-                    <div>
-                        <p class="text-sm text-gray-500">Groupe sanguin</p>
-                        <p class="font-medium">O+</p>
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-sm text-gray-500">Groupe sanguin</p>
+                            <p class="font-medium">{{ $dossier->groupe_sanguin ?? 'Non renseigné' }}</p>
+                        </div>
+                        @if(!$dossier || !$dossier->groupe_sanguin)
+                            <button onclick="openEditModal('groupe_sanguin')" class="px-3 py-1.5 bg-[#b9ff66] text-gray-800 rounded-full text-sm hover:bg-[#a8eb5f] transition-colors">
+                                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                </svg>
+                                Ajouter
+                            </button>
+                        @else
+                            <button onclick="openEditModal('groupe_sanguin')" class="px-3 py-1.5 bg-blue-500 text-white rounded-full text-sm hover:bg-blue-600 transition-colors">
+                                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
+                                Modifier
+                            </button>
+                        @endif
                     </div>
-                    <div>
-                        <p class="text-sm text-gray-500">Contact</p>
-                        <p class="font-medium">0661234567</p>
-                        <p class="text-sm text-gray-600">mohammed.benali@email.com</p>
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-sm text-gray-500">Contact</p>
+                            <p class="font-medium">{{ $dossier->tel ?? 'Non renseigné' }}</p>
+                            <p class="text-sm text-gray-600">{{ $patient->user->email ?? '' }}</p>
+                        </div>
+                        @if(!$dossier || !$dossier->tel)
+                            <button onclick="openEditModal('tel')" class="px-3 py-1.5 bg-[#b9ff66] text-gray-800 rounded-full text-sm hover:bg-[#a8eb5f] transition-colors">
+                                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                </svg>
+                                Ajouter
+                            </button>
+                        @else
+                            <button onclick="openEditModal('tel')" class="px-3 py-1.5 bg-blue-500 text-white rounded-full text-sm hover:bg-blue-600 transition-colors">
+                                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
+                                Modifier
+                            </button>
+                        @endif
                     </div>
-                    <div>
-                        <p class="text-sm text-gray-500">Adresse</p>
-                        <p class="font-medium">15 rue Ibn Sina</p>
-                        <p class="text-sm text-gray-600">Casablanca, 20000</p>
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-sm text-gray-500">Adresse</p>
+                            <p class="font-medium">{{ $dossier->adresse ?? 'Non renseignée' }}</p>
+                            <p class="text-sm text-gray-600">{{ $patient->ville ?? '' }}{{ $patient->code_postal ? ', '.$patient->code_postal : '' }}</p>
+                        </div>
+                        @if(!$dossier || !$dossier->adresse)
+                            <button onclick="openEditModal('adresse')" class="px-3 py-1.5 bg-[#b9ff66] text-gray-800 rounded-full text-sm hover:bg-[#a8eb5f] transition-colors">
+                                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                </svg>
+                                Ajouter
+                            </button>
+                        @else
+                            <button onclick="openEditModal('adresse')" class="px-3 py-1.5 bg-blue-500 text-white rounded-full text-sm hover:bg-blue-600 transition-colors">
+                                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
+                                Modifier
+                            </button>
+                        @endif
                     </div>
                 </div>
             </div>
-
             <!-- Antécédents médicaux -->
             <div class="bg-white p-6 rounded-[20px] shadow-sm">
-                <h3 class="text-lg font-bold mb-4">Antécédents Médicaux</h3>
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold">Antécédents Médicaux</h3>
+                    @if(!$dossier || !$dossier->antecedents_medicaux)
+                        <button onclick="openEditModal('antecedents_medicaux')" class="px-3 py-1.5 bg-[#b9ff66] text-gray-800 rounded-full text-sm hover:bg-[#a8eb5f] transition-colors">
+                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                            </svg>
+                            Ajouter
+                        </button>
+                    @else
+                        <button onclick="openEditModal('antecedents_medicaux')" class="px-3 py-1.5 bg-blue-500 text-white rounded-full text-sm hover:bg-blue-600 transition-colors">
+                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                            </svg>
+                            Modifier
+                        </button>
+                    @endif
+                </div>
                 <div class="space-y-3">
-                    <div class="flex items-center gap-2">
-                        <span class="w-2 h-2 bg-red-500 rounded-full"></span>
-                        <p>Diabète Type 2</p>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="w-2 h-2 bg-yellow-500 rounded-full"></span>
-                        <p>Hypertension</p>
-                    </div>
-                    <button class="text-[#b9ff66] hover:text-[#a8eb5f] text-sm mt-2">
-                        Voir tous les antécédents
-                    </button>
+                    @if($dossier && $dossier->antecedents_medicaux)
+                        @foreach(explode(',', $dossier->antecedents_medicaux) as $ant)
+                            <div class="flex items-center gap-2">
+                                <span class="w-2 h-2 bg-red-500 rounded-full"></span>
+                                <p>{{ $ant }}</p>
+                            </div>
+                        @endforeach
+                    @else
+                        <p class="text-gray-500">Aucun antécédent renseigné.</p>
+                    @endif
                 </div>
             </div>
-
             <!-- Allergies -->
             <div class="bg-white p-6 rounded-[20px] shadow-sm">
-                <h3 class="text-lg font-bold mb-4">Allergies</h3>
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold">Allergies</h3>
+                    @if(!$dossier || !$dossier->allergies)
+                        <button onclick="openEditModal('allergies')" class="px-3 py-1.5 bg-[#b9ff66] text-gray-800 rounded-full text-sm hover:bg-[#a8eb5f] transition-colors">
+                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                            </svg>
+                            Ajouter
+                        </button>
+                    @else
+                        <button onclick="openEditModal('allergies')" class="px-3 py-1.5 bg-blue-500 text-white rounded-full text-sm hover:bg-blue-600 transition-colors">
+                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                            </svg>
+                            Modifier
+                        </button>
+                    @endif
+                </div>
                 <div class="space-y-2">
-                    <div class="flex items-center gap-2">
-                        <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-sm">
-                            Pénicilline
-                        </span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-sm">
-                            Arachides
-                        </span>
-                    </div>
+                    @if($dossier && $dossier->allergies)
+                        @foreach(explode(',', $dossier->allergies) as $all)
+                            <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-sm">{{ $all }}</span>
+                        @endforeach
+                    @else
+                        <span class="text-gray-500">Aucune allergie renseignée.</span>
+                    @endif
                 </div>
             </div>
         </div>
@@ -1000,6 +1092,42 @@
     </div>
 </div>
 
+<!-- Modal d'édition du dossier médical -->
+<div id="editDossierModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-[30px] p-8 w-96 max-h-[80vh] overflow-y-auto">
+        <div class="flex justify-between items-start mb-6">
+            <h3 class="text-2xl font-bold">Modifier le dossier médical</h3>
+            <button onclick="closeEditModal()" class="text-gray-500 hover:text-gray-700">
+                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+
+        <div class="space-y-6">
+            <div>
+                <label id="fieldLabel" class="block text-sm font-medium text-gray-700 mb-2">
+                    Champ à modifier
+                </label>
+                <div id="fieldInput">
+                    <!-- Le contenu sera généré dynamiquement par JavaScript -->
+                </div>
+            </div>
+
+            <div class="flex gap-3 pt-4">
+                <button onclick="closeEditModal()"
+                        class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                    Annuler
+                </button>
+                <button onclick="saveDossierField()"
+                        class="flex-1 px-4 py-2 bg-[#b9ff66] text-gray-800 rounded-lg hover:bg-[#a8eb5f] transition-colors">
+                    Enregistrer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- JavaScript pour la modal -->
 <script>
 function openConsultationModal() {
@@ -1119,6 +1247,133 @@ function viewAnalyseDetails(analyseId) {
         button.querySelector('svg').style.transform = 'rotate(0deg)';
     }
 }
+
+// Fonctions pour le modal d'édition du dossier médical
+function openEditModal(field) {
+    const modal = document.getElementById('editDossierModal');
+    const fieldLabel = document.getElementById('fieldLabel');
+    const fieldInput = document.getElementById('fieldInput');
+
+    // Configurer le modal selon le champ à éditer
+    switch(field) {
+        case 'date_naissance':
+            fieldLabel.textContent = 'Date de naissance';
+            fieldInput.innerHTML = '<input type="date" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#b9ff66] focus:border-[#b9ff66]">';
+            break;
+        case 'groupe_sanguin':
+            fieldLabel.textContent = 'Groupe sanguin';
+            fieldInput.innerHTML = `
+                <select class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#b9ff66] focus:border-[#b9ff66]">
+                    <option value="">Sélectionner un groupe</option>
+                    <option value="A+">A+</option>
+                    <option value="A-">A-</option>
+                    <option value="B+">B+</option>
+                    <option value="B-">B-</option>
+                    <option value="AB+">AB+</option>
+                    <option value="AB-">AB-</option>
+                    <option value="O+">O+</option>
+                    <option value="O-">O-</option>
+                </select>
+            `;
+            break;
+        case 'tel':
+            fieldLabel.textContent = 'Numéro de téléphone';
+            fieldInput.innerHTML = '<input type="tel" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#b9ff66] focus:border-[#b9ff66]" placeholder="Entrez le numéro de téléphone">';
+            break;
+        case 'adresse':
+            fieldLabel.textContent = 'Adresse';
+            fieldInput.innerHTML = '<textarea class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#b9ff66] focus:border-[#b9ff66]" rows="3" placeholder="Entrez l\'adresse complète"></textarea>';
+            break;
+        case 'antecedents_medicaux':
+            fieldLabel.textContent = 'Antécédents médicaux';
+            fieldInput.innerHTML = '<textarea class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#b9ff66] focus:border-[#b9ff66]" rows="4" placeholder="Entrez les antécédents médicaux (séparés par des virgules)"></textarea>';
+            break;
+        case 'allergies':
+            fieldLabel.textContent = 'Allergies';
+            fieldInput.innerHTML = '<textarea class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#b9ff66] focus:border-[#b9ff66]" rows="3" placeholder="Entrez les allergies (séparées par des virgules)"></textarea>';
+            break;
+    }
+
+    // Stocker le champ en cours d'édition
+    modal.dataset.field = field;
+
+    // Afficher le modal
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeEditModal() {
+    const modal = document.getElementById('editDossierModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    document.body.style.overflow = 'auto';
+
+    // Réinitialiser le formulaire
+    const fieldInput = document.getElementById('fieldInput');
+    fieldInput.innerHTML = '';
+}
+
+function saveDossierField() {
+    const modal = document.getElementById('editDossierModal');
+    const field = modal.dataset.field;
+    const fieldInput = document.getElementById('fieldInput');
+
+    let value = '';
+    const selectElement = fieldInput.querySelector('select');
+    const textareaElement = fieldInput.querySelector('textarea');
+    const inputElement = fieldInput.querySelector('input');
+
+    if (selectElement) {
+        value = selectElement.value;
+    } else if (textareaElement) {
+        value = textareaElement.value;
+    } else if (inputElement) {
+        value = inputElement.value;
+    }
+
+    if (!value.trim()) {
+        alert('Veuillez remplir le champ');
+        return;
+    }
+
+    // Envoyer les données au serveur
+    const formData = new FormData();
+    formData.append('field', field);
+    formData.append('value', value);
+    formData.append('patient_id', '{{ $patient->id }}');
+    formData.append('_token', '{{ csrf_token() }}');
+
+    fetch('/dashboard/medecin/dossier-medical/update', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Recharger la page pour afficher les nouvelles données
+            location.reload();
+        } else {
+            alert('Erreur lors de la sauvegarde: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        alert('Erreur lors de la sauvegarde');
+    });
+}
+
+// Fermeture du modal en cliquant en dehors
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('editDossierModal');
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeEditModal();
+            }
+        });
+    }
+});
 </script>
 
 <style>

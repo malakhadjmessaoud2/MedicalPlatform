@@ -107,64 +107,67 @@
                                 <th class="px-6 py-3 text-left text-sm font-medium text-gray-500">Actions</th>
                             </tr>
                         </thead>
+                        @php $patients = $patients ?? collect([]); @endphp
+                        @if($patients->count())
                         <tbody class="divide-y divide-gray-200">
-                            <!-- Patient Row -->
+                            @forelse($patients as $patient)
                             <tr class="hover:bg-gray-50">
                                 <td class="px-6 py-4">
                                     <div class="flex items-center gap-3">
-                                        <img src="https://randomuser.me/api/portraits/women/68.jpg"
-                                             class="w-8 h-8 rounded-full">
+                                        @php
+                                            $photoUrl = $patient->user && $patient->user->profile_photo_path
+                                                ? asset('storage/' . $patient->user->profile_photo_path)
+                                                : 'https://ui-avatars.com/api/?name=' . urlencode($patient->prenom . ' ' . $patient->nom) . '&color=7F9CF5&background=EBF4FF';
+                                        @endphp
+                                        <img src="{{ $photoUrl }}" alt="Photo de {{ $patient->prenom }}" class="w-10 h-10 rounded-full object-cover">
                                         <div>
-                                            <div class="font-medium">Marie Dupont</div>
-                                            <div class="text-sm text-gray-500">ID: #12345</div>
+                                            <div class="font-medium">{{ $patient->prenom }} {{ $patient->nom }}</div>
+                                            <div class="text-sm text-gray-500">ID: #{{ $patient->id }}</div>
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-6 py-4">42 ans</td>
-                                <td class="px-6 py-4">15/03/2024</td>
+                                <td class="px-6 py-4">{{ \Carbon\Carbon::parse($patient->dateNaissance)->age }} ans</td>
+                                <td class="px-6 py-4">{{ $patient->derniere_visite }}</td>
                                 <td class="px-6 py-4">
                                     <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm">
-                                        Suivi régulier
+                                        Actif
                                     </span>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <div class="flex items-center gap-3">
-                                        <a href="{{ route("medecin.dossiermedical") }}"
-                                            class="text-blue-600 hover:text-blue-800 flex items-center gap-1">
-                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                       d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                             </svg>
-                                             Dossier
-                                         </a>                                        <button class="text-gray-600 hover:text-gray-800">Consultation</button>
-                                        <button class="text-green-600 hover:text-green-800">Ordonnance</button>
+                                    <div class="flex items-center gap-4">
+                                        <a href="{{ route('medecin.dossiermedical', ['patient_id' => $patient->id]) }}"
+                                           class="text-blue-600 hover:text-blue-800 flex items-center gap-1">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                            </svg>
+                                            Dossier
+                                        </a>
                                     </div>
                                 </td>
                             </tr>
-                            <!-- Ajoutez plus de lignes de patients ici -->
+                            @empty
+                            <tr>
+                                <td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                                    <div class="flex flex-col items-center">
+                                        <svg class="w-12 h-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                        <h3 class="text-lg font-medium">Aucun patient trouvé</h3>
+                                        <p class="text-sm">Vous n'avez pas encore de patients enregistrés.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            @endforelse
                         </tbody>
+                        @endif
                     </table>
                 </div>
 
                 <!-- Pagination -->
+                @if($patients && $patients instanceof \Illuminate\Pagination\LengthAwarePaginator)
                 <div class="flex justify-between items-center mt-6">
-                    <span class="text-sm text-gray-500">Affichage de 1 à 10 sur 248 patients</span>
-                    <div class="flex gap-2">
-                        <button class="pagination-btn" disabled>
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-                            </svg>
-                        </button>
-                        <button class="pagination-btn active">1</button>
-                        <button class="pagination-btn">2</button>
-                        <button class="pagination-btn">3</button>
-                        <button class="pagination-btn">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                            </svg>
-                        </button>
-                    </div>
+                    {{ $patients->links() }}
                 </div>
+                @endif
             </div>
 
             <!-- Consultations Section -->

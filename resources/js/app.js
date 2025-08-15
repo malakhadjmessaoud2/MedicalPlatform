@@ -1,6 +1,7 @@
 // console.log('app.js chargé');
 import './bootstrap';
 import './agenda'; // Importez votre fichier agenda.js
+import './realtime';
 
 // Import FullCalendar et ses plugins
 import { Calendar } from '@fullcalendar/core';
