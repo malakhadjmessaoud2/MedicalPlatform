@@ -1,0 +1,138 @@
+/* Styles personnalisés pour le menu déroulant des statuts */
+.status-select-custom {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.75rem center;
+    background-repeat: no-repeat;
+    background-size: 1.25em 1.25em;
+    padding-right: 2.75rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+    min-width: 220px;
+    cursor: pointer;
+    background-color: white;
+    color: #374151;
+    position: relative;
+}
+
+.status-select-custom:hover {
+    border-color: #9ca3af;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    transform: translateY(-1px);
+}
+
+.status-select-custom:focus {
+    outline: none;
+    border-color: #3b82f6;
+    ring: 4px;
+    ring-color: rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1), 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.status-select-custom:disabled {
+    background-color: #f9fafb;
+    border-color: #e5e7eb;
+    color: #9ca3af;
+    cursor: not-allowed;
+}
+
+/* Styles pour les options */
+.status-select-custom option {
+    padding: 12px 16px;
+    margin: 4px 0;
+    border-radius: 8px;
+    font-weight: 500;
+    color: #374151;
+    background-color: white;
+}
+
+.status-select-custom option:disabled {
+    color: #9ca3af;
+    background-color: #f9fafb;
+    font-style: italic;
+}
+
+.status-select-custom option:checked {
+    font-weight: 600;
+    background-color: #3b82f6;
+    color: white;
+}
+
+/* Styles spécifiques pour chaque statut */
+.status-select-custom option.pending {
+    color: #d97706;
+    background-color: #fef3c7;
+}
+
+.status-select-custom option.confirmed {
+    color: #059669;
+    background-color: #d1fae5;
+}
+
+.status-select-custom option.cancelled {
+    color: #dc2626;
+    background-color: #fee2e2;
+}
+
+.status-select-custom option.completed {
+    color: #4b5563;
+    background-color: #f3f4f6;
+}
+
+/* Animation pour l'ouverture du menu */
+.status-select-custom:focus option {
+    animation: slideIn 0.2s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Style pour l'état de chargement */
+.status-select-custom.loading {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'%3e%3ccircle class='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' stroke-width='4'%3e%3c/circle%3e%3cpath class='opacity-75' fill='currentColor' d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'%3e%3c/path%3e%3c/svg%3e");
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Amélioration pour les écrans mobiles */
+@media (max-width: 768px) {
+    .status-select-custom {
+        min-width: 180px;
+        font-size: 13px;
+        padding: 10px 14px;
+        padding-right: 2.5rem;
+    }
+}
+
+/* Style pour l'indicateur de succès */
+.status-select-custom.success {
+    border-color: #10b981;
+    background-color: #ecfdf5;
+}
+
+/* Style pour l'indicateur d'erreur */
+.status-select-custom.error {
+    border-color: #ef4444;
+    background-color: #fef2f2;
+}

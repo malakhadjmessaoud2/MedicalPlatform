@@ -1,29 +1,28 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Workspace</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="medecin-id" content="{{ Auth::user()->medecin->id ?? '' }}">
-    <meta name="pusher-key" content="{{ config('broadcasting.connections.pusher.key') }}">
-    <meta name="pusher-cluster" content="{{ config('broadcasting.connections.pusher.options.cluster') }}">
+    @livewireStyles
 
-    <!-- Suppression des CDN FullCalendar car nous utilisons les modules npm -->
     @yield('styles')
 
-    <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- Autres scripts -->
+    <!-- CDN nécessaires -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js" defer></script>
-    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
-    <!-- Vite doit être chargé avant tout script qui utilise les modules importés -->
-    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/realtime.js'])
+    <!-- Vite pour tous les assets CSS et JS -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+
 </head>
+
 <body class="bg-[#e4e4e4] font-sans">
     <div class="flex h-screen">
         @include('dashMedecin.sidebar')
@@ -37,5 +36,21 @@
         </div>
     </div>
     @yield('scripts')
+
+
+
+
+    <script type="module">
+        console.log('Listening for new appointments...');
+        console.log('Echo:', window.Echo);
+
+        window.Echo.channel('rendez-vous')
+            .listen('.create', (data) => {
+                console.log('New appointment created: ');
+                console.log('Order status updated: ', data);
+
+            });
+    </script>
 </body>
+
 </html>

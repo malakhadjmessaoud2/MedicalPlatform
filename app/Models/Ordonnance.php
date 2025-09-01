@@ -9,20 +9,18 @@ class Ordonnance extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['medecin_id', 'patient_id'];
-
-    public function medecin()
+    protected $fillable = [
+        'consultation_id',
+        'medicaments',
+        'notes',
+        'file',
+    ];
+    protected $casts = [
+        'medicaments' => 'array', // JSON array PHP
+    ];
+    public function consultation()
     {
-        return $this->belongsTo(Medecin::class);
+        return $this->belongsTo(Consultation::class, 'consultation_id');
     }
 
-    public function patient()
-    {
-        return $this->belongsTo(Patient::class);
-    }
-
-    public function medicaments()
-    {
-        return $this->belongsToMany(Medicament::class);
-    }
 }

@@ -13,7 +13,7 @@ class PaiementDon extends Model
 
     public function donateur()
     {
-        return $this->belongsTo(Donateur::class);
+        return $this->belongsTo(User::class, 'donateur_id');
     }
 
     public function pharmacie()

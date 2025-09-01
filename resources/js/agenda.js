@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         eventSources: [
             {
-                url: '/dashboard/medecin/api/rendez-vous',
+                url: '/api/medecin/rendez-vous',
                 method: 'GET',
                 extraParams: {
                     _token: csrfToken
@@ -61,15 +61,20 @@ document.addEventListener('DOMContentLoaded', function() {
                             textColor = '#1a73e8';       // Bleu Google
                             borderColor = '#1a73e8';
                             break;
-                        case 'suivi':
+                        case 'examen':
                             backgroundColor = '#e6f4ea'; // Vert clair style Google
                             textColor = '#0d652d';       // Vert Google
                             borderColor = '#0d652d';
                             break;
-                        case 'urgence':
+                        case 'intervention':
                             backgroundColor = '#fce8e6'; // Rouge clair style Google
                             textColor = '#d93025';       // Rouge Google
                             borderColor = '#d93025';
+                            break;
+                        case 'autre':
+                            backgroundColor = '#fef7e0'; // Jaune clair style Google
+                            textColor = '#ea8600';       // Orange Google
+                            borderColor = '#ea8600';
                             break;
                         default:
                             backgroundColor = '#f1f3f4'; // Gris clair Google
@@ -78,13 +83,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
 
                     // Modifier l'apparence selon le statut
-                    if (event.statut === 'annulé') {
-                        textColor = '#80868b';  // Gris Google pour les événements annulés
-                        event.textDecoration = 'line-through';
-                        event.opacity = 0.7;
-                    } else if (event.statut === 'en_attente') {
-                        event.borderStyle = 'dashed';
-                    }
+                                    if (event.statut === 'cancelled') {
+                    textColor = '#80868b';  // Gris Google pour les événements annulés
+                    event.textDecoration = 'line-through';
+                    event.opacity = 0.7;
+                } else if (event.statut === 'pending') {
+                    event.borderStyle = 'dashed';
+                }
 
                     event.backgroundColor = backgroundColor;
                     event.textColor = textColor;
@@ -125,7 +130,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const isCompact = event.extendedProps.view === 'compact' || window.innerWidth < 768;
 
             const wrapper = document.createElement('div');
-            wrapper.className = `event-card ${event.extendedProps.statut === 'annulé' ? 'opacity-60' : ''}`;
+            wrapper.className = `event-card ${event.extendedProps.statut === 'cancelled' ? 'opacity-60' : ''}`;
             wrapper.style.width = '100%';
             wrapper.style.height = '100%';
             wrapper.style.borderLeft = `4px solid ${event.borderColor || '#1a73e8'}`;
@@ -137,9 +142,9 @@ document.addEventListener('DOMContentLoaded', function() {
             wrapper.style.transition = 'all 0.2s ease';
 
             // Appliquer des styles spécifiques selon le statut
-            if (event.extendedProps.statut === 'annulé') {
+            if (event.extendedProps.statut === 'cancelled') {
                 wrapper.style.textDecoration = 'line-through';
-            } else if (event.extendedProps.statut === 'en_attente') {
+            } else if (event.extendedProps.statut === 'pending') {
                 wrapper.style.borderStyle = 'dashed';
             }
 
@@ -148,10 +153,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 wrapper.innerHTML = `
                     <div class="p-1 flex items-center justify-between">
                         <span class="text-sm font-medium">${timeText}</span>
-                        <span class="text-xs px-1 rounded-full ${getStatusClass(event.extendedProps.statut)}">
-                            ${event.extendedProps.statut === 'confirmé' ? '✓' :
-                              event.extendedProps.statut === 'en_attente' ? '⏱' : '✕'}
-                        </span>
+                                                    <span class="text-xs px-1 rounded-full ${getStatusClass(event.extendedProps.statut)}">
+                                ${event.extendedProps.statut === 'confirmed' ? '✓' :
+                                  event.extendedProps.statut === 'pending' ? '⏱' : '✕'}
+                            </span>
                     </div>
                     <div class="px-1 font-medium truncate">${event.title}</div>
                 `;
@@ -162,8 +167,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="flex items-center justify-between">
                             <span class="text-sm font-medium">${timeText}</span>
                             <span class="text-xs px-1.5 py-0.5 rounded-full ${getStatusClass(event.extendedProps.statut)}">
-                                ${event.extendedProps.statut === 'confirmé' ? '✓' :
-                                  event.extendedProps.statut === 'en_attente' ? '⏱' : '✕'}
+                                ${event.extendedProps.statut === 'confirmed' ? '✓' :
+                                  event.extendedProps.statut === 'pending' ? '⏱' : '✕'}
                             </span>
                         </div>
                         <div class="font-medium truncate mt-0.5">${event.title}</div>
@@ -213,13 +218,14 @@ document.addEventListener('DOMContentLoaded', function() {
         showNotification('Mise à jour en cours...', 'info', 1000);
 
         // Envoyer les nouvelles dates au serveur
-        fetch(`/dashboard/medecin/api/rendez-vous/${eventId}`, {
+        fetch(`/api/medecin/rendez-vous/${eventId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': csrfToken,
                 'Accept': 'application/json'
             },
+            credentials: 'same-origin',
             body: JSON.stringify({
                 start: startTime,
                 end: endTime
@@ -520,9 +526,9 @@ function getEventTypeClass(type) {
 
 function getStatusClass(status) {
     const classes = {
-        confirmé: 'bg-green-100 text-green-800',
-        en_attente: 'bg-yellow-100 text-yellow-800',
-        annulé: 'bg-red-100 text-red-800'
+        confirmed: 'bg-green-100 text-green-800',
+        pending: 'bg-yellow-100 text-yellow-800',
+        cancelled: 'bg-red-100 text-red-800'
     };
     return classes[status] || 'bg-gray-100 text-gray-800';
 }
@@ -569,7 +575,7 @@ function initializeCalendar() {
             endTime: '19:00',
         },
         eventSources: [{
-            url: '/dashboard/medecin/api/rendez-vous',
+            url: '/api/medecin/rendez-vous',
             method: 'GET',
             extraParams: {
                 _token: csrfToken
@@ -604,13 +610,14 @@ async function updateEventStatus(eventId, newStatus) {
     try {
         showNotification('Mise à jour en cours...', 'info', 1000);
 
-        const response = await fetch(`/dashboard/medecin/api/rendez-vous/${eventId}/statut`, {
+        const response = await fetch(`/api/medecin/rendez-vous/${eventId}/statut`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': csrfToken,
                 'Accept': 'application/json'
             },
+            credentials: 'same-origin',
             body: JSON.stringify({
                 statut: newStatus
             })
@@ -656,13 +663,14 @@ async function deleteEvent(eventId) {
     try {
         showNotification('Suppression en cours...', 'info', 1000);
 
-        const response = await fetch(`/dashboard/medecin/api/rendez-vous/${eventId}`, {
+        const response = await fetch(`/api/medecin/rendez-vous/${eventId}`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': csrfToken,
                 'Accept': 'application/json'
-            }
+            },
+            credentials: 'same-origin'
         });
 
         if (!response.ok) {
@@ -1027,7 +1035,7 @@ window.openRdvDetailsModal = function(event, mode = 'full') {
             button.innerHTML = `<span class="inline-flex items-center"><svg class="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Annulation...</span>`;
 
             const rdvId = button.getAttribute('data-id');
-            const success = await updateEventStatus(rdvId, 'annulé');
+            const success = await updateEventStatus(rdvId, 'cancelled');
 
             if (success) {
                 showNotification('Rendez-vous annulé avec succès', 'success');

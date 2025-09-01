@@ -1,13 +1,21 @@
 <?php
 
-use App\Http\Controllers\PharmacieController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\RendezVousController;
+use App\Http\Controllers\Patient\RendezVousController as PatientRendezVousController;
+use App\Http\Controllers\Medecin\RendezVousController as MedecinRendezVousController;
+
+use App\Http\Controllers\Medecin\ConsultationController;
+use App\Http\Controllers\Medecin\TimelineController;
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\GestionPatientDashMedecinController;
+use App\Http\Controllers\Medecin\PatientController;
+use App\Http\Controllers\Pharmacie\DashboardController as PharmacieDashboardController;
+use App\Http\Controllers\Donateur\DashboardController as DonateurDashboardController;
+use App\Http\Controllers\Medecin\DashboardController as MedecinDashboardController;
+use App\Http\Controllers\Patient\DashboardController as PatientDashboardController;
+use App\Http\Controllers\Patient\DossierController;
 use Illuminate\Support\Facades\Auth;
 use App\Models\RendezVous;
 
@@ -47,233 +55,106 @@ Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),
     'verified',
+    'redirect.role'
 ])->group(function () {
     Route::get('/dashboard', function () {
         return view('dashboard');
     })->name('dashboard');
 });
 
-Route::prefix('dashboard/pharmacie')->group(function () {
-    //dashboard pharmacie
-    Route::get('/', function () {
-        return view('dashPharmacie.index');
-    })->name('dashboard.pharmacie');
 
-    Route::get('/stock', function () {
-        return view('dashPharmacie.stock.index');
-    })->name('dashPharmacie.stock');
-
-    Route::get('/commandes', function () {
-        return view('dashPharmacie.commandes.index');
-    })->name('dashPharmacie.commandes');
-
-    Route::get('/commandes/validation', function () {
-        return view('dashPharmacie.commandes.validationCommande');
-    })->name('dashPharmacie.validationCommande');
-
-    Route::get('/dons', function () {
-        return view('dashPharmacie.donsReçus.index');
-    })->name('dashPharmacie.donsReçus');
-
-    Route::get('/donateurs', function () {
-        return view('dashPharmacie.donateurs.index');
-    })->name('dashPharmacie.donateurs');
-
-    Route::get('/demandes-dons', function () {
-        return view('dashPharmacie.demandesDons.index');
-    })->name('dashPharmacie.demandesDons');
+Route::middleware(['auth', 'role:operateurpharmacie'])->prefix('pharmacie')->name('pharmacie.')->group(function () {
+    Route::get('/dashboard', [PharmacieDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/stock', [PharmacieDashboardController::class, 'stocks'])->name('stock');
+    Route::get('/commandes', [PharmacieDashboardController::class, 'commandes'])->name('commandes');
+    Route::get('/commandes/validation',  [PharmacieDashboardController::class, 'validationCommande'])->name('validationCommande');
+    Route::get('/dons', [PharmacieDashboardController::class, 'donsReçus'])->name('donsReçus');
+    Route::get('/donateurs', [PharmacieDashboardController::class, 'donateurs'])->name('donateurs');
+    Route::get('/demandes-dons', [PharmacieDashboardController::class, 'demandesDons'])->name('demandesDons');
 });
-// Routes pour le dashboard donateur
-Route::prefix('dashboard/donateur')->group(function () {
-    // Dashboard principal donateur
-    Route::get('/', function () {
-        return view('dashDonateur.index');
-    })->name('donateur.dashboard');
 
-    // Gestion des dons
-    Route::get('/mes-dons', function () {
-        return view('dashDonateur.dons.index');
-    })->name('donateur.dons');
-
-    // Nouveau don
-    Route::get('/nouveau-don', function () {
-        return view('dashDonateur.dons.nouveau');
-    })->name('donateur.nouveau-don');
-
-    // Suivi des dons
-    Route::get('/suivi', function () {
-        return view('dashDonateur.suivi.index');
-    })->name('donateur.suivi');
-
-    // Rapports et statistiques
-    Route::get('/rapports', function () {
-        return view('dashDonateur.rapports.index');
-    })->name('donateur.rapports');
-
-    // Notifications
-    Route::get('/notifications', function () {
-        return view('dashDonateur.notifications.index');
-    })->name('donateur.notifications');
-
-    // Paramètres du compte
-    Route::get('/parametres', function () {
-        return view('dashDonateur.parametres.index');
-    })->name('donateur.parametres');
-
-    // Aide et support
-    Route::get('/aide', function () {
-        return view('dashDonateur.aide.index');
-    })->name('donateur.aide');
+Route::middleware(['auth', 'role:donateur'])->prefix('donateur')->name('donateur.')->group(function () {
+    Route::get('/dashboard', [DonateurDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/mes-dons', [DonateurDashboardController::class, 'dons'])->name('dons');
+    Route::get('/nouveau-don', [DonateurDashboardController::class, 'nouveauDon'])->name('nouveau-don');
+    Route::get('/suivi', [DonateurDashboardController::class, 'suivi'])->name('suivi');
+    Route::get('/rapports', [DonateurDashboardController::class, 'rapports'])->name('rapports');
+    Route::get('/notifications', [DonateurDashboardController::class, 'notifications'])->name('notifications');
+    Route::get('/parametres', [DonateurDashboardController::class, 'parametres'])->name('parametres');
+    Route::get('/aide', [DonateurDashboardController::class, 'aides'])->name('aide');
 });
-Route::prefix('dashboard/medecin')->middleware(['auth', 'role:medecin'])->group(function () {
 
-    Route::resource('rendez-vous', RendezVousController::class);
-    // Dashboard principal médecin
-    Route::get('/', function () {
-        return view('dashMedecin.index');
-    })->name('dashboard.medecin');
+Route::middleware(['auth', 'role:medecin'])->prefix('medecin')->name('medecin.')->group(function () {
+    Route::get('/dashboard', [MedecinDashboardController::class, 'index'])->name('dashboard');
 
-    Route::get('/', [DashboardController::class, 'index'])->name('dashboard.medecin');
-
-    Route::get('/rendez-vous-du-jour', [DashboardController::class, 'getRendezVousDuJour'])->name('medecin.rendezvous.jour');
-
-    // Gestion des patients
-    Route::get('/patients', [GestionPatientDashMedecinController::class, 'index'])->name('medecin.patients');
-
-    // Gestion des dossiers médicaux
-    Route::get('/dossiers-medicaux', [GestionPatientDashMedecinController::class, 'dossiersMedicaux'])->name('medecin.dossiers.medicaux');
-    Route::get('/dossiers/{dossier}', [GestionPatientDashMedecinController::class, 'showDossierMedicalJson'])->name('medecin.dossier.show');
-    Route::get('/dossier', [GestionPatientDashMedecinController::class, 'showDossierMedical'])->name('medecin.dossiermedical');
-    Route::post('/dossier-medical/update', [GestionPatientDashMedecinController::class, 'updateDossierMedical'])->name('medecin.dossier.update');
+    Route::resource('rendez-vous', MedecinRendezVousController::class);
+    Route::get('/patients', [PatientController::class, 'index'])->name('patients');
+    Route::get('/dossiers-medicaux', [PatientController::class, 'dossiersMedicaux'])->name('dossiers.medicaux');
+    Route::get('/dossiers/{dossier}', [PatientController::class, 'showDossierMedicalJson'])->name('dossier.show');
+    Route::get('/dossier', [PatientController::class, 'showDossierMedical'])->name('dossiermedical');
+    Route::post('/dossier-medical/update', [PatientController::class, 'updateDossierMedical'])->name('dossier.update');
     // Agenda & Rendez-vous
-    Route::controller(RendezVousController::class)->group(function () {
-        Route::get('/agenda', 'index')->name('medecin.agenda');
-        Route::get('/rendez-vous/evenements', 'getEvenements')->name('rendez-vous.evenements');
-        Route::post('/rendez-vous', 'store')->name('rendez-vous.store');
-        Route::put('/rendez-vous/{rendezVous}', 'update')->name('rendez-vous.update');
-        Route::delete('/rendez-vous/{rendezVous}', 'destroy')->name('rendez-vous.destroy');
+    Route::controller(MedecinRendezVousController::class)->group(function () {
+        Route::get('/agenda', 'index')->name('agenda');
+        // Les routes JSON ont été déplacées vers routes/api.php
     });
-
-    // Traitements & Suivis
-    Route::get('/traitements', function () {
-        return view('dashMedecin.SuiviTraitements.index');
-    })->name('medecin.traitements');
-
-    // Gestion des Prestations
-    Route::get('/prestations', function () {
-        return view('dashMedecin.gestionPrestations.index');
-    })->name('medecin.prestations');
-
-    // Communication & Assistance
-    Route::get('/communication', function () {
-        return view('dashMedecin.communication.index');
-    })->name('medecin.communication');
-
-    Route::get('/patients/search', [RendezVousController::class, 'getPatients'])->name('patients.search');
-    // Routes pour les rendez-vous
-    Route::get('/rendez-vous', [RendezVousController::class, 'index'])->name('medecin.rendez-vous.index');
-
-    // API pour les opérations CRUD sur les rendez-vous
-    Route::get('/api/rendez-vous', [RendezVousController::class, 'getEvenements'])->name('medecin.rendez-vous.evenements');
-    Route::post('/api/rendez-vous', [RendezVousController::class, 'store'])->name('medecin.rendez-vous.store');
-    Route::get('/api/rendez-vous/{rendezVous}', [RendezVousController::class, 'show'])->name('medecin.rendez-vous.show');
-    Route::put('/api/rendez-vous/{rendezVous}', [RendezVousController::class, 'update'])->name('medecin.rendez-vous.update');
-    Route::delete('/api/rendez-vous/{rendezVous}', [RendezVousController::class, 'destroy'])->name('medecin.rendez-vous.destroy');
-
-    // Ajouter cette route pour gérer le changement de statut
-    Route::put('/api/rendez-vous/{rendezVous}/statut', [RendezVousController::class, 'updateStatus'])->name('medecin.rendez-vous.updateStatus');
-
-    // Route pour créer le lien de consultation
-    Route::post('/api/rendez-vous/{rendezVous}/creer-lien-consultation', [RendezVousController::class, 'creerLienConsultation'])->name('medecin.rendez-vous.creer-lien-consultation');
-
-    // API pour récupérer la liste des patients
-    Route::get('/api/patients', [RendezVousController::class, 'getPatients'])->name('medecin.patients.list');
+    Route::get('/traitements', [MedecinDashboardController::class, 'SuiviTraitements'])->name('traitements');
+    Route::get('/prestations', [MedecinDashboardController::class, 'Prestations'])->name('prestations');
+    Route::get('/communication', [MedecinDashboardController::class, 'communication'])->name('communication');
+    Route::resource('consultations', ConsultationController::class);
+    // Ordonnance embedded in consultation
+    Route::post('/consultations/{consultation}/ordonnance', [ConsultationController::class, 'upsertOrdonnance'])->name('consultations.ordonnance.upsert');
+    Route::delete('/consultations/{consultation}/ordonnance', [ConsultationController::class, 'deleteOrdonnance'])->name('consultations.ordonnance.delete');
+    // Redirection vers consultation depuis un rendez-vous
+    Route::get('/rendez-vous/{rendezVous}/consultation', [ConsultationController::class, 'redirectToConsultationFromRendezVous'])->name('rendezvous.to.consultation');
+    // Route pour récupérer les rendez-vous du jour
+    Route::get('/rendez-vous-du-jour', [MedecinDashboardController::class, 'getRendezVousDuJour'])->name('rendez-vous-du-jour');
+});
+// Endpoints JSON utilisés par le dashboard médecin (protégés par session web)
+Route::middleware(['auth', 'role:medecin'])->prefix('api/medecin')->group(function () {
+    Route::get('/rendez-vous-du-jour', [MedecinDashboardController::class, 'getRendezVousDuJour']);
+    Route::get('/timeline', [TimelineController::class, 'getTimelineData']);
 });
 
-Route::prefix('dashboard/patient')->middleware(['auth', 'role:patient'])->group(function () {
-    // Dashboard patient
-    Route::get('/', function () {
-        return view('dashPatient.index');
-    })->name('dashboard.patient');
-    // Rendez-vous
-    Route::get('/rendezvous/create', function () {
-        return view('dashPatient.rendezvous.create');
-    })->name('patient.rendezvousCreate');
-    Route::get('/rendezvous', [RendezVousController::class, 'indexPatient'])
-        ->name('patient.rendezvous');
-    // Achat médicaments
-    Route::get('/medicaments', function () {
-        return view('dashPatient.achatMedicament.index');
-    })->name('patient.medicaments');
+
+
+Route::middleware(['auth', 'role:patient'])->prefix('patient')->name('patient.')->group(function () {
+    Route::get('/dashboard', [PatientDashboardController::class, 'index'])->name('dashboard');
+
+    Route::get('/rendez-vous/create', [PatientDashboardController::class, 'createRendezVous'])->name('rendez-vous.create');
+
+    Route::get('/rendez-vous', [PatientRendezVousController::class, 'indexPatient'])
+        ->name('rendez-vous.index');
+
+    Route::post('/rendez-vous', [PatientRendezVousController::class, 'patientRendezVousStore'])
+        ->name('rendez-vous.store');
+
+    Route::put('/rendez-vous/{rendezVous}/cancel', [PatientRendezVousController::class, 'cancelRendezVous'])
+        ->name('rendez-vous.cancel');
+
+    // Dossier patient via contrôleur
+    Route::get('/dossier', [DossierController::class, 'index'])->name('dossier');
+    Route::get('/ordonnance/download', [DossierController::class, 'downloadOrdonnance'])->name('ordonnance.download');
+    Route::get('/ordonnance/view', [DossierController::class, 'viewOrdonnance'])->name('ordonnance.view');
+    Route::get('/messages', [PatientDashboardController::class, 'messages'])->name('messages');
+    Route::get('/medicaments', [PatientDashboardController::class, 'medicaments'])->name('medicaments');
 
     // Commandes
-    Route::get('/commandes', function () {
-        return view('dashPatient.commandes.index');
-    })->name('patient.commandes');
+    Route::get('/commandes', [PatientDashboardController::class, 'commandes'])->name('commandes');
 
     // Dons médicaux
-    Route::get('/dons', function () {
-        return view('dashPatient.dons.index');
-    })->name('patient.dons');
-     // Ajout de la route pour récupérer les médecins par spécialité
-     Route::get('/api/medecins', [RendezVousController::class, 'getMedecinsBySpecialite'])
-     ->name('patient.medecins.by.specialite');
+    Route::get('/dons', [PatientDashboardController::class, 'dons'])->name('dons');
 
- Route::get('/rendez-vous', [RendezVousController::class, 'indexPatient'])->name('patient.rendez-vous.index');
- Route::put('/rendez-vous/{rendezVous}/cancel', [RendezVousController::class, 'cancelRendezVous'])->name('patient.rendez-vous.cancel');
+    // Routes API patient (JSON) - sous le même middleware auth
+    // Médecins par spécialité
+    Route::get('/medecins/by-specialite', [PatientRendezVousController::class, 'getMedecinsBySpecialite'])
+        ->name('api.medecins.by-specialite');
 
- // Route de test pour vérifier les liens de consultation du patient
- Route::get('/api/test-liens-patient', function () {
-     $user = Auth::user();
-     $patient = $user->patient;
+    // Détails d'un médecin
+    Route::get('/medecins/{medecin}', [PatientRendezVousController::class, 'getMedecinDetails'])
+        ->name('api.medecin.details');
 
-     if (!$patient) {
-         return response()->json(['error' => 'Patient non trouvé'], 404);
-     }
-
-     $rendezVous = RendezVous::with('medecin.user')
-         ->where('patient_id', $patient->id)
-         ->where('date_debut', '>=', now())
-         ->where('statut', 'confirmé')
-         ->get();
-
-     $consultationService = app(\App\Services\ConsultationService::class);
-     $resultats = [];
-
-     foreach ($rendezVous as $rdv) {
-         $lien = $consultationService->creerOuRecupererLien($rdv);
-         $resultats[] = [
-             'rdv_id' => $rdv->id,
-             'medecin' => $rdv->medecin->nom . ' ' . $rdv->medecin->prenom,
-             'date' => $rdv->date_debut,
-             'lien_original' => $rdv->lien_en_ligne,
-             'lien_generer' => $lien,
-             'type' => str_contains($lien, 'meet.google.com') ? 'Google Meet' : 'Jitsi'
-         ];
-     }
-
-     return response()->json($resultats);
- })->middleware(['auth', 'role:patient'])->name('patient.test-liens');
+    // Créneaux disponibles d'un médecin
+    Route::get('/medecins/{medecin}/creneaux-disponibles', [PatientRendezVousController::class, 'getCreneauxDisponibles'])
+        ->name('api.medecin.creneaux-disponibles');
 });
-
-// Routes pour les rendez-vous des patients
-Route::middleware(['auth', 'role:patient'])->group(function () {
- // Route existante pour l'affichage du formulaire de création
- Route::get('/patient/rendez-vous/create', [RendezVousController::class, 'patientRendezVousCreate'])
-     ->name('patient.rendezvousCreate');
-
- // Route pour la liste des rendez-vous
- Route::get('/patient/rendez-vous', [RendezVousController::class, 'indexPatient'])
-     ->name('patient.rendez-vous.index');
-
- // Route pour l'enregistrement du rendez-vous
- Route::post('/patient/rendez-vous', [RendezVousController::class, 'patientRendezVousStore'])
-     ->name('patient.rendez-vous.store');
-
- // Route pour l'annulation d'un rendez-vous
- Route::put('/patient/rendez-vous/{rendezVous}/cancel', [RendezVousController::class, 'cancelRendezVous'])
-     ->name('patient.rendez-vous.cancel');
-
-});
-
-

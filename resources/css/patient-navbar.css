@@ -1,0 +1,43 @@
+/* Patient Navbar Styles */
+
+/* Hide scrollbar but keep functionality */
+.hide-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Gradient fade on edges */
+.timeline-container {
+    position: relative;
+}
+.timeline-container::before,
+.timeline-container::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 30px;
+    z-index: 1;
+    pointer-events: none;
+}
+.timeline-container::before {
+    left: 0;
+    background: linear-gradient(to right, rgba(0,0,0,0.8), transparent);
+}
+.timeline-container::after {
+    right: 0;
+    background: linear-gradient(to left, rgba(0,0,0,0.8), transparent);
+}
+
+/* Active time indicator animation */
+.time-indicator {
+    animation: pulse 2s infinite;
+}
+@keyframes pulse {
+    0% { opacity: 0.8; }
+    50% { opacity: 1; }
+    100% { opacity: 0.8; }
+}

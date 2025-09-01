@@ -1,6 +1,11 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Import des fichiers CSS personnalisés */
+@import './dashboard.css';
+@import './dashMedecin-navbar.css';
+@import './patient-navbar.css';
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+@import './status-select.css';
 
 [x-cloak] {
     display: none;

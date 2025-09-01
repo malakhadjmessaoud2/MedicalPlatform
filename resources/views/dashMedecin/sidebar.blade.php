@@ -28,9 +28,9 @@
         <!-- Navigation Items -->
         <div class="space-y-4">
             <!-- Dashboard -->
-            <a href="{{ route('dashboard.medecin') }}"
+            <a href="{{ route('medecin.dashboard') }}"
                class="flex items-center pl-3">
-                <div class="w-10 h-10 rounded-full {{ request()->routeIs('dashboard.medecin') ? 'bg-black text-white' : 'bg-white text-gray-600' }} flex items-center justify-center">
+                <div class="w-10 h-10 rounded-full {{ request()->routeIs('medecin.dashboard') ? 'bg-black text-white' : 'bg-white text-gray-600' }} flex items-center justify-center">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
                     </svg>
@@ -45,7 +45,7 @@
             </a>
 
             <!-- Patients -->
-            <a href="{{ route('medecin.patients') }}"
+            <a href="{{ route('medecin.dossiers.medicaux') }}"
                class="flex items-center pl-3">
                 <div class="w-10 h-10 rounded-full bg-white text-gray-600 flex items-center justify-center">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -75,6 +75,23 @@
                       x-transition:enter-end="opacity-100"
                       class="ml-3 text-sm font-medium text-gray-900">
                     Agenda
+                </span>
+            </a>
+
+            <!-- Consultations -->
+            <a href="{{ route('medecin.consultations.index') }}"
+               class="flex items-center pl-3">
+                <div class="w-10 h-10 rounded-full {{ request()->routeIs('medecin.consultations.*') ? 'bg-black text-white' : 'bg-white text-gray-600' }} flex items-center justify-center">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                </div>
+                <span x-show="isOpen"
+                      x-transition:enter="transition-opacity duration-300"
+                      x-transition:enter-start="opacity-0"
+                      x-transition:enter-end="opacity-100"
+                      class="ml-3 text-sm font-medium text-gray-900">
+                    Consultations
                 </span>
             </a>
 

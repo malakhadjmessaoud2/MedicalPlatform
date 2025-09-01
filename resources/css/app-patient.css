@@ -1,0 +1,10 @@
+/* Import des fichiers CSS personnalisés pour les patients */
+@import './patient-navbar.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+[x-cloak] {
+    display: none;
+}

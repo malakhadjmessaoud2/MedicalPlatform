@@ -1,0 +1,350 @@
+/* Dashboard Styles - Optimisé */
+
+/* Layout */
+.dashboard-container {
+    @apply p-4 lg:p-8 bg-[#e4e4e4] min-h-screen;
+}
+
+.dashboard-header {
+    @apply flex flex-col lg:flex-row justify-between items-center mb-8 lg:mb-12;
+}
+
+.dashboard-title {
+    @apply text-2xl lg:text-4xl font-bold;
+}
+
+.dashboard-title-accent {
+    @apply text-[#b9ff66];
+}
+
+/* Grid Layout */
+.dashboard-grid {
+    @apply grid grid-cols-1 lg:grid-cols-12 gap-6 mb-12;
+}
+
+.dashboard-main {
+    @apply lg:col-span-8 space-y-6;
+}
+
+.dashboard-sidebar {
+    @apply lg:col-span-4 space-y-6;
+}
+
+/* Cards */
+.dashboard-card {
+    @apply bg-white p-4 lg:p-6 rounded-[20px] shadow-sm hover:shadow-md transition-all;
+}
+
+.stat-card {
+    @apply dashboard-card;
+}
+
+.stat-card-header {
+    @apply flex items-center gap-3 mb-4;
+}
+
+.stat-card-icon {
+    @apply p-2 rounded-full;
+}
+
+.stat-card-title {
+    @apply font-semibold;
+}
+
+.stat-card-content {
+    @apply space-y-3;
+}
+
+.stat-item {
+    @apply flex justify-between items-center;
+}
+
+.stat-label {
+    @apply text-gray-500;
+}
+
+.stat-value {
+    @apply text-2xl font-bold;
+}
+
+.stat-value-secondary {
+    @apply text-xl font-semibold;
+}
+
+.stat-value-small {
+    @apply text-lg font-semibold;
+}
+
+/* Buttons */
+.btn-primary {
+    @apply bg-[#b9ff66] hover:bg-[#a8eb5f] transition-all;
+}
+
+.btn-secondary {
+    @apply bg-blue-500 hover:bg-blue-600 text-white transition-all;
+}
+
+.btn-success {
+    @apply bg-green-500 hover:bg-green-600 text-white transition-all;
+}
+
+.btn-danger {
+    @apply bg-red-500 hover:bg-red-600 text-white transition-all;
+}
+
+.btn-disabled {
+    @apply bg-gray-300 text-gray-500 cursor-not-allowed;
+}
+
+.btn-rounded {
+    @apply rounded-full;
+}
+
+.btn-sm {
+    @apply text-sm py-2 px-4;
+}
+
+.btn-icon {
+    @apply p-2;
+}
+
+/* Patient Cards */
+.patient-card {
+    @apply flex flex-col lg:flex-row items-center justify-between gap-4 p-4 bg-gray-50 rounded-lg shadow-sm hover:shadow-md transition-all mb-2;
+}
+
+.patient-info {
+    @apply flex items-center gap-4;
+}
+
+.patient-photo {
+    @apply rounded-full object-cover border-2 border-[#b9ff66] shadow;
+    min-width: 56px;
+    min-height: 56px;
+}
+
+.patient-details {
+    @apply flex-1;
+}
+
+.patient-name {
+    @apply text-lg font-bold text-gray-800;
+}
+
+.patient-meta {
+    @apply text-sm text-gray-500 flex gap-2 items-center;
+}
+
+.patient-meta-item {
+    @apply inline-flex items-center gap-1;
+}
+
+.patient-meta-icon {
+    @apply w-4 h-4;
+}
+
+.patient-meta-icon-blue {
+    @apply text-blue-400;
+}
+
+.patient-meta-icon-green {
+    @apply text-green-400;
+}
+
+.consultation-indicator {
+    @apply text-xs mt-1;
+}
+
+.patient-actions {
+    @apply flex flex-col lg:flex-row items-center gap-3;
+}
+
+.status-label {
+    @apply px-4 py-1.5 rounded-full text-sm font-semibold;
+}
+
+.status-confirmed {
+    @apply bg-green-100 text-green-700;
+}
+
+.status-pending {
+    @apply bg-yellow-100 text-yellow-700;
+}
+
+.status-cancelled {
+    @apply bg-red-100 text-red-700;
+}
+
+.action-buttons {
+    @apply flex items-center gap-2;
+}
+
+/* Consultation Status Colors */
+.status-unconfirmed {
+    @apply text-red-500 font-medium;
+}
+
+.status-finished {
+    @apply text-gray-600 font-medium;
+}
+
+.status-active {
+    @apply text-green-600 font-medium;
+}
+
+.status-can-start {
+    @apply text-blue-600 font-medium;
+}
+
+.status-upcoming {
+    @apply text-gray-500;
+}
+
+/* Empty States */
+.empty-state {
+    @apply text-center py-8 bg-gray-50 rounded-lg;
+}
+
+.empty-state-icon {
+    @apply w-12 h-12 mx-auto text-gray-400 mb-4;
+}
+
+.empty-state-title {
+    @apply text-gray-500 text-lg;
+}
+
+.empty-state-subtitle {
+    @apply text-gray-400 text-sm mt-2;
+}
+
+/* Modal */
+.modal-overlay {
+    @apply fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50;
+}
+
+.modal-content {
+    @apply bg-white rounded-[30px] p-8 w-3/4 max-h-[80vh] overflow-y-auto;
+}
+
+.modal-header {
+    @apply flex justify-between items-start mb-6;
+}
+
+.modal-title {
+    @apply text-2xl font-bold;
+}
+
+.modal-close {
+    @apply text-gray-500 hover:text-gray-700;
+}
+
+/* Tables */
+.table-container {
+    @apply overflow-x-auto;
+}
+
+.table {
+    @apply w-full;
+}
+
+.table-header {
+    @apply bg-gray-50 rounded-lg;
+}
+
+.table-header-cell {
+    @apply px-6 py-3 text-left text-sm font-medium text-gray-500;
+}
+
+.table-body {
+    @apply divide-y divide-gray-200;
+}
+
+.table-row {
+    @apply hover:bg-gray-50 transition-colors;
+}
+
+.table-cell {
+    @apply px-6 py-4;
+}
+
+/* Pagination */
+.pagination {
+    @apply flex justify-between items-center mt-6;
+}
+
+.pagination-btn {
+    @apply flex items-center justify-center w-8 h-8 rounded-full text-sm hover:bg-gray-100 transition-all;
+}
+
+.pagination-btn.active {
+    @apply bg-[#b9ff66] hover:bg-[#a8eb5f];
+}
+
+.pagination-btn[disabled] {
+    @apply opacity-50 cursor-not-allowed hover:bg-transparent;
+}
+
+/* Notifications */
+.notification {
+    @apply fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 transform translate-x-full;
+}
+
+.notification-success {
+    @apply bg-green-500 text-white;
+}
+
+.notification-error {
+    @apply bg-red-500 text-white;
+}
+
+.notification-info {
+    @apply bg-blue-500 text-white;
+}
+
+.notification-content {
+    @apply flex items-center gap-2;
+}
+
+.notification-close {
+    @apply ml-2 text-white hover:text-gray-200;
+}
+
+/* Loading States */
+.loading-spinner {
+    @apply animate-spin rounded-full h-8 w-8 border-b-2 border-[#b9ff66] mx-auto;
+}
+
+.loading-text {
+    @apply text-gray-500 mt-2;
+}
+
+/* Responsive Utilities */
+@media (max-width: 640px) {
+    .dashboard-container {
+        @apply p-4;
+    }
+
+    .dashboard-header {
+        @apply flex-col gap-4;
+    }
+
+    .patient-card {
+        @apply flex-col gap-4;
+    }
+
+    .patient-actions {
+        @apply flex-col gap-3;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .dashboard-container {
+        @apply bg-white;
+    }
+
+    .action-buttons,
+    .modal-overlay {
+        @apply hidden;
+    }
+}

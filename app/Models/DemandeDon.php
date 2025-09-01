@@ -9,16 +9,29 @@ class DemandeDon extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['medicament_id', 'quantite_demandee', 'patient_id', 'date_demande', 'status', 'certification_id'];
+    protected $fillable = [
+        'pharmacie_id',
+        'donateur_id',
+        'patient_id',
+        'quantite_demandee',
+        'date_demande',
+        'status',
+        'certification_id',
+    ];
 
-    public function medicament()
+    public function pharmacie()
     {
-        return $this->belongsTo(Medicament::class);
+        return $this->belongsTo(Pharmacie::class);
     }
 
     public function patient()
     {
-        return $this->belongsTo(Patient::class);
+        return $this->belongsTo(User::class, 'patient_id');
+    }
+
+    public function donateur()
+    {
+        return $this->belongsTo(User::class, 'donateur_id');
     }
 
     public function certification()

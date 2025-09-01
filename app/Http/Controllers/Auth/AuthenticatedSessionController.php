@@ -22,7 +22,7 @@ class AuthenticatedSessionController extends FortifyAuthenticatedSessionControll
 
         // Attempt to log the user in
         if (Auth::attempt($request->only('email', 'password'), $request->boolean('remember'))) {
-            $request->session()->regenerate();
+             $request->session()->regenerate();
 
             // Redirect based on user role
             return redirect()->intended($this->getHomePath(Auth::user()));
@@ -57,10 +57,16 @@ class AuthenticatedSessionController extends FortifyAuthenticatedSessionControll
     protected function getHomePath($user)
     {
         if ($user->role === 'medecin') {
-            return '/dashboard/medecin';
+            return '/medecin/dashboard';
         } elseif ($user->role === 'patient') {
-            return '/dashboard/patient';
+            return '/patient/dashboard';
+        } elseif ($user->role === 'operateurpharmacie') {
+            return '/pharmacie/dashboard';
+        } elseif ($user->role === 'donateur') {
+            return '/donateur/dashboard';
         }
 
+        // Default fallback
+        return '/dashboard';
     }
 }

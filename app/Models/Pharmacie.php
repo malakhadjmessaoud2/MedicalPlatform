@@ -9,24 +9,34 @@ class Pharmacie extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['nom', 'localisation'];
+    protected $fillable = [
+        'operateurpharmacie_id',
+        'nom',
+        'localisation',
+        'tel',
+        'email',
+        'site_web',
+        'horaires',
+        'image',
+        'description',
+    ];
+    public function operateurPharmacie()
+    {
+        return $this->belongsTo(User::class, 'operateurpharmacie_id');
+    }
 
     public function medicaments()
     {
         return $this->hasMany(Medicament::class);
     }
 
-    public function demandesDon()
+    public function mouvementsStock()
     {
-        return $this->hasMany(DemandeDon::class);
+        return $this->hasMany(MouvementStock::class);
     }
 
-    public function paiements()
-    {
-        return $this->hasMany(Paiement::class);
-    }
-
-    public function dons()
-    {
-        return $this->hasMany(Don::class);
-    }}
+    // public function commandes()
+    // {
+    //     return $this->hasMany(Commande::class);
+    // }
+}

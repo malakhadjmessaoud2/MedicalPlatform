@@ -23,6 +23,6 @@ class Don extends Model
 
     public function donateur()
     {
-        return $this->belongsTo(Donateur::class);
+        return $this->belongsTo(User::class, 'donateur_id');
     }
 }

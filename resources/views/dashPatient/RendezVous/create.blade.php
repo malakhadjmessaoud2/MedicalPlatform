@@ -2,6 +2,20 @@
 
 @section('content')
 <div class="p-8 bg-gray-50 min-h-screen rounded-2xl">
+    @if(session('error'))
+        <div class="max-w-4xl mx-auto mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+            {{ session('error') }}
+        </div>
+    @endif
+    @if($errors->any())
+        <div class="max-w-4xl mx-auto mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+            <ul class="list-disc ml-5">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
     <!-- Stepper Progress -->
     <div class="max-w-4xl mx-auto mb-8">
         <div class="flex items-center justify-between">
@@ -43,7 +57,7 @@
                 <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-semibold step-circle cursor-pointer">
                     4
                 </div>
-                <span class="text-sm font-medium mt-2 step-title">Dossier</span>
+                <span class="text-sm font-medium mt-2 step-title">Documents médicaux</span>
             </div>
         </div>
     </div>
@@ -56,8 +70,8 @@
             <input type="hidden" id="medecin_id" name="medecin_id">
             <input type="hidden" id="date_rdv" name="date_rdv">
             <input type="hidden" id="heure_debut" name="heure_debut">
-            <input type="hidden" id="selected_specialite" name="specialite">
-            <input type="hidden" name="statut" value="en_attente">
+            <input type="hidden" id="date_fin" name="date_fin">
+
             <input type="hidden" id="type" name="type">
             <input type="hidden" id="description_input" name="description">
         </form>
@@ -167,64 +181,25 @@
         <div id="step3" class="hidden space-y-6">
             <h2 class="text-2xl font-bold">Information patient</h2>
             <div class="bg-white rounded-2xl p-6 border border-gray-100 max-w-2xl">
-                <!-- Type de patient -->
-                <div class="space-y-4 mb-6">
-                    <div>
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="radio" name="patient_type" value="self" class="text-[#b9ff66]" checked>
-                            <span>Je prends rendez-vous pour moi-même</span>
-                        </label>
-                    </div>
-                    <div>
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="radio" name="patient_type" value="family" class="text-[#b9ff66]">
-                            <span>Je prends rendez-vous pour un membre de ma famille</span>
-                        </label>
-                    </div>
-                    </div>
-
-                    <!-- Formulaire membre famille (caché par défaut) -->
-                <div id="familyForm" class="hidden space-y-4 mb-6 p-4 bg-gray-50 rounded-xl">
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Prénom</label>
-                                <input type="text" class="mt-1 w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-[#b9ff66] focus:border-transparent">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Nom</label>
-                                <input type="text" class="mt-1 w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-[#b9ff66] focus:border-transparent">
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Lien de parenté</label>
-                            <select class="mt-1 w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-[#b9ff66] focus:border-transparent">
-                                <option>Conjoint(e)</option>
-                                <option>Enfant</option>
-                                <option>Parent</option>
-                                <option>Autre</option>
-                            </select>
-                        </div>
-                    </div>
-
                 <!-- Type de rendez-vous -->
                 <div class="mb-6">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Type de rendez-vous</label>
                     <div class="grid grid-cols-3 gap-4">
-                        <label class="relative flex cursor-pointer rounded-lg border border-gray-200 p-4 hover:border-[#b9ff66] focus-within:ring-2 focus-within:ring-[#b9ff66]">
+                        <label class="relative flex cursor-pointer rounded-lg border border-gray-200 p-4 hover:border-[#b9ff66] focus-within:ring-2 focus-within:ring-[#b9ff66] transition-all duration-200 appointment-type-option" data-type="consultation">
                             <input type="radio" name="appointment_type" value="consultation" class="sr-only" checked>
                             <span class="flex flex-col">
                                 <span class="block text-sm font-medium text-gray-900">Consultation</span>
                                 <span class="block text-xs text-gray-500">Première visite</span>
                             </span>
                         </label>
-                        <label class="relative flex cursor-pointer rounded-lg border border-gray-200 p-4 hover:border-[#b9ff66] focus-within:ring-2 focus-within:ring-[#b9ff66]">
+                        <label class="relative flex cursor-pointer rounded-lg border border-gray-200 p-4 hover:border-[#b9ff66] focus-within:ring-2 focus-within:ring-[#b9ff66] transition-all duration-200 appointment-type-option" data-type="suivi">
                             <input type="radio" name="appointment_type" value="suivi" class="sr-only">
                             <span class="flex flex-col">
                                 <span class="block text-sm font-medium text-gray-900">Suivi</span>
                                 <span class="block text-xs text-gray-500">Visite de contrôle</span>
                             </span>
                         </label>
-                        <label class="relative flex cursor-pointer rounded-lg border border-gray-200 p-4 hover:border-[#b9ff66] focus-within:ring-2 focus-within:ring-[#b9ff66]">
+                        <label class="relative flex cursor-pointer rounded-lg border border-gray-200 p-4 hover:border-[#b9ff66] focus-within:ring-2 focus-within:ring-[#b9ff66] transition-all duration-200 appointment-type-option" data-type="urgent">
                             <input type="radio" name="appointment_type" value="urgent" class="sr-only">
                             <span class="flex flex-col">
                                 <span class="block text-sm font-medium text-gray-900">Urgent</span>
@@ -236,7 +211,7 @@
 
                 <!-- Description / Motif de consultation -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Motif de consultation</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Informations supplémentaires</label>
                     <textarea
                         id="description"
                         name="description"
@@ -248,9 +223,9 @@
             </div>
         </div>
 
-        <!-- Step 4: Dossier médical -->
+        <!-- Step 4: Documents médicaux -->
         <div id="step4" class="hidden space-y-6">
-            <h2 class="text-2xl font-bold">Dossier médical (optionnel)</h2>
+            <h2 class="text-2xl font-bold">Documents médicaux (optionnel)</h2>
             <div class="bg-white rounded-2xl p-6 border border-gray-100 max-w-2xl">
                 <div class="space-y-4">
                     <div class="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center">
@@ -345,7 +320,7 @@ const totalSteps = 4;
 let stepValidation = {
     1: false,
     2: false,
-    3: true,  // Pour faciliter les tests, mettre à false en production
+    3: false,  // Étape 3 doit être validée par type + description
     4: true   // Dossier (optionnel, donc toujours valide)
 };
 let selectedSpecialite = '';
@@ -358,11 +333,39 @@ document.addEventListener('DOMContentLoaded', function() {
     setupEventListeners();
     goToStep(1);
 
-    // Gestion du formulaire famille
-    setupFamilyForm();
+    // Configuration de la sélection des types de consultation
+    setupAppointmentTypeSelection();
 
     // Charger le nombre de médecins pour chaque spécialité
     loadMedecinCounts();
+    // Capturer et valider en temps réel les champs de l'étape 3
+    setupStep3LiveBinding();
+
+    // Debug: écouter la soumission du formulaire
+    const form = document.getElementById('appointment-form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            console.log('[DEBUG] Soumission du formulaire →', {
+                method: form.method,
+                action: form.action,
+                medecin_id: form.medecin_id?.value,
+                date_rdv: form.date_rdv?.value,
+                heure_debut: form.heure_debut?.value,
+                date_fin: document.getElementById('date_fin')?.value,
+                type: document.getElementById('type')?.value,
+                description: document.getElementById('description_input')?.value
+            });
+            // Garde-fou: si pas de navigation sous 6s, alerter
+            setTimeout(() => {
+                console.warn('[DEBUG] Aucune redirection détectée après soumission (6s). Vérifiez l’onglet Réseau et laravel.log');
+            }, 6000);
+        });
+    }
+
+    // Debug: erreurs JS globales
+    window.addEventListener('error', (ev) => {
+        console.error('[DEBUG] Erreur JS:', ev.message, ev.filename, ev.lineno, ev.colno);
+    });
 
     setTimeout(() => {
         isInitialLoad = false;
@@ -379,11 +382,8 @@ function setupEventListeners() {
         });
     });
 
-    // Gestion des radios pour le type de patient
-    const radioButtons = document.querySelectorAll('input[name="patient_type"]');
-    radioButtons.forEach(radio => {
-        radio.addEventListener('change', handlePatientTypeChange);
-    });
+    // Gestion des types de consultation
+    setupAppointmentTypeSelection();
 }
 
 // Gestion de la sélection de spécialité
@@ -404,24 +404,74 @@ function handleSpecialitySelection(selectedCard, allCards) {
         selectedBorder.classList.add('border-[#b9ff66]', 'shadow-lg');
     }
 
-    // Mettre à jour la spécialité sélectionnée et le champ caché correspondant
+    // Mettre à jour la spécialité sélectionnée
     selectedSpecialite = selectedCard.dataset.specialite;
-    document.getElementById('selected_specialite').value = selectedSpecialite;
 
     console.log(`Spécialité sélectionnée : ${selectedSpecialite}`);
     stepValidation[1] = true;
 }
 
-// Configuration du formulaire famille
-function setupFamilyForm() {
-    const familyForm = document.getElementById('familyForm');
-    if (!familyForm) return;
+// Configuration de la sélection des types de consultation
+function setupAppointmentTypeSelection() {
+    const appointmentTypeOptions = document.querySelectorAll('.appointment-type-option');
 
-    document.querySelectorAll('input[name="patient_type"]').forEach(radio => {
-        radio.addEventListener('change', function() {
-            familyForm.classList.toggle('hidden', this.value !== 'family');
+    appointmentTypeOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            // Désélectionner toutes les options
+            appointmentTypeOptions.forEach(opt => {
+                opt.classList.remove('border-[#b9ff66]', 'bg-[#b9ff66]/5');
+                opt.classList.add('border-gray-200');
+            });
+
+            // Sélectionner l'option cliquée
+            this.classList.remove('border-gray-200');
+            this.classList.add('border-[#b9ff66]', 'bg-[#b9ff66]/5');
+
+            // Cocher le radio button correspondant
+            const radio = this.querySelector('input[type="radio"]');
+            if (radio) {
+                radio.checked = true;
+            }
+
+            // Mettre à jour le champ caché "type" immédiatement
+            const selectedType = this.dataset.type || radio?.value;
+            const hiddenType = document.getElementById('type');
+            if (hiddenType && selectedType) {
+                hiddenType.value = selectedType;
+            }
+
+            // Revalider l'étape 3
+            validateStep3();
         });
     });
+
+    // Sélectionner par défaut la première option
+    const firstOption = appointmentTypeOptions[0];
+    if (firstOption) {
+        firstOption.classList.remove('border-gray-200');
+        firstOption.classList.add('border-[#b9ff66]', 'bg-[#b9ff66]/5');
+    }
+}
+
+// Lier les champs de l'étape 3 pour mettre à jour les inputs cachés en direct
+function setupStep3LiveBinding() {
+    const desc = document.getElementById('description');
+    if (desc) {
+        desc.addEventListener('input', function() {
+            const hiddenDesc = document.getElementById('description_input');
+            if (hiddenDesc) {
+                hiddenDesc.value = this.value.trim();
+            }
+            validateStep3();
+        });
+    }
+
+    // Initialiser la valeur du type si une option est déjà sélectionnée
+    const currentType = document.querySelector('input[name="appointment_type"]:checked')?.value;
+    const hiddenType = document.getElementById('type');
+    if (hiddenType && currentType) {
+        hiddenType.value = currentType;
+    }
 }
 
 // Navigation entre les étapes
@@ -446,10 +496,24 @@ function goToStep(step) {
 
 function goToNextStep() {
     if (currentStep < totalSteps) {
-        if (currentStep === 3) {
-            if (!validateStep3()) {
-                return;
-            }
+        // Logs et validations spécifiques avant d'avancer
+        if (currentStep === 1) {
+            console.log('[Step 1] Spécialité sélectionnée =', selectedSpecialite || '(non sélectionnée)');
+        } else if (currentStep === 2) {
+            const medecinId = document.getElementById('medecin_id')?.value || '';
+            const dateRdv = document.getElementById('date_rdv')?.value || '';
+            const heureDebut = document.getElementById('heure_debut')?.value || '';
+            const dateFin = document.getElementById('date_fin')?.value || '';
+            console.log('[Step 2] Sélection =', { medecin_id: medecinId, date_rdv: dateRdv, heure_debut: heureDebut, date_fin: dateFin });
+        } else if (currentStep === 3) {
+            if (!validateStep3AndAlert()) return;
+            const typeVal = document.getElementById('type')?.value || document.querySelector('input[name="appointment_type"]:checked')?.value || '';
+            const descVal = document.getElementById('description_input')?.value || document.getElementById('description')?.value.trim() || '';
+            console.log('[Step 3] Données patient =', { type: typeVal, description: descVal });
+            // Étape 3 validée → aller directement à l'étape 4
+            stepValidation[3] = true;
+            goToStep(4);
+            return;
         }
 
         if (stepValidation[currentStep]) {
@@ -458,6 +522,16 @@ function goToNextStep() {
             alert("Veuillez compléter cette étape avant de continuer.");
         }
     } else {
+        // Dernière étape: reconfirmer que les champs cachés sont remplis puis soumettre
+        const hiddenType = document.getElementById('type');
+        const hiddenDesc = document.getElementById('description_input');
+        if (!hiddenType.value) {
+            // Reprendre la valeur de l'option sélectionnée
+            hiddenType.value = document.querySelector('input[name="appointment_type"]:checked')?.value || '';
+        }
+        if (!hiddenDesc.value) {
+            hiddenDesc.value = document.getElementById('description')?.value.trim() || '';
+        }
         handleFinalStep();
     }
 }
@@ -527,12 +601,14 @@ function handleFinalStep() {
 
     // Log de débogage final avant soumission
     console.log('--- Début de la soumission du formulaire ---');
-    console.log('ID Médecin:', document.getElementById('medecin_id').value);
-    console.log('Date RDV:', document.getElementById('date_rdv').value);
-    console.log('Heure Début:', document.getElementById('heure_debut').value);
-    console.log('Spécialité:', document.getElementById('selected_specialite').value);
-    console.log('Type:', document.getElementById('type').value);
-    console.log('Description:', document.getElementById('description_input').value);
+    console.log({
+        medecin_id: document.getElementById('medecin_id').value,
+        date_rdv: document.getElementById('date_rdv').value,
+        heure_debut: document.getElementById('heure_debut').value,
+        date_fin: document.getElementById('date_fin').value,
+        type: document.getElementById('type').value,
+        description: document.getElementById('description_input').value,
+    });
     console.log('-------------------------------------------');
 
     // Validation des champs requis
@@ -540,10 +616,7 @@ function handleFinalStep() {
         alert('Veuillez sélectionner un médecin, une date et un créneau horaire.');
         return;
     }
-    if (!form.specialite.value) {
-        alert('La spécialité n\'a pas été sélectionnée correctement. Veuillez revenir à la première étape.');
-        return;
-    }
+
     if (!appointmentType) {
         alert('Veuillez sélectionner un type de rendez-vous.');
         return;
@@ -570,34 +643,46 @@ function handleFinalStep() {
     form.submit();
 }
 
-// Gestion du type de patient
-function handlePatientTypeChange(event) {
-    const familyForm = document.getElementById('familyForm');
-    if (familyForm) {
-        familyForm.classList.toggle('hidden', event.target.value !== 'family');
-    }
+// Gestion de la sélection du type de consultation
+function handleAppointmentTypeChange(event) {
+    const selectedType = event.target.value;
+    console.log('Type de consultation sélectionné:', selectedType);
 }
 
 // Fonction pour charger le nombre de médecins par spécialité
 function loadMedecinCounts() {
     const specialites = ['Médecin de famille', 'Généraliste', 'Psychiatrie', 'Pédiatrie', 'Nutrition'];
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
     specialites.forEach(specialite => {
-        fetch(`{{ route('patient.medecins.by.specialite') }}?specialite=${encodeURIComponent(specialite)}`)
-            .then(response => response.json())
-            .then(data => {
-                const countElements = document.querySelectorAll(`.medecin-count[data-specialite="${specialite}"]`);
-                countElements.forEach(el => {
-                    el.textContent = `${data.count} médecin${data.count > 1 ? 's' : ''} disponible${data.count > 1 ? 's' : ''}`;
-                });
-            })
-            .catch(error => {
-                console.error('Erreur lors du chargement des médecins:', error);
-                const countElements = document.querySelectorAll(`.medecin-count[data-specialite="${specialite}"]`);
-                countElements.forEach(el => {
-                    el.textContent = 'Erreur de chargement';
-                });
+        fetch(`/patient/medecins/by-specialite?specialite=${encodeURIComponent(specialite)}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            const countElements = document.querySelectorAll(`.medecin-count[data-specialite="${specialite}"]`);
+            countElements.forEach(el => {
+                el.textContent = `${data.count} médecin${data.count > 1 ? 's' : ''} disponible${data.count > 1 ? 's' : ''}`;
             });
+        })
+        .catch(error => {
+            console.error('Erreur lors du chargement des médecins:', error);
+            const countElements = document.querySelectorAll(`.medecin-count[data-specialite="${specialite}"]`);
+            countElements.forEach(el => {
+                el.textContent = 'Erreur de chargement';
+            });
+        });
     });
 }
 
@@ -620,7 +705,15 @@ function loadMedecinsBySpecialite() {
     selectedMedecinId = null;
     stepValidation[2] = false;
 
-    fetch(`/api/medecins/by-specialite?specialite=${encodeURIComponent(selectedSpecialite)}`)
+    fetch(`/patient/medecins/by-specialite?specialite=${encodeURIComponent(selectedSpecialite)}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Accept': 'application/json'
+        },
+        credentials: 'same-origin'
+    })
         .then(response => {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -693,14 +786,19 @@ function setupMedecinSelection() {
     // Ajouter les écouteurs d'événements pour la sélection des cartes de médecins
     document.querySelectorAll('.medecin-card').forEach(card => {
         card.addEventListener('click', (e) => {
-            if (!e.target.closest('.view-doctor-details')) {
-                const medecinId = card.dataset.medecinId;
-                if (medecinId) {
-                    selectMedecin(medecinId);
-                }
+            // Ignorer les clics sur le bouton de détails, l'input date et les boutons de créneaux
+            if (e.target.closest('.view-doctor-details') ||
+                e.target.closest('input[type="date"]') ||
+                e.target.closest('.creneau-btn')) {
+                return;
+            }
+
+            const medecinId = card.dataset.medecinId;
+            if (medecinId) {
+                selectMedecin(medecinId);
             }
         });
-        });
+    });
 }
 
 // Fonction pour afficher les détails du médecin
@@ -712,7 +810,15 @@ function showDoctorDetails(medecinId) {
     modal.querySelector('.bg-white').classList.add('animate-scaleIn');
     content.innerHTML = '<div class="text-center py-8"><div class="spinner"></div><p>Chargement...</p></div>';
 
-    fetch(`/api/medecins/${medecinId}`)
+    fetch(`/patient/medecins/${medecinId}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Accept': 'application/json'
+        },
+        credentials: 'same-origin'
+    })
         .then(response => response.json())
         .then(medecin => {
             let photoUrl = '';
@@ -836,8 +942,23 @@ function loadCreneauxForMedecin(medecinId, date) {
 
     // Mettre à jour la date dans le résumé si elle existe déjà
     updateDateInSummary(date);
+    // Enregistrer immédiatement la date sélectionnée pour l'étape 2
+    const dateRdvInput = document.getElementById('date_rdv');
+    if (dateRdvInput) {
+        dateRdvInput.value = date;
+    }
+    // Revalider l'étape 2
+    updateStep2Validation();
 
-    fetch(`/api/medecins/${medecinId}/creneaux-disponibles?date=${date}`)
+    fetch(`/patient/medecins/${medecinId}/creneaux-disponibles?date=${date}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Accept': 'application/json'
+        },
+        credentials: 'same-origin'
+    })
         .then(response => response.json())
         .then(data => {
             if (data.error) {
@@ -853,7 +974,7 @@ function loadCreneauxForMedecin(medecinId, date) {
             creneauxContainer.innerHTML = data.creneaux_disponibles
                 .map(creneau => `
                     <button type="button"
-                            onclick="selectCreneauAndMedecin(${medecinId}, '${date}', '${creneau.heure_debut}')"
+                            onclick="selectCreneauAndMedecin(event, ${medecinId}, '${date}', '${creneau.heure_debut}')"
                             class="p-2 text-sm text-center border rounded-lg hover:bg-[#b9ff66]/10 hover:border-[#b9ff66] transition-colors creneau-btn">
                         ${creneau.heure_debut} - ${creneau.heure_fin}
                     </button>
@@ -886,14 +1007,24 @@ function updateTimeInSummary(heure) {
     if (selectedTime) {
         selectedTime.textContent = `${heure} - ${getEndTime(heure, 30)}`;
     }
+    // Mettre à jour le champ caché date_fin si date_rdv existe
+    const dateVal = document.getElementById('date_rdv')?.value;
+    const endTime = getEndTime(heure, 30);
+    if (dateVal && endTime) {
+        const dateFinInput = document.getElementById('date_fin');
+        if (dateFinInput) {
+            dateFinInput.value = `${dateVal} ${endTime}`;
+        }
+    }
 }
 
 // Fonction pour sélectionner un créneau et un médecin
-function selectCreneauAndMedecin(medecinId, date, heure) {
+function selectCreneauAndMedecin(evt, medecinId, date, heure) {
     // Mettre à jour les champs cachés
     const medecinIdInput = document.getElementById('medecin_id');
     const dateRdvInput = document.getElementById('date_rdv');
     const heureDebutInput = document.getElementById('heure_debut');
+    const dateFinInput = document.getElementById('date_fin');
 
     if (!medecinIdInput || !dateRdvInput || !heureDebutInput) {
         console.error('Les champs de formulaire requis sont manquants');
@@ -904,6 +1035,11 @@ function selectCreneauAndMedecin(medecinId, date, heure) {
     medecinIdInput.value = medecinId;
     dateRdvInput.value = date;
     heureDebutInput.value = heure;
+    // Calculer et stocker la date de fin locale (affichage/diagnostic)
+    const end = getEndTime(heure, 30);
+    if (dateFinInput) {
+        dateFinInput.value = `${date} ${end}`;
+    }
 
     // Mettre à jour l'UI des créneaux
     const allCreneauBtns = document.querySelectorAll('.creneau-btn');
@@ -911,12 +1047,49 @@ function selectCreneauAndMedecin(medecinId, date, heure) {
         btn.classList.remove('bg-[#b9ff66]/10', 'border-[#b9ff66]', 'font-medium');
     });
 
-    if (event && event.target) {
-        event.target.classList.add('bg-[#b9ff66]/10', 'border-[#b9ff66]', 'font-medium');
+    if (evt && evt.target) {
+        evt.target.classList.add('bg-[#b9ff66]/10', 'border-[#b9ff66]', 'font-medium');
     }
 
+    // Revalider l'étape 2
+    updateStep2Validation();
     // Mettre à jour le résumé
     updateAppointmentSummary(medecinId, date, heure);
+
+    // Logs de contrôle
+    console.log('[Sélection créneau] medecin_id=', medecinIdInput.value, ' date_rdv=', dateRdvInput.value, ' heure_debut=', heureDebutInput.value);
+
+    // Ne pas avancer automatiquement; l'utilisateur utilise le bouton "Suivant"
+}
+
+// Fonction pour sélectionner simplement un médecin (sans créneau)
+function selectMedecin(medecinId) {
+    const medecinIdInput = document.getElementById('medecin_id');
+    if (medecinIdInput) {
+        medecinIdInput.value = medecinId;
+    }
+
+    // Revalider l'étape 2 (sans forcer la validation)
+    updateStep2Validation();
+
+    // Mettre à jour visuellement la carte sélectionnée
+    document.querySelectorAll('.medecin-card').forEach(card => {
+        if (card.dataset.medecinId === String(medecinId)) {
+            card.classList.add('ring-2', 'ring-[#b9ff66]');
+        } else {
+            card.classList.remove('ring-2', 'ring-[#b9ff66]');
+        }
+    });
+
+    // Rester sur step 2: l'utilisateur doit choisir une date + créneau
+}
+
+// Vérifie et met à jour la validation de l'étape 2 en fonction des champs cachés
+function updateStep2Validation() {
+    const form = document.getElementById('appointment-form');
+    if (!form) return;
+    const ok = !!(form.medecin_id?.value && form.date_rdv?.value && form.heure_debut?.value);
+    stepValidation[2] = ok;
 }
 
 // Fonction pour mettre à jour le résumé complet du rendez-vous
@@ -936,7 +1109,15 @@ function updateAppointmentSummary(medecinId, date, heure) {
     updateTimeInSummary(heure);
 
     // Charger les informations du médecin
-    fetch(`/api/medecins/${medecinId}`)
+    fetch(`/patient/medecins/${medecinId}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Accept': 'application/json'
+        },
+        credentials: 'same-origin'
+    })
         .then(response => {
             if (!response.ok) throw new Error('Erreur réseau');
             return response.json();
@@ -1015,29 +1196,33 @@ function validateStep3() {
     const description = document.getElementById('description').value.trim();
     const appointmentType = document.querySelector('input[name="appointment_type"]:checked');
 
-    if (!appointmentType) {
-        alert("Veuillez sélectionner un type de rendez-vous");
-        return false;
-    }
+    // Mettre à jour les champs cachés
+    const hiddenType = document.getElementById('type');
+    const hiddenDesc = document.getElementById('description_input');
+    if (appointmentType && hiddenType) hiddenType.value = appointmentType.value;
+    if (hiddenDesc) hiddenDesc.value = description;
 
-    if (description.length < 10) {
-        alert("Veuillez fournir une description d'au moins 10 caractères");
-        return false;
-    }
+    // Définir l'état de validation
+    const ok = !!appointmentType && description.length >= 10;
+    stepValidation[3] = ok;
+    return ok;
+}
 
-    // Si c'est pour un membre de la famille, vérifier les champs supplémentaires
-    const patientType = document.querySelector('input[name="patient_type"]:checked').value;
-    if (patientType === 'family') {
-        const familyForm = document.getElementById('familyForm');
-        const prenom = familyForm.querySelector('input[type="text"]').value.trim();
-        const nom = familyForm.querySelector('input[type="text"]:last-of-type').value.trim();
-
-        if (!prenom || !nom) {
-            alert("Veuillez remplir tous les champs pour le membre de la famille");
+// Helper: valide l'étape 3 et affiche des alerts si nécessaire
+function validateStep3AndAlert() {
+    const isValid = validateStep3();
+    if (!isValid) {
+        const appointmentType = document.querySelector('input[name="appointment_type"]:checked');
+        const description = document.getElementById('description').value.trim();
+        if (!appointmentType) {
+            alert("Veuillez sélectionner un type de rendez-vous");
+            return false;
+        }
+        if (description.length < 10) {
+            alert("Veuillez fournir une description d'au moins 10 caractères");
             return false;
         }
     }
-
     return true;
 }
 </script>
@@ -1081,6 +1266,22 @@ function validateStep3() {
     @keyframes spin {
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
+    }
+
+    /* Styles pour les options de type de consultation */
+    .appointment-type-option {
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+    }
+
+    .appointment-type-option:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(185, 255, 102, 0.15);
+    }
+
+    .appointment-type-option.border-[#b9ff66] {
+        background-color: rgba(185, 255, 102, 0.05);
+        box-shadow: 0 4px 12px rgba(185, 255, 102, 0.2);
     }
 </style>
 @endsection

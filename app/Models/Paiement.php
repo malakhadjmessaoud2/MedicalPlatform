@@ -10,20 +10,27 @@ class Paiement extends Model
 
     use HasFactory;
 
-    protected $fillable = ['patient_id', 'pharmacie_id', 'medicament_id', 'montant', 'date_paiement'];
+    protected $fillable = [
+        'commande_id',
+        'consultation_id',
+        'don_id',
+        'montant',
+        'type',
+        'datePaiement',
+    ];
 
-    public function patient()
+    public function commande()
     {
-        return $this->belongsTo(Patient::class);
+        return $this->belongsTo(Commande::class, 'commande_id');
     }
 
-    public function pharmacie()
+    public function consultation()
     {
-        return $this->belongsTo(Pharmacie::class);
+        return $this->belongsTo(Consultation::class, 'consultation_id');
     }
 
-    public function medicament()
+    public function demandeDon()
     {
-        return $this->belongsTo(Medicament::class);
+        return $this->belongsTo(DemandeDon::class, 'don_id');
     }
 }

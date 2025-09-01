@@ -1,0 +1,344 @@
+﻿/* Hide scrollbar but keep functionality */
+.hide-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Timeline container - strict overflow control */
+.timeline-container {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    height: 48px; /* Fixed height */
+}
+
+/* Gradient fade on edges */
+.timeline-container::before,
+.timeline-container::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 30px;
+    z-index: 1;
+    pointer-events: none;
+}
+.timeline-container::before {
+    left: 0;
+    background: linear-gradient(to right, rgba(0,0,0,0.8), transparent);
+}
+.timeline-container::after {
+    right: 0;
+    background: linear-gradient(to left, rgba(0,0,0,0.8), transparent);
+}
+
+/* Active time indicator animation */
+.time-indicator {
+    animation: pulse 2s infinite;
+}
+@keyframes pulse {
+    0% { opacity: 0.8; }
+    50% { opacity: 1; }
+    100% { opacity: 0.8; }
+}
+
+/* Timeline scrollable - strict containment */
+.timeline-scrollable {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    margin: 0 48px; /* Space for scroll buttons */
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    scroll-behavior: smooth;
+    scroll-snap-type: x proximity;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+    padding: 0 8px;
+    box-sizing: border-box;
+}
+.timeline-scrollable::-webkit-scrollbar {
+    display: none;
+}
+
+/* Timeline slot - compact chip layout */
+.timeline-slot {
+    flex: 0 0 auto;
+    scroll-snap-align: center;
+    position: relative;
+    cursor: pointer;
+    height: 32px;
+}
+.timeline-slot:hover {
+    transform: translateY(-2px) scale(1.02);
+    z-index: 10;
+}
+.timeline-slot.current {
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    transform: translateY(-2px);
+}
+.timeline-slot.past {
+    opacity: 0.7;
+}
+.timeline-slot.future {
+    opacity: 0.9;
+}
+
+/* Slot chip styles */
+.slot-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 10px;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(255,255,255,0.5);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    backdrop-filter: blur(6px);
+    transition: all 0.2s ease;
+}
+.slot-chip:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+.slot-chip.free {
+    background: rgba(255,255,255,0.28);
+    border: 1px dashed rgba(0,0,0,0.25);
+    color: rgba(0,0,0,0.7);
+}
+.slot-avatar {
+    width: 18px;
+    height: 18px;
+    border-radius: 9999px;
+    border: 1px solid #fff;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+}
+.slot-name {
+    max-width: 100px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(0,0,0,0.9);
+    line-height: 1;
+}
+.slot-time {
+    font-size: 11px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    color: rgba(0,0,0,0.6);
+    line-height: 1;
+}
+.timeline-slot.current .slot-chip {
+    outline: 2px solid rgba(0,0,0,0.6);
+    outline-offset: 0;
+}
+
+/* Time indicator styles */
+.time-indicator {
+    animation: pulse 2s infinite;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+@keyframes pulse {
+    0% { opacity: 0.8; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.05); }
+    100% { opacity: 0.8; transform: scale(1); }
+}
+
+/* Scroll button styles */
+.scroll-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 32px;
+    height: 32px;
+    background: rgba(0, 0, 0, 0.3);
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(10px);
+    z-index: 10;
+}
+.scroll-btn:hover {
+    background: rgba(0, 0, 0, 0.5);
+    transform: translateY(-50%) scale(1.1);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+.scroll-btn:active {
+    transform: translateY(-50%) scale(0.95);
+}
+.scroll-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    transform: translateY(-50%) scale(1);
+}
+
+/* Loading animation */
+.loading-dots {
+    display: inline-block;
+}
+.loading-dots::after {
+    content: '';
+    animation: dots 1.5s infinite;
+}
+@keyframes dots {
+    0%, 20% { content: ''; }
+    40% { content: '.'; }
+    60% { content: '..'; }
+    80%, 100% { content: '...'; }
+}
+
+/* Empty slot styling */
+.empty-slot {
+    width: 100%;
+    height: 100%;
+    border: 2px dashed rgba(0,0,0,0.2);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,0.3);
+    backdrop-filter: blur(6px);
+}
+
+/* Smooth transitions for all elements */
+* {
+    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Enhanced hover effects for timeline slots */
+.timeline-slot:hover .slot-chip {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+    z-index: 20;
+}
+
+/* Disable in-chip tooltip overlay; we use a bottom bar instead */
+.timeline-slot,
+.timeline-slot .slot-chip { position: relative; }
+.timeline-slot .slot-chip::before,
+.timeline-slot .slot-chip::after { content: none !important; }
+
+/* Bottom tooltip bar (outside timeline, always visible area) */
+.timeline-tooltip {
+    width: 100%;
+    margin-top: 8px;
+    max-height: 0;
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: all 0.2s ease;
+    pointer-events: none;
+}
+.timeline-tooltip.visible {
+    max-height: 40px;
+    opacity: 1;
+    transform: translateY(0);
+}
+.timeline-tooltip .tooltip-inner {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0,0,0,0.85);
+    color: #fff;
+    padding: 6px 12px;
+    border-radius: 9999px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin: 0 48px; /* align with scroll button gutters */
+}
+
+/* Statistics hover effect */
+.stats-container {
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.stats-container:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+.stats-container::before {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.95);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 1000;
+    pointer-events: none;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.1);
+    max-width: 300px;
+    text-align: center;
+    line-height: 1.4;
+}
+.stats-container::after {
+    content: '';
+    position: absolute;
+    bottom: calc(100% + 4px);
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: rgba(0, 0, 0, 0.95);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+.stats-container:hover::before,
+.stats-container:hover::after {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(-2px);
+}
+
+/* Enhanced slot chip with more info */
+.slot-chip.enhanced {
+    min-width: 120px;
+    padding: 0 12px;
+}
+
+.slot-chip .meet-icon {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-radius: 4px;
+    padding: 2px;
+}
+.slot-chip .meet-icon:hover {
+    background: rgba(0,0,0,0.1);
+    transform: scale(1.1);
+}
+.slot-chip .meet-icon.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+.slot-chip .meet-icon.disabled:hover {
+    background: none;
+    transform: none;
+}

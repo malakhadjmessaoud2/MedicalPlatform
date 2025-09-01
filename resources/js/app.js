@@ -1,7 +1,11 @@
 // console.log('app.js chargé');
 import './bootstrap';
 import './agenda'; // Importez votre fichier agenda.js
-import './realtime';
+import './dashboard'; // Fichier dashboard.js principal
+// Import des fichiers du dashboard
+import './dashboard/navbar-timeline';
+import './dashboard/consultation-manager';
+import './dashboard/dossier-manager';
 
 // Import FullCalendar et ses plugins
 import { Calendar } from '@fullcalendar/core';

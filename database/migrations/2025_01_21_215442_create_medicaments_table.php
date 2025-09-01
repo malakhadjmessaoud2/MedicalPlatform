@@ -12,12 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('medicaments', function (Blueprint $table) {
-            $table->id();
+            $table->bigIncrements('id');
             $table->string('nom');
-            $table->string('description');
-            $table->integer('stock');
-            $table->float('prix');
+            $table->string('description')->nullable();
             $table->boolean('est_don')->default(false);
+            $table->string('picture')->nullable();
+            $table->string('qrcode');
             $table->timestamps();
         });
     }

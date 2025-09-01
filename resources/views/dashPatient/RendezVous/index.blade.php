@@ -8,7 +8,7 @@
             <h1 class="text-2xl font-bold text-gray-800">Mes Rendez-vous</h1>
             <p class="text-gray-500 mt-1">Gérez vos consultations médicales en toute simplicité</p>
         </div>
-        <a href="{{ route('patient.rendezvousCreate') }}" class="px-4 py-2.5 bg-[#b9ff66] hover:bg-[#a3e55a] text-gray-800 rounded-lg flex items-center gap-2 shadow-sm transition-all duration-200 hover:shadow-md">
+        <a href="{{ route('patient.rendez-vous.create') }}" class="px-4 py-2.5 bg-[#b9ff66] hover:bg-[#a3e55a] text-gray-800 rounded-lg flex items-center gap-2 shadow-sm transition-all duration-200 hover:shadow-md">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
             </svg>
@@ -82,7 +82,7 @@
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div class="flex items-center gap-4">
                         @php
-                            $photo = $rdv->medecin->user?->profile_photo_path;
+                            $photo = $rdv->medecin?->profile_photo_path;
                             $photoUrl = $photo ? asset('storage/' . $photo) : 'https://ui-avatars.com/api/?name=' . urlencode($rdv->medecin->prenom . ' ' . $rdv->medecin->nom);
                         @endphp
                         <img src="{{ $photoUrl }}" alt="Photo de Dr. {{ $rdv->medecin->nom }}" class="w-14 h-14 rounded-full object-cover border-2 border-gray-100">
@@ -101,7 +101,16 @@
 
                     <div class="flex flex-col items-end">
                         <div class="bg-[#b9ff66]/10 px-3 py-1 rounded-full text-[#92cc52] text-sm font-medium">
-                            {{ ucfirst($rdv->statut) }}
+                            @php
+                                $labels = [
+                                    'pending' => 'En attente',
+                                    'confirmed' => 'Confirmé',
+                                    'cancelled' => 'Annulé',
+                                    'rejected' => 'Rejeté',
+                                    'completed' => 'Terminé',
+                                ];
+                            @endphp
+                            {{ $labels[$rdv->statut] ?? ucfirst($rdv->statut) }}
                         </div>
                         <p class="font-medium text-lg mt-2">{{ $rdv->date_debut->timezone('Africa/Tunis')->translatedFormat('d F Y') }}</p>
                         <p class="text-gray-500">
@@ -156,7 +165,7 @@
         @empty
         <div class="bg-gray-50 rounded-xl p-6 text-center">
             <p class="text-gray-500">Aucun rendez-vous à venir</p>
-            <a href="{{ route('patient.rendezvousCreate') }}" class="inline-block mt-3 px-4 py-2 bg-[#b9ff66] text-black rounded-lg hover:bg-[#a8eb5f] transition-colors">
+            <a href="{{ route('patient.rendez-vous.create') }}" class="inline-block mt-3 px-4 py-2 bg-[#b9ff66] text-black rounded-lg hover:bg-[#a8eb5f] transition-colors">
                 Prendre un rendez-vous
             </a>
         </div>
@@ -173,7 +182,7 @@
             Consultations en ligne
         </h2>
 
-                @php
+        @php
             // Filtrer seulement les consultations qui doivent être affichées dans "Consultations en ligne"
             // IMPORTANT: Les consultations restent affichées jusqu'à la date de fin du rendez-vous
             $consultationsEnLigne = $prochainsRendezVous->filter(function($rdv) {
@@ -182,7 +191,7 @@
 
                 // Afficher dès que le statut est confirmé ET jusqu'à la fin du rendez-vous
                 // Cela permet aux consultations de rester visibles pendant toute leur durée
-                return $rdv->statut === 'confirmé' &&
+                return $rdv->statut === 'confirmed' &&
                        $rdv->lien_en_ligne &&
                        $maintenant <= $heureFin;
             });
@@ -203,7 +212,7 @@
                         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <div class="flex items-center gap-4">
                                 @php
-                                    $photo = $rdv->medecin->user?->profile_photo_path;
+                                    $photo = $rdv->medecin?->profile_photo_path;
                                     $photoUrl = $photo ? asset('storage/' . $photo) : 'https://ui-avatars.com/api/?name=' . urlencode($rdv->medecin->prenom . ' ' . $rdv->medecin->nom);
                                 @endphp
                                 <img src="{{ $photoUrl }}" alt="Photo de Dr. {{ $rdv->medecin->nom }}" class="w-14 h-14 rounded-full object-cover border-2 border-blue-100">
@@ -219,18 +228,18 @@
 
                             <div class="flex flex-col items-end">
                                 <div class="flex items-center gap-2 mb-3">
-                                    @if($consultationEnCours)
-                                        <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-                                            🟢 Consultation en cours
-                                        </span>
+                                        @if($consultationEnCours)
+                                            <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+                                                🟢 Consultation en cours
+                                            </span>
                                     @elseif($consultationActive)
-                                        <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                                            <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
                                             🔵 Consultation peut commencer (5 min avant)
-                                        </span>
+                                            </span>
                                     @else
-                                        <span class="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm font-medium">
+                                            <span class="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm font-medium">
                                             ⏰ Consultation programmée
-                                        </span>
+                                            </span>
                                     @endif
                                 </div>
 
@@ -245,14 +254,7 @@
                                     </a>
                                     <!-- Indicateur du type de lien -->
                                     <div class="text-xs text-gray-500 mt-1">
-                                        @if(str_contains($rdv->lien_en_ligne, 'meet.google.com'))
-                                            <span class="inline-flex items-center gap-1">
-                                                <svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
-                                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                                                </svg>
-                                                Google Meet
-                                            </span>
-                                        @elseif(str_contains($rdv->lien_en_ligne, 'meet.jit.si'))
+                                        @if(str_contains($rdv->lien_en_ligne, 'meet.jit.si'))
                                             <span class="inline-flex items-center gap-1">
                                                 <svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
                                                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
@@ -278,9 +280,9 @@
                                             @endif
                                         </div>
                                         @if(!$consultationEnCours)
-                                            <div class="text-xs text-gray-400">
-                                                {{ $heureDebut->diffForHumans() }}
-                                            </div>
+                                        <div class="text-xs text-gray-400">
+                                            {{ $heureDebut->diffForHumans() }}
+                                        </div>
                                         @endif
                                     </div>
                                 @endif
@@ -316,7 +318,7 @@
                     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div class="flex items-center gap-4">
                             @php
-                                $photo = $rdv->medecin->user?->profile_photo_path;
+                                $photo = $rdv->medecin?->profile_photo_path;
                                 $photoUrl = $photo ? asset('storage/' . $photo) : 'https://ui-avatars.com/api/?name=' . urlencode($rdv->medecin->prenom . ' ' . $rdv->medecin->nom);
                             @endphp
                             <img src="{{ $photoUrl }}" alt="Photo de Dr. {{ $rdv->medecin->nom }}" class="w-14 h-14 rounded-full object-cover border-2 border-gray-100">
@@ -351,10 +353,10 @@
                                     </button>
                                 </form>
                             </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
             @endforeach
         @else
             <div class="bg-gray-50 rounded-xl p-6 text-center">
@@ -373,7 +375,7 @@
 
             // Inclure seulement les rendez-vous confirmés terminés aujourd'hui
             // Logique: statut confirmé + heure actuelle > heure de fin + même jour
-            return $rdv->statut === 'confirmé' &&
+            return $rdv->statut === 'confirmed' &&
                    $maintenant > $heureFin &&
                    $heureFin->isSameDay($aujourdhui);
         });
@@ -471,8 +473,25 @@
                             <p class="text-sm text-gray-500">
                                 {{ $rdv->date_debut->timezone('Africa/Tunis')->format('H:i') }}
                             </p>
-                            <span class="px-2 py-1 text-xs rounded-full {{ $rdv->statut === 'confirmé' ? 'bg-green-100 text-green-800' : ($rdv->statut === 'annulé' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800') }}">
-                                {{ ucfirst($rdv->statut) }}
+                            @php
+                                $cls = match($rdv->statut) {
+                                    'confirmed' => 'bg-green-100 text-green-800',
+                                    'cancelled' => 'bg-red-100 text-red-800',
+                                    'pending' => 'bg-yellow-100 text-yellow-800',
+                                    'rejected' => 'bg-red-100 text-red-800',
+                                    'completed' => 'bg-gray-100 text-gray-800',
+                                    default => 'bg-gray-100 text-gray-800'
+                                };
+                                $labels = [
+                                    'pending' => 'En attente',
+                                    'confirmed' => 'Confirmé',
+                                    'cancelled' => 'Annulé',
+                                    'rejected' => 'Rejeté',
+                                    'completed' => 'Terminé',
+                                ];
+                            @endphp
+                            <span class="px-2 py-1 text-xs rounded-full {{ $cls }}">
+                                {{ $labels[$rdv->statut] ?? ucfirst($rdv->statut) }}
                             </span>
                         </div>
                     </div>
@@ -620,48 +639,48 @@
     });
 
     // Debug: Vérifier les liens de consultation
-    console.log('=== Debug: Liens de consultation ===');
+        console.log('=== Debug: Liens de consultation ===');
 
-    // Vérifier les liens dans les prochains rendez-vous
-    const prochainsRDV = @json($prochainsRendezVous);
-    console.log('Prochains rendez-vous:', prochainsRDV);
+        // Vérifier les liens dans les prochains rendez-vous
+        const prochainsRDV = @json($prochainsRendezVous);
+        console.log('Prochains rendez-vous:', prochainsRDV);
 
-    prochainsRDV.forEach((rdv, index) => {
-        const dateDebut = new Date(rdv.date_debut);
-        const dateFin = new Date(rdv.date_fin || new Date(dateDebut.getTime() + 30 * 60000));
-        const maintenant = new Date();
-        const estTermine = maintenant > dateFin;
-        const estActif = maintenant >= dateDebut && maintenant <= dateFin;
+        prochainsRDV.forEach((rdv, index) => {
+            const dateDebut = new Date(rdv.date_debut);
+            const dateFin = new Date(rdv.date_fin || new Date(dateDebut.getTime() + 30 * 60000));
+            const maintenant = new Date();
+            const estTermine = maintenant > dateFin;
+            const estActif = maintenant >= dateDebut && maintenant <= dateFin;
         const peutCommencer = maintenant >= new Date(dateDebut.getTime() - 5 * 60000) && maintenant <= dateFin;
 
-        console.log(`RDV ${index + 1}:`, {
-            id: rdv.id,
-            medecin: rdv.medecin?.nom + ' ' + rdv.medecin?.prenom,
-            date_debut: rdv.date_debut,
-            date_fin: rdv.date_fin,
-            lien_en_ligne: rdv.lien_en_ligne,
-            has_lien: !!rdv.lien_en_ligne,
-            est_termine: estTermine,
-            est_actif: estActif,
-            peut_commencer: peutCommencer,
-            maintenant: maintenant.toISOString()
+            console.log(`RDV ${index + 1}:`, {
+                id: rdv.id,
+                medecin: rdv.medecin?.nom + ' ' + rdv.medecin?.prenom,
+                date_debut: rdv.date_debut,
+                date_fin: rdv.date_fin,
+                lien_en_ligne: rdv.lien_en_ligne,
+                has_lien: !!rdv.lien_en_ligne,
+                est_termine: estTermine,
+                est_actif: estActif,
+                peut_commencer: peutCommencer,
+                maintenant: maintenant.toISOString()
+            });
         });
-    });
 
-    // Vérifier les consultations en ligne
-    const consultationsEnLigne = prochainsRDV.filter(rdv => {
-        const dateFin = new Date(rdv.date_fin || new Date(new Date(rdv.date_debut).getTime() + 30 * 60000));
-        const maintenant = new Date();
-        return rdv.lien_en_ligne && maintenant <= dateFin;
-    });
+        // Vérifier les consultations en ligne
+        const consultationsEnLigne = prochainsRDV.filter(rdv => {
+            const dateFin = new Date(rdv.date_fin || new Date(new Date(rdv.date_debut).getTime() + 30 * 60000));
+            const maintenant = new Date();
+            return rdv.lien_en_ligne && maintenant <= dateFin;
+        });
 
-    console.log('Consultations avec lien (non terminées):', consultationsEnLigne.length);
+        console.log('Consultations avec lien (non terminées):', consultationsEnLigne.length);
 
-    if (consultationsEnLigne.length === 0) {
-        console.warn('⚠️ Aucun lien de consultation actif trouvé !');
-    } else {
-        console.log('✅ Liens de consultation actifs trouvés:', consultationsEnLigne.map(rdv => rdv.lien_en_ligne));
-    }
+        if (consultationsEnLigne.length === 0) {
+            console.warn('⚠️ Aucun lien de consultation actif trouvé !');
+        } else {
+            console.log('✅ Liens de consultation actifs trouvés:', consultationsEnLigne.map(rdv => rdv.lien_en_ligne));
+        }
 </script>
 
 @endsection

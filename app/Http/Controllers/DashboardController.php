@@ -8,6 +8,7 @@ use App\Models\Patient;
 use App\Models\Medecin;
 use App\Models\DossierMedical;
 use App\Models\RendezVous;
+use App\Models\User;
 use App\Services\ConsultationService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
@@ -40,10 +41,10 @@ class DashboardController extends Controller
         $consultationsMois = RendezVous::where('medecin_id', $medecin->id)
             ->whereBetween('date_debut', [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()])
             ->count();
-        $totalPatients = Patient::whereHas('rendezVous', function($query) use ($medecin) {
+        $totalPatients = User::whereHas('rendezVous', function($query) use ($medecin) {
             $query->where('medecin_id', $medecin->id);
         })->count();
-        $nouveauxPatients = Patient::whereHas('rendezVous', function($query) use ($medecin) {
+        $nouveauxPatients = User::whereHas('rendezVous', function($query) use ($medecin) {
             $query->where('medecin_id', $medecin->id)
                 ->whereMonth('date_debut', Carbon::now()->month);
         })->count();
@@ -74,59 +75,15 @@ class DashboardController extends Controller
     // API : Récupérer tous les rendez-vous du jour pour le médecin connecté (avec infos patient)
     public function getRendezVousDuJour()
     {
+        /** @var User $user */
         $user = Auth::user();
-        if (!$user->medecin) {
+        if (!$user->isMedecin()) {
             return response()->json(['error' => 'Accès non autorisé. Vous devez être un médecin.'], 403);
         }
-        $medecin = $user->medecin;
 
-        $rendezVousDuJour = RendezVous::with(['patient.user'])
-            ->where('medecin_id', $medecin->id)
-            ->whereDate('date_debut', Carbon::today())
-            ->orderBy('date_debut')
-            ->get()
-            ->map(function($rdv) {
-                // Déterminer la photo de profil du patient
-                $photo = 'https://randomuser.me/api/portraits/women/68.jpg';
-                if ($rdv->patient) {
-                    if ($rdv->patient->user && $rdv->patient->user->profile_photo_path) {
-                        $photo = Storage::url($rdv->patient->user->profile_photo_path);
-                    } elseif ($rdv->patient->photo) {
-                        // Si le champ photo est déjà une URL absolue, l'utiliser, sinon le passer par Storage::url
-                        $photo = filter_var($rdv->patient->photo, FILTER_VALIDATE_URL)
-                            ? $rdv->patient->photo
-                            : Storage::url($rdv->patient->photo);
-                    }
-                }
+     //   dd($user->id);
 
-                // Vérifier si la consultation peut commencer (15 minutes avant l'heure prévue)
-                $heureDebut = Carbon::parse($rdv->date_debut);
-                $heureFin = Carbon::parse($rdv->date_fin ?? $rdv->date_debut->addMinutes(30));
-                $maintenant = Carbon::now();
-
-                $consultationActive = $this->consultationService->consultationPeutCommencer($rdv);
-                $consultationEnCours = $this->consultationService->consultationEnCours($rdv);
-
-                // Utiliser le service pour créer ou récupérer le lien
-                $lienMeet = $this->consultationService->creerOuRecupererLien($rdv);
-
-                return [
-                    'id' => $rdv->id,
-                    'nom' => $rdv->patient->nom ?? '',
-                    'prenom' => $rdv->patient->prenom ?? '',
-                    'photo' => $photo,
-                    'heure' => Carbon::parse($rdv->date_debut)->format('H:i'),
-                    'heure_fin' => $heureFin->format('H:i'),
-                    'type' => $rdv->type ?? '',
-                    'statut' => $rdv->statut ?? '',
-                    'consultation_active' => $consultationActive,
-                    'consultation_en_cours' => $consultationEnCours,
-                    'lien_meet' => $lienMeet,
-                    'date_debut' => $rdv->date_debut,
-                    'date_fin' => $rdv->date_fin
-                ];
-            })->toArray();
-
+        $rendezVousDuJour = $this->consultationService->getRendezVousDuJour($user->id);
         return response()->json($rendezVousDuJour);
     }
 }

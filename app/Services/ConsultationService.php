@@ -3,38 +3,25 @@
 namespace App\Services;
 
 use App\Models\RendezVous;
+use App\Models\Consultation;
+use App\Models\DossierMedical;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class ConsultationService
 {
-    public function __construct(private ?GoogleMeetService $googleMeetService = null)
-    {
-        // L'injection est optionnelle; si le container n'a pas GoogleMeetService, on reste à null
-    }
-
     /**
-     * Retourne un lien de visioconférence pour un rendez-vous en utilisant le provider configuré.
-     * - GOOGLE: via Google Calendar API (si configurée) → lien Meet réel
-     * - JITSI (défaut): lien Jitsi fonctionnel et accessible
+     * Retourne un lien de visioconférence pour un rendez-vous en utilisant Jitsi Meet.
      */
     public function genererLienConsultation(RendezVous $rendezVous): string
     {
-        $provider = strtoupper(env('ONLINE_MEET_PROVIDER', 'JITSI'));
-
-        if ($provider === 'GOOGLE' && $this->googleMeetService) {
-            $meetLink = $this->googleMeetService->createMeetLink($rendezVous);
-            if ($meetLink) {
-                return $meetLink;
-            }
-            // Si l'API Google n'est pas disponible ou échoue, on bascule sur Jitsi
-        }
-
-        // Fallback Jitsi: lien réellement ouvrable, pas besoin de compte
         return $this->genererLienJitsi($rendezVous);
     }
 
     /**
      * Génère un lien Jitsi fonctionnel basé sur l'ID du rendez-vous
+     * Format: https://meet.jit.si/rdv-{id}-{hash}
      */
     private function genererLienJitsi(RendezVous $rendezVous): string
     {
@@ -48,8 +35,8 @@ class ConsultationService
      */
     public function consultationPeutCommencer(RendezVous $rendezVous): bool
     {
-        // Vérifier d'abord que le statut est confirmé
-        if ($rendezVous->statut !== 'confirmé') {
+        // Vérifier d'abord que le statut est confirmé (gérer FR et EN)
+        if (!in_array($rendezVous->statut, ['confirmé', 'confirmed'], true)) {
             return false;
         }
 
@@ -66,8 +53,8 @@ class ConsultationService
      */
     public function consultationEnCours(RendezVous $rendezVous): bool
     {
-        // Vérifier d'abord que le statut est confirmé
-        if ($rendezVous->statut !== 'confirmé') {
+        // Vérifier d'abord que le statut est confirmé (gérer FR et EN)
+        if (!in_array($rendezVous->statut, ['confirmé', 'confirmed'], true)) {
             return false;
         }
 
@@ -83,8 +70,8 @@ class ConsultationService
      */
     public function doitAfficherDansConsultationsEnLigne(RendezVous $rendezVous): bool
     {
-        // Vérifier d'abord que le statut est confirmé
-        if ($rendezVous->statut !== 'confirmé') {
+        // Vérifier d'abord que le statut est confirmé (gérer FR et EN)
+        if (!in_array($rendezVous->statut, ['confirmé', 'confirmed'], true)) {
             return false;
         }
 
@@ -119,14 +106,245 @@ class ConsultationService
      */
     public function creerOuRecupererLien(RendezVous $rendezVous): string
     {
-        // Si un lien est déjà là, le réutiliser tel quel (Google Meet réel ou Jitsi)
+        // Si un lien est déjà là, le réutiliser
         if ($rendezVous->lien_en_ligne) {
             return $rendezVous->lien_en_ligne;
         }
 
-        // Sinon, générer selon le provider
-        $lien = $this->genererLienConsultation($rendezVous);
+        // Sinon, générer un lien Jitsi
+        $lien = $this->genererLienJitsi($rendezVous);
         $rendezVous->update(['lien_en_ligne' => $lien]);
         return $lien;
+    }
+
+    /**
+     * Récupère les statistiques des consultations pour un médecin
+     */
+    public function getStatistiquesConsultations(int $medecinId): array
+    {
+        $aujourdhui = Carbon::today();
+        $debutSemaine = Carbon::now()->startOfWeek();
+        $debutMois = Carbon::now()->startOfMonth();
+
+        $consultationsAujourdhui = Consultation::whereHas('rendezVous', function ($query) use ($medecinId) {
+            $query->where('medecin_id', $medecinId);
+        })
+            ->whereDate('date', $aujourdhui)
+            ->count();
+
+        $consultationsSemaine = Consultation::whereHas('rendezVous', function ($query) use ($medecinId) {
+            $query->where('medecin_id', $medecinId);
+        })
+            ->where('date', '>=', $debutSemaine)
+            ->count();
+
+        $consultationsMois = Consultation::whereHas('rendezVous', function ($query) use ($medecinId) {
+            $query->where('medecin_id', $medecinId);
+        })
+            ->where('date', '>=', $debutMois)
+            ->count();
+
+        return [
+            'aujourdhui' => $consultationsAujourdhui,
+            'semaine' => $consultationsSemaine,
+            'mois' => $consultationsMois
+        ];
+    }
+
+    /**
+     * Récupère les rendez-vous du jour pour un médecin
+     */
+    public function getRendezVousDuJour(int $medecinId): array
+    {
+        $aujourdhui = Carbon::today();
+
+        $rendezVous = RendezVous::with(['patient'])
+            ->where('medecin_id', $medecinId)
+            ->whereDate('date_debut', $aujourdhui)
+            ->orderBy('date_debut')
+            ->get();
+
+        return $rendezVous->map(function ($rdv) {
+            $consultationService = app(ConsultationService::class);
+
+            return [
+                'id' => $rdv->id,
+                'prenom' => $rdv->patient->prenom,
+                'nom' => $rdv->patient->nom,
+                'photo' => $rdv->patient->profile_photo_path
+                    ? asset('storage/' . $rdv->patient->profile_photo_path)
+                    : 'https://ui-avatars.com/api/?name=' . urlencode($rdv->patient->prenom . ' ' . $rdv->patient->nom),
+                'heure' => Carbon::parse($rdv->date_debut)->format('H:i'),
+                'heure_fin' => Carbon::parse($rdv->date_fin ?? Carbon::parse($rdv->date_debut)->addMinutes(30))->format('H:i'),
+                'type' => $rdv->type ?? 'consultation',
+                'statut' => $rdv->statut,
+                'lien_meet' => $consultationService->creerOuRecupererLien($rdv),
+                'consultation_active' => $consultationService->consultationPeutCommencer($rdv),
+                'consultation_en_cours' => $consultationService->consultationEnCours($rdv),
+                'consultation_terminee' => Carbon::now() > Carbon::parse($rdv->date_fin ?? Carbon::parse($rdv->date_debut)->addMinutes(30)),
+                'date_debut' => $rdv->date_debut,
+                'date_fin' => $rdv->date_fin
+            ];
+        })->toArray();
+    }
+
+    /**
+     * Crée une nouvelle consultation
+     */
+    public function createConsultation(array $data, int $medecinId): Consultation
+    {
+        try {
+            DB::beginTransaction();
+
+            // Vérifier que le rendez-vous appartient au médecin
+            $rendezVous = RendezVous::where('id', $data['rendezvous_id'])
+                ->where('medecin_id', $medecinId)
+                ->firstOrFail();
+
+            // Vérifier que le patient a un dossier médical
+            $dossierMedical = DossierMedical::firstOrCreate(
+                ['patient_id' => $rendezVous->patient_id],
+                [
+                    'allergies' => '',
+                    'groupe_sanguin' => '',
+                    'antecedents_medicaux' => '',
+                ]
+            );
+
+            // Créer la consultation
+            $consultation = Consultation::create([
+                'dossier_medical_id' => $dossierMedical->id,
+                'rendezvous_id' => $data['rendezvous_id'],
+                'date' => $data['date'] ?? now(),
+                'type' => $data['type'] ?? 'consultation',
+                'motif' => $data['motif'] ?? '',
+                'symptomes' => $data['symptomes'] ?? '',
+                'tension_arterielle' => $data['tension_arterielle'] ?? '',
+                'frequence_cardiaque' => $data['frequence_cardiaque'] ?? '',
+                'temperature' => $data['temperature'] ?? '',
+                'saturation_o2' => $data['saturation_o2'] ?? '',
+                'score_glasgow' => $data['score_glasgow'] ?? '',
+                'examen_physique' => $data['examen_physique'] ?? '',
+                'diagnostic_presume' => $data['diagnostic_presume'] ?? '',
+                'medicaments_prescrits' => $data['medicaments_prescrits'] ?? '',
+                'propositions_suivi' => $data['propositions_suivi'] ?? '',
+                'instructions_particulieres' => $data['instructions_particulieres'] ?? '',
+                'poids' => $data['poids'] ?? '',
+                'taille' => $data['taille'] ?? '',
+                'imc' => $this->calculerIMC($data['poids'] ?? null, $data['taille'] ?? null),
+                'habitudes_vie' => $data['habitudes_vie'] ?? '',
+                'traitement_actuel' => $data['traitement_actuel'] ?? '',
+                'evolution_symptomes' => $data['evolution_symptomes'] ?? '',
+                'effets_secondaires' => $data['effets_secondaires'] ?? '',
+                'examens_controle' => $data['examens_controle'] ?? '',
+                'symptomes_aigus' => $data['symptomes_aigus'] ?? '',
+                'debut_symptomes' => $data['debut_symptomes'] ?? '',
+                'gravite' => $data['gravite'] ?? '',
+                'orientation_patient' => $data['orientation_patient'] ?? '',
+            ]);
+
+            // Mettre à jour le statut du rendez-vous
+            $rendezVous->update(['statut' => 'completed']);
+
+            DB::commit();
+            return $consultation;
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Erreur lors de la création de la consultation: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
+     * Met à jour une consultation
+     */
+    public function updateConsultation(int $consultationId, array $data, int $medecinId): Consultation
+    {
+        try {
+            $consultation = Consultation::whereHas('rendezVous', function ($query) use ($medecinId) {
+                $query->where('medecin_id', $medecinId);
+            })->findOrFail($consultationId);
+
+            // Calculer l'IMC si poids et taille sont fournis
+            if (isset($data['poids']) || isset($data['taille'])) {
+                $poids = $data['poids'] ?? $consultation->poids;
+                $taille = $data['taille'] ?? $consultation->taille;
+                $data['imc'] = $this->calculerIMC($poids, $taille);
+            }
+
+            $consultation->update($data);
+
+            return $consultation;
+
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de la mise à jour de la consultation: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
+     * Supprime une consultation
+     */
+    public function deleteConsultation(int $consultationId, int $medecinId): bool
+    {
+        try {
+            $consultation = Consultation::whereHas('rendezVous', function ($query) use ($medecinId) {
+                $query->where('medecin_id', $medecinId);
+            })->findOrFail($consultationId);
+
+            // Remettre le rendez-vous en statut "confirmed"
+            $consultation->rendezVous->update(['statut' => 'confirmed']);
+
+            $consultation->delete();
+            return true;
+
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de la suppression de la consultation: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
+     * Récupère les consultations d'un médecin avec filtres
+     */
+    public function getConsultationsMedecin(int $medecinId, array $filters = []): \Illuminate\Database\Eloquent\Collection
+    {
+        $query = Consultation::whereHas('rendezVous', function ($query) use ($medecinId) {
+            $query->where('medecin_id', $medecinId);
+        })->with(['rendezVous.patient', 'rendezVous.medecin']);
+
+        // Appliquer les filtres
+        if (isset($filters['patient_id'])) {
+            $query->whereHas('rendezVous', function ($q) use ($filters) {
+                $q->where('patient_id', $filters['patient_id']);
+            });
+        }
+
+        if (isset($filters['date_debut'])) {
+            $query->where('date', '>=', $filters['date_debut']);
+        }
+
+        if (isset($filters['date_fin'])) {
+            $query->where('date', '<=', $filters['date_fin']);
+        }
+
+        if (isset($filters['type'])) {
+            $query->where('type', $filters['type']);
+        }
+
+        return $query->orderBy('date', 'desc')->get();
+    }
+
+    /**
+     * Calcule l'IMC
+     */
+    private function calculerIMC(?float $poids, ?float $taille): ?float
+    {
+        if (!$poids || !$taille || $taille <= 0) {
+            return null;
+        }
+
+        return round($poids / pow($taille / 100, 2), 2);
     }
 }

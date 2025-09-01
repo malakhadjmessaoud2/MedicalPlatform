@@ -13,11 +13,11 @@ class Certification extends Model
 //cordeonnées medecin
     public function patient()
     {
-        return $this->belongsTo(Patient::class);
+        return $this->belongsTo(User::class, 'patient_id');
     }
 
     public function medecin()
     {
-        return $this->belongsTo(Medecin::class);
+        return $this->belongsTo(User::class, 'medecin_id');
     }
 }

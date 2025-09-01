@@ -6,8 +6,9 @@ export default defineConfig({
         laravel({
             input: [
                 'resources/css/app.css',
+                'resources/css/app-patient.css',
                 'resources/js/app.js',
-                'resources/js/realtime.js'
+                'resources/js/app-patient.js',
             ],
             refresh: true,
         }),

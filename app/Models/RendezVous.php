@@ -13,43 +13,44 @@ class RendezVous extends Model
     protected $table = 'rendez_vous';
 
     protected $fillable = [
-        'medecin_id',
         'patient_id',
-        'titre',
+        'medecin_id',
         'date_debut',
         'date_fin',
-        'description',
         'type',
+        'description',
         'statut',
-        'family_info',
-        'lien_en_ligne'
+        'lien_en_ligne',
     ];
 
     protected $casts = [
         'date_debut' => 'datetime',
         'date_fin' => 'datetime',
-        'est_bloque' => 'boolean',
     ];
 
     public function medecin()
     {
-        return $this->belongsTo(Medecin::class);
+        return $this->belongsTo(User::class, 'medecin_id');
     }
 
     public function patient()
     {
-        return $this->belongsTo(Patient::class);
+        return $this->belongsTo(User::class, 'patient_id');
     }
+
+    // public function consultations()
+    // {
+    //     return $this->hasMany(Consultation::class, 'rendezvous_id');
+    // }
 
     public function getCouleurAttribute($value)
     {
         if ($value) return $value;
-
         return match($this->type) {
             'consultation' => '#10B981', // vert
-            'suivi' => '#F59E0B',       // jaune
-            'urgence' => '#EF4444',     // rouge
-            default => '#6B7280'         // gris
+            'examen' => '#F59E0B',       // jaune
+            'intervention' => '#EF4444',     // rouge
+            'autre' => '#6B7280'         // gris
         };
     }
 }

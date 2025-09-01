@@ -4,8 +4,6 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Models\Medecin;
-use App\Models\Patient;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -36,7 +34,7 @@ class RegisteredUserController extends Controller
     {
         // Validation de base pour tous les utilisateurs
         $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'nom' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'role' => ['required', 'string', 'in:medecin,patient'],
@@ -60,7 +58,8 @@ class RegisteredUserController extends Controller
 
         // Créer l'utilisateur
         $user = User::create([
-            'name' => $request->name,
+            'nom' => $request->nom,
+            'prenom' => $request->prenom,
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'role' => $request->role,
@@ -99,10 +98,7 @@ class RegisteredUserController extends Controller
             // Convertir le tableau de langues en chaîne de caractères
             $langues = !empty($languesArray) ? implode(', ', $languesArray) : '';
 
-            Medecin::create([
-                'user_id' => $user->id,
-                'nom' => $request->name,
-                'prenom' => $request->prenom,
+            $user->update([
                 'specialite' => $request->specialite,
                 'adresse_cabinet' => $request->adresse_cabinet,
                 'experience' => $request->experience,
@@ -111,26 +107,16 @@ class RegisteredUserController extends Controller
                 'score' => 0,
             ]);
         } elseif ($request->role === 'patient') {
-            Patient::create([
-                'user_id' => $user->id,
-                'nom' => $request->name,
-                'prenom' => $request->prenom,
+            $user->update([
                 'dateNaissance' => $request->dateNaissance,
             ]);
         }
 
         // Authentifier l'utilisateur après l'enregistrement
         Auth::login($user);
+        //    dd($user->isMedecin());
 
-        // Rediriger en fonction du rôle
-        if ($user->role === 'medecin') {
-            return redirect()->route('dashboard.medecin');
-        } elseif ($user->role === 'patient') {
-            return redirect()->route('dashboard.patient');
-        }
-
-        // Redirection par défaut si aucun des rôles spécifiques n'est trouvé
-        return redirect()->route('dashboard');
+        return $user->isMedecin() ? redirect()->route('medecin.dashboard') : redirect()->route('patient.dashboard');
     }
 
     /**

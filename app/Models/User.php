@@ -16,7 +16,7 @@ class User extends Authenticatable
 
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory;
-    use HasProfilePhoto;
+    use HasProfilePhoto; // pour la photo de profil jetstream profile_photo_path
     use Notifiable;
     use TwoFactorAuthenticatable;
 
@@ -26,10 +26,20 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
-        'name',
+        'nom',
+        'prenom',
         'email',
         'password',
         'role',
+        'dateNaissance',
+        'tel',
+        'adresse',
+        'specialite',
+        'adresse_cabinet',
+        'experience',
+        'formation',
+        'langues',
+        'score',
     ];
 
     /**
@@ -51,6 +61,7 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'two_factor_confirmed_at' => 'datetime',
     ];
 
     /**
@@ -62,28 +73,42 @@ class User extends Authenticatable
         'profile_photo_url',
     ];
 
-    /**
-     * Relation avec le modèle Medecin
-     */
-    public function medecin()
+
+    public function rendezVousCommeMedecin()
     {
-        return $this->hasOne(Medecin::class);
+        return $this->hasMany(RendezVous::class, 'medecin_id');
     }
 
-    /**
-     * Relation avec le modèle Patient
-     */
-    public function patient()
+    public function rendezVousCommePatient()
     {
-        return $this->hasOne(Patient::class);
+        return $this->hasMany(RendezVous::class, 'patient_id');
     }
+
+
+
+    public function demandesDon()
+    {
+        return $this->hasMany(DemandeDon::class);
+    }
+
+    // public function consultations()
+    // {
+    //     return $this->hasMany(Consultation::class, 'patient_id');
+    // }
+
+    // public function consultationsEffectuees()
+    // {
+    //     return $this->hasMany(Consultation::class, 'medecin_id');
+    // }
+
+
 
     /**
      * Vérifie si l'utilisateur est un médecin
      */
     public function isMedecin()
     {
-        return $this->role === 'medecin';
+        return $this->role == 'medecin';
     }
 
     /**
@@ -91,6 +116,16 @@ class User extends Authenticatable
      */
     public function isPatient()
     {
-        return $this->role === 'patient';
+        return $this->role == 'patient';
+    }
+
+    public function isDonateur()
+    {
+        return $this->role == 'donateur';
+    }
+
+    public function isOperateurPharmacie()
+    {
+        return $this->role == 'operateurpharmacie';
     }
 }

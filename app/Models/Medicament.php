@@ -9,20 +9,26 @@ class Medicament extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['nom', 'description', 'stock', 'prix', 'est_don'];
+    protected $fillable = [
+        'nom',
+        'description',
+        'est_don',
+        'picture',
+        'qrcode',
+    ];
 
     public function ordonnances()
     {
         return $this->belongsToMany(Ordonnance::class);
     }
 
-    public function dons()
+    public function mouvementsStock()
     {
-        return $this->hasMany(Don::class);
+        return $this->hasMany(MouvementStock::class, 'medicament_id');
     }
 
-    public function demandesDon()
+    public function lignesCommande()
     {
-        return $this->hasMany(DemandeDon::class);
+        return $this->hasMany(LigneCommande::class, 'medicament_id');
     }
 }

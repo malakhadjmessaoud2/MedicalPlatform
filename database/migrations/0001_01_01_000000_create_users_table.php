@@ -12,16 +12,31 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('users', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
+            $table->bigIncrements('id');
+            $table->string('nom');
+            $table->string('prenom');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->enum('role', ['medecin', 'patient'])->default('patient'); // Ajout du rôle ici
+            $table->enum('role', ['admin', 'medecin', 'patient', 'donateur', 'operateurpharmacie'])->default('patient');
 
-            $table->rememberToken();
             $table->foreignId('current_team_id')->nullable();
             $table->string('profile_photo_path', 2048)->nullable();
+
+            /* patient */
+            $table->date('dateNaissance')->nullable();
+            $table->string('tel')->nullable();
+            $table->string('adresse')->nullable();
+
+            /* medecin */
+            $table->string('specialite')->nullable();
+            $table->string('adresse_cabinet')->nullable();
+            $table->integer('experience')->nullable()->default(0);
+            $table->text('formation')->nullable();
+            $table->string('langues')->nullable();
+            $table->integer('score')->default(0);
+
+            $table->rememberToken();
             $table->timestamps();
         });
 

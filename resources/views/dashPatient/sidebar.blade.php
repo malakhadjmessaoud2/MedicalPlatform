@@ -28,9 +28,9 @@
         <!-- Navigation Items -->
         <div class="space-y-4">
             <!-- Dashboard -->
-            <a href="{{ route('dashboard.patient') }}"
+            <a href="{{ route('patient.dashboard') }}"
                class="flex items-center pl-3">
-                <div class="w-10 h-10 rounded-full {{ request()->routeIs('dashboard.patient') ? 'bg-black text-white' : 'bg-white text-gray-600' }} flex items-center justify-center">
+                <div class="w-10 h-10 rounded-full {{ request()->routeIs('patient.dashboard') ? 'bg-black text-white' : 'bg-white text-gray-600' }} flex items-center justify-center">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
                     </svg>
@@ -45,7 +45,7 @@
             </a>
 
             <!-- Dossier Médical -->
-            <a href="#"
+            <a href="{{ route('patient.dossier') }}"
                class="flex items-center pl-3">
                 <div class="w-10 h-10 rounded-full {{ request()->routeIs('patient.dossier') ? 'bg-black text-white' : 'bg-white text-gray-600' }} flex items-center justify-center">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -58,11 +58,11 @@
             </a>
 
             <!-- Rendez-vous -->
-            <a href="{{ route('patient.rendezvous') }}"
+            <a href="{{ route('patient.rendez-vous.index') }}"
                class="flex items-center pl-3">
-                <div class="w-10 h-10 rounded-full {{ request()->routeIs('patient.rendez-vous') ? 'bg-black text-white' : 'bg-white text-gray-600' }} flex items-center justify-center">
+                <div class="w-10 h-10 rounded-full {{ request()->routeIs('patient.rendez-vous.*') ? 'bg-black text-white' : 'bg-white text-gray-600' }} flex items-center justify-center">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                     </svg>
                 </div>
                 <span x-show="isOpen" class="ml-3 text-sm font-medium text-gray-900">
