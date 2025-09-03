@@ -1,4 +1,5 @@
 @vite(['resources/css/app.css', 'resources/js/app.js'])
+<meta name="user-id" content="{{ Auth::id() }}">
 
 <nav class="px-4 py-1.5 flex items-center justify-between">
     <!-- Timeline Container -->
@@ -52,25 +53,22 @@
     <!-- Right Actions -->
     <div class="flex items-center space-x-4">
         <!-- Notifications -->
-        <div class="relative group">
+        <div class="relative" id="notifications">
             <button
-                class="w-9 h-9 rounded-full bg-white hover:bg-gray-50 flex items-center justify-center transition-colors duration-200 relative">
+                class="w-9 h-9 rounded-full bg-white hover:bg-gray-50 flex items-center justify-center transition-colors duration-200 relative" id="notifications-button">
                 <svg class="w-4 h-4 text-gray-600 group-hover:text-gray-800" fill="none" stroke="currentColor"
                     viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                 </svg>
-                <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"></span>
+                <span id="notifications-badge" class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white hidden"></span>
             </button>
-            <div class="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg py-2 hidden group-hover:block z-50">
+            <div class="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg py-2 hidden z-50" id="notifications-dropdown">
                 <div class="px-4 py-2 border-b border-gray-100">
                     <h3 class="text-sm font-semibold text-gray-900">Notifications</h3>
                 </div>
-                <div class="max-h-64 overflow-y-auto">
-                    <div class="px-4 py-2 hover:bg-gray-50 cursor-pointer">
-                        <p class="text-sm text-gray-600">Nouveau rendez-vous confirmé</p>
-                        <p class="text-xs text-gray-400">Il y a 5 minutes</p>
-                    </div>
+                <div class="max-h-64 overflow-y-auto" id="notifications-list">
+                    <div class="px-4 py-2 text-sm text-gray-500" id="notifications-empty">Aucune notification</div>
                 </div>
                 <div class="px-4 py-2 border-t border-gray-100">
                     <a href="#" class="text-xs text-blue-600 hover:text-blue-800">Voir toutes les

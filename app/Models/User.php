@@ -40,6 +40,11 @@ class User extends Authenticatable
         'formation',
         'langues',
         'score',
+        'nbrAvis',
+        'notations',
+        'prixConsultation',
+        'isActive',
+        'DiplômeOrCNOM'
     ];
 
     /**

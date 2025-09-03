@@ -8,7 +8,7 @@
                 <h1 class="text-2xl sm:text-4xl font-bold">
                     GESTI<span class="text-[#b9ff66]">O</span>N DES PATIENTS
                 </h1>
-                <div class="flex gap-2 sm:gap-4">
+                {{-- <div class="flex gap-2 sm:gap-4">
                     <button onclick="openNewPatientModal()"
                         class="bg-black text-white rounded-full px-3 sm:px-4 py-1.5 sm:py-2.5 flex items-center gap-2 hover:bg-black/90 transition-all text-sm sm:text-base">
                         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none">
@@ -16,7 +16,7 @@
                         </svg>
                         <span>Nouveau Patient</span>
                     </button>
-                </div>
+                </div> --}}
             </div>
 
             <!-- Search Bar -->
@@ -547,7 +547,7 @@
         </div>
     </div>
 
-    <!-- Modal Nouveau Patient avec design amélioré -->
+    {{-- <!-- Modal Nouveau Patient avec design amélioré -->
     <div id="newPatientModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
         <div
             class="bg-white rounded-[20px] p-8 w-full max-w-4xl mx-4 relative max-h-[90vh] overflow-y-auto shadow-2xl transform transition-all duration-300 ease-in-out">
@@ -713,7 +713,7 @@
                 </div>
             </form>
         </div>
-    </div>
+    </div> --}}
 
     <script>
         function showSection(section) {

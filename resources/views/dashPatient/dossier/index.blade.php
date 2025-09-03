@@ -96,7 +96,7 @@
                             </thead>
                             <tbody class="bg-white/50 divide-y divide-gray-100">
                                 @foreach($medecins as $doc)
-                                    <tr class="hover:bg-gradient-to-r hover:from-[#b9ff66]/5 hover:to-blue-50/30 transition-all duration-300 group">
+                                    <tr class="hover:bg-gradient-to-r hover:from-[#b9ff66]/5 hover:to-blue-50/30 transition-all duration-300 group" data-medecin-id="{{ $doc->id }}">
                                         <td class="px-8 py-6 whitespace-nowrap">
                                             <div class="flex items-center gap-5">
                                                 <div class="relative">
@@ -113,6 +113,27 @@
                                                 <div>
                                                     <div class="text-xl font-bold text-gray-900 group-hover:text-gray-800 transition-colors">Dr. {{ $doc->prenom }} {{ $doc->nom }}</div>
                                                     <div class="text-sm text-gray-600 mt-1">{{ $doc->email }}</div>
+                                                    <div class="flex items-center gap-2 mt-2">
+                                                        <div class="flex text-yellow-400">
+                                                            @for($i = 1; $i <= 5; $i++)
+                                                                @if($i <= ($doc->score ?? 0))
+                                                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                                                                    </svg>
+                                                                @else
+                                                                    <svg class="w-4 h-4 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
+                                                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                                                                    </svg>
+                                                                @endif
+                                                            @endfor
+                                                        </div>
+                                                        <span class="text-sm text-gray-500">({{ $doc->nbrAvis ?? 0 }} avis)</span>
+                                                        <button class="btnNoterMedecin ml-2 text-xs bg-[#b9ff66] text-black px-2 py-1 rounded hover:bg-[#a8eb5f] transition-colors"
+                                                                data-medecin-id="{{ $doc->id }}"
+                                                                data-medecin-name="Dr. {{ $doc->prenom }} {{ $doc->nom }}">
+                                                            Noter
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </td>
@@ -201,6 +222,55 @@
                         <button id="closeModal2" class="px-6 py-3 bg-[#b9ff66] text-black rounded-xl font-semibold hover:bg-[#a8eb5f] transition-all duration-300 shadow-lg hover:shadow-xl">
                             Fermer
                         </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de notation du médecin -->
+        <div id="notationModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50">
+            <div class="flex items-center justify-center min-h-full p-4">
+                <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md transform transition-all duration-300 scale-95 opacity-0" id="notationModalContent">
+                    <div class="bg-gradient-to-r from-[#b9ff66] to-green-400 px-6 py-4 rounded-t-2xl">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xl font-bold text-white">Noter le médecin</h3>
+                            <button id="closeNotationModal" class="text-white hover:text-gray-100 text-2xl transition-all duration-300 hover:scale-110">✕</button>
+                        </div>
+                    </div>
+
+                    <div class="p-6">
+                        <div class="text-center mb-6">
+                            <h4 id="medecinNomNotation" class="text-lg font-semibold text-gray-900 mb-2"></h4>
+                            <p class="text-gray-600">Donnez votre avis sur ce médecin</p>
+                        </div>
+
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-3">Note (étoiles)</label>
+                            <div class="flex justify-center space-x-2" id="ratingStars">
+                                <button type="button" class="star-btn text-3xl text-gray-300 hover:text-yellow-400 transition-colors" data-rating="1">★</button>
+                                <button type="button" class="star-btn text-3xl text-gray-300 hover:text-yellow-400 transition-colors" data-rating="2">★</button>
+                                <button type="button" class="star-btn text-3xl text-gray-300 hover:text-yellow-400 transition-colors" data-rating="3">★</button>
+                                <button type="button" class="star-btn text-3xl text-gray-300 hover:text-yellow-400 transition-colors" data-rating="4">★</button>
+                                <button type="button" class="star-btn text-3xl text-gray-300 hover:text-yellow-400 transition-colors" data-rating="5">★</button>
+                            </div>
+                            <div class="text-center mt-2">
+                                <span id="ratingText" class="text-sm text-gray-500">Sélectionnez une note</span>
+                            </div>
+                        </div>
+
+                        <div class="mb-6">
+                            <label for="avisText" class="block text-sm font-medium text-gray-700 mb-2">Avis (optionnel)</label>
+                            <textarea id="avisText" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#b9ff66] focus:border-transparent" placeholder="Partagez votre expérience avec ce médecin..."></textarea>
+                        </div>
+
+                        <div class="flex justify-end space-x-3">
+                            <button id="cancelNotation" class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                                Annuler
+                            </button>
+                            <button id="submitNotation" class="px-4 py-2 bg-[#b9ff66] text-black rounded-lg hover:bg-[#a8eb5f] transition-colors font-semibold" disabled>
+                                Envoyer
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -343,12 +413,16 @@ document.addEventListener('DOMContentLoaded', function() {
                                             <span class="inline-flex px-3 py-1 text-xs font-semibold rounded-full ${statusClass}">
                                                 ${rv.type}
                                             </span>
+                                            <button class="btnToggleDetails inline-flex items-center px-3 py-2 text-xs font-semibold rounded-lg bg-[#b9ff66] text-black hover:bg-[#a8eb5f] transition-colors duration-200" data-target="rv-details-${index}">
+                                                <span>Afficher détails</span>
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
 
                                 <!-- Contenu du rendez-vous -->
                                 <div class="p-6">
+                                    <div id="rv-details-${index}" class="hidden">
                                     ${consultations.length > 0 ? `
                                         <div class="space-y-6">
                                             ${consultations.map((consultation, cIndex) => {
@@ -572,6 +646,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                             <p class="text-gray-600">Ce rendez-vous n'a pas encore donné lieu à une consultation médicale.</p>
                                         </div>
                                     `}
+                                    </div>
                                 </div>
                             </div>
                         `;
@@ -711,6 +786,21 @@ document.addEventListener('DOMContentLoaded', function() {
                         });
                     });
 
+                    // Toggle des détails des rendez-vous
+                    document.querySelectorAll('.btnToggleDetails').forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            const targetId = btn.getAttribute('data-target');
+                            const details = document.getElementById(targetId);
+                            if (!details) return;
+                            const isHidden = details.classList.contains('hidden');
+                            details.classList.toggle('hidden');
+                            const label = btn.querySelector('span');
+                            if (label) {
+                                label.textContent = isHidden ? 'Fermer détails' : 'Afficher détails';
+                            }
+                        });
+                    });
+
                 } else {
                     container.innerHTML = `
                         <div class="text-center py-16">
@@ -821,6 +911,173 @@ document.addEventListener('DOMContentLoaded', function() {
             btnTelechargerDossier.disabled = false;
         }
     });
+
+    // Gestion de la notation des médecins
+    let selectedRating = 0;
+    let currentMedecinId = null;
+
+    // Ouvrir le modal de notation
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('btnNoterMedecin')) {
+            currentMedecinId = e.target.getAttribute('data-medecin-id');
+            const medecinName = e.target.getAttribute('data-medecin-name');
+
+            document.getElementById('medecinNomNotation').textContent = medecinName;
+            openNotationModal();
+        }
+    });
+
+    // Gestion des étoiles de notation
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('star-btn')) {
+            const rating = parseInt(e.target.getAttribute('data-rating'));
+            selectedRating = rating;
+
+            // Mettre à jour l'affichage des étoiles
+            const stars = document.querySelectorAll('.star-btn');
+            stars.forEach((star, index) => {
+                if (index < rating) {
+                    star.classList.remove('text-gray-300');
+                    star.classList.add('text-yellow-400');
+                } else {
+                    star.classList.remove('text-yellow-400');
+                    star.classList.add('text-gray-300');
+                }
+            });
+
+            // Mettre à jour le texte
+            const ratingTexts = ['', 'Très mauvais', 'Mauvais', 'Moyen', 'Bon', 'Excellent'];
+            document.getElementById('ratingText').textContent = ratingTexts[rating];
+
+            // Activer le bouton d'envoi
+            document.getElementById('submitNotation').disabled = false;
+        }
+    });
+
+    // Soumettre la notation
+    document.getElementById('submitNotation').addEventListener('click', function() {
+        if (selectedRating === 0) {
+            alert('Veuillez sélectionner une note');
+            return;
+        }
+
+        const avisElement = document.getElementById('avisText');
+        const avis = avisElement ? avisElement.value : '';
+
+        // Désactiver le bouton pendant l'envoi
+        this.disabled = true;
+        this.textContent = 'Envoi en cours...';
+
+        fetch('{{ route("patient.medecin.noter") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                medecin_id: currentMedecinId,
+                note: selectedRating,
+                avis: avis
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Médecin noté avec succès !');
+                closeNotationModal();
+
+                // Mettre à jour l'affichage en temps réel
+                updateMedecinScore(currentMedecinId, data.nouveau_score, data.nouveau_nbr_avis);
+            } else {
+                alert(data.message || 'Erreur lors de la notation');
+            }
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            alert('Erreur lors de la notation du médecin');
+        })
+        .finally(() => {
+            // Réactiver le bouton
+            this.disabled = false;
+            this.textContent = 'Envoyer';
+        });
+    });
+
+    // Fermer le modal de notation
+    document.getElementById('closeNotationModal').addEventListener('click', closeNotationModal);
+    document.getElementById('cancelNotation').addEventListener('click', closeNotationModal);
+
+    function openNotationModal() {
+        const modal = document.getElementById('notationModal');
+        const modalContent = document.getElementById('notationModalContent');
+
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+            modalContent.classList.remove('scale-95', 'opacity-0');
+            modalContent.classList.add('scale-100', 'opacity-100');
+        }, 10);
+
+        // Réinitialiser les étoiles
+        selectedRating = 0;
+        const stars = document.querySelectorAll('.star-btn');
+        stars.forEach(star => {
+            star.classList.remove('text-yellow-400');
+            star.classList.add('text-gray-300');
+        });
+        document.getElementById('ratingText').textContent = 'Sélectionnez une note';
+        const avisElement = document.getElementById('avisText');
+        if (avisElement) {
+            avisElement.value = '';
+        }
+        document.getElementById('submitNotation').disabled = true;
+    }
+
+        function closeNotationModal() {
+        const modal = document.getElementById('notationModal');
+        const modalContent = document.getElementById('notationModalContent');
+
+        modalContent.classList.add('scale-95', 'opacity-0');
+        modalContent.classList.remove('scale-100', 'opacity-100');
+
+        setTimeout(() => {
+            modal.classList.add('hidden');
+        }, 300);
+    }
+
+    // Fonction pour mettre à jour l'affichage du score d'un médecin
+    function updateMedecinScore(medecinId, nouveauScore, nouveauNbrAvis) {
+        // Trouver la ligne du médecin dans le tableau
+        const medecinRow = document.querySelector(`[data-medecin-id="${medecinId}"]`).closest('tr');
+        if (!medecinRow) return;
+
+        // Mettre à jour les étoiles
+        const starsContainer = medecinRow.querySelector('.flex.text-yellow-400');
+        if (starsContainer) {
+            starsContainer.innerHTML = '';
+            for (let i = 1; i <= 5; i++) {
+                if (i <= nouveauScore) {
+                    starsContainer.innerHTML += `
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                        </svg>
+                    `;
+                } else {
+                    starsContainer.innerHTML += `
+                        <svg class="w-4 h-4 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                        </svg>
+                    `;
+                }
+            }
+        }
+
+        // Mettre à jour le nombre d'avis
+        const avisSpan = medecinRow.querySelector('.text-sm.text-gray-500');
+        if (avisSpan) {
+            avisSpan.textContent = `(${nouveauNbrAvis} avis)`;
+        }
+    }
 });
 </script>
 

@@ -206,9 +206,11 @@
                                     <select id="consultations-type"
                                         class="rounded-lg border-gray-300 focus:ring-[#b9ff66] focus:border-[#b9ff66]">
                                         <option value="">Type de consultation</option>
-                                        <option value="routine">Consultation de routine</option>
-                                        <option value="urgence">Consultation d'urgence</option>
-                                        <option value="suivi">Consultation de suivi</option>
+                                        <option value="routine">Premiere consultation</option>
+                                        <option value="urgence">Consultation de controle</option>
+                                        <option value="suivi">Consultation urgente</option>
+                                        <option value="suivi">Consultation de routine</option>
+
                                     </select>
                                     <select id="consultations-period"
                                         class="rounded-lg border-gray-300 focus:ring-[#b9ff66] focus:border-[#b9ff66]">

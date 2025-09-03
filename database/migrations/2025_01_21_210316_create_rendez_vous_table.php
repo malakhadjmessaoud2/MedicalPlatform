@@ -17,8 +17,9 @@ return new class extends Migration
             $table->dateTime('date_fin');
             $table->enum('type', ['consultation', 'examen', 'intervention', 'autre'])->default('consultation');
             $table->text('description')->nullable();
-            $table->enum('statut', ['pending', 'confirmed', 'cancelled', 'rejected', 'completed'])->default('pending');
+            $table->enum('statut', ['pending', 'confirmed', 'payed', 'cancelled', 'rejected', 'completed'])->default('pending');
             $table->string('lien_en_ligne')->nullable();
+            $table->string('payment_token')->nullable();
             $table->timestamps();
         });
     }

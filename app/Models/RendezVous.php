@@ -21,6 +21,7 @@ class RendezVous extends Model
         'description',
         'statut',
         'lien_en_ligne',
+        'payment_token'
     ];
 
     protected $casts = [
@@ -46,7 +47,7 @@ class RendezVous extends Model
     public function getCouleurAttribute($value)
     {
         if ($value) return $value;
-        return match($this->type) {
+        return match ($this->type) {
             'consultation' => '#10B981', // vert
             'examen' => '#F59E0B',       // jaune
             'intervention' => '#EF4444',     // rouge

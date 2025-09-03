@@ -840,8 +840,8 @@ function showDoctorDetails(medecinId) {
                         <h4 class="text-xl font-semibold">Dr. ${medecin.prenom} ${medecin.nom}</h4>
                         <p class="text-[#b9ff66] font-medium">${medecin.specialite}</p>
                         <div class="flex items-center gap-2 mt-1">
-                            <div class="flex text-yellow-400">${generateStars(score)}</div>
-                            <span class="text-sm text-gray-500">(150 avis)</span>
+                            <div class="flex text-yellow-400">${generateStars(medecin.score || 0)}</div>
+                            <span class="text-sm text-gray-500">(${medecin.nbrAvis || 0} avis)</span>
                         </div>
                         <p class="text-sm text-gray-600 mt-2">${experienceText}</p>
                     </div>
@@ -902,8 +902,8 @@ function createMedecinCard(medecin) {
                 <h3 class="text-lg font-semibold">Dr. ${medecin.prenom} ${medecin.nom}</h3>
                 <p class="text-[#b9ff66] text-sm font-medium">${medecin.specialite}</p>
                 <div class="flex items-center gap-2 mt-1">
-                    <div class="flex text-yellow-400 text-sm">${generateStars(medecin.score || 4)}</div>
-                    <span class="text-sm text-gray-500">(${nbAvis} avis)</span>
+                    <div class="flex text-yellow-400 text-sm">${generateStars(medecin.score || 0)}</div>
+                    <span class="text-sm text-gray-500">(${medecin.nbrAvis || 0} avis)</span>
                 </div>
             </div>
             <button class="ml-auto text-sm text-[#b9ff66] hover:text-[#92cc52] view-doctor-details transition-colors duration-200" data-medecin-id="${medecin.id}">

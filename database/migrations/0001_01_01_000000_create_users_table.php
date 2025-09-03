@@ -35,6 +35,10 @@ return new class extends Migration
             $table->text('formation')->nullable();
             $table->string('langues')->nullable();
             $table->integer('score')->default(0);
+            $table->integer('nbrAvis')->default(0);
+            $table->integer('prixConsultation')->nullable()->default(0);
+            $table->boolean('isActive')->default(false);
+            $table->string('DiplômeOrCNOM', 2048)->nullable();
 
             $table->rememberToken();
             $table->timestamps();

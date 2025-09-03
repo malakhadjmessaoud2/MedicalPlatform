@@ -11,12 +11,19 @@ class Paiement extends Model
     use HasFactory;
 
     protected $fillable = [
+
         'commande_id',
         'consultation_id',
         'don_id',
-        'montant',
         'type',
         'datePaiement',
+        'paiement_id',
+        'status',
+        'amount',
+        'currency',
+        'details',
+        'rendezvous_id'
+
     ];
 
     public function commande()

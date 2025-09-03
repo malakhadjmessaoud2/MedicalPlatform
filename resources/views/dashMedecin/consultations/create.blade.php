@@ -52,7 +52,7 @@
                     @endif
                 </div>
 
-                <!-- Médecin (affiché en lecture seule) -->
+                {{-- <!-- Médecin (affiché en lecture seule) -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Médecin</label>
                     <div class="w-full p-3 bg-gray-50 rounded-lg border border-gray-300">
@@ -61,7 +61,7 @@
                             <p class="text-sm text-gray-600">{{ $medecinConnecte->specialite }}</p>
                         @endif
                     </div>
-                </div>
+                </div> --}}
 
                 <!-- Rendez-vous (optionnel) -->
                 <div>

@@ -704,7 +704,8 @@ class RendezVousController extends Controller
                         'adresse_cabinet' => $medecin->adresse_cabinet,
                         'experience' => $medecin->experience,
                         'langues' => $medecin->langues_array,
-                        'score' => $medecin->score,
+                        'score' => $medecin->score ?? 0,
+                        'nbrAvis' => $medecin->nbrAvis ?? 0,
                         'profile_photo_url' => $medecin->user ? $medecin->profile_photo_url : null,
                         'formation' => $medecin->formation,
                     ];
@@ -895,7 +896,8 @@ class RendezVousController extends Controller
                 'adresse_cabinet' => $medecin->adresse_cabinet,
                 'experience' => $medecin->experience,
                 'langues' => $medecin->langues_array,
-                'score' => $medecin->score,
+                'score' => $medecin->score ?? 0,
+                'nbrAvis' => $medecin->nbrAvis ?? 0,
                 'user' => $medecin->user ? [
                     'profile_photo_path' => $medecin->user->profile_photo_path,
                 ] : null,
@@ -1040,5 +1042,10 @@ class RendezVousController extends Controller
                 'message' => 'Erreur lors de la création du lien de consultation'
             ], 500);
         }
+    }
+
+    public function confirmationPayment(RendezVous $rendezVous)
+    {
+        return view('dashPatient.RendezVous.confirmationPayment', compact('rendezVous'));
     }
 }

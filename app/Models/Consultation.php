@@ -38,6 +38,7 @@ class Consultation extends Model
         'debut_symptomes',
         'gravite',
         'orientation_patient',
+        
     ];
 
     protected $casts = [

@@ -451,13 +451,7 @@
                                     <h4>ORDONNANCE MÉDICALE</h4>
 
                                                                         <!-- Affichage de l'image de l'ordonnance si disponible -->
-                                    @if($consultation['ordonnance']['file_base64'])
-                                        <div class="ordonnance-image" style="margin: 15px 0; text-align: center;">
-                                            <img src="{{ $consultation['ordonnance']['file_base64'] }}"
-                                                 alt="Ordonnance médicale"
-                                                 style="max-width: 100%; max-height: 600px; width: auto; height: auto; border: 2px solid #ffc107; border-radius: 5px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); object-fit: contain;" />
-                                        </div>
-                                    @endif
+                                    {{-- Affichage de l'image de l'ordonnance désactivé pour éviter les erreurs d'extensions images --}}
 
                                     <!-- Affichage des informations textuelles de l'ordonnance -->
                                     @if($consultation['ordonnance']['medicaments'])
@@ -480,7 +474,7 @@
                                         </div>
                                     @endif
 
-                                   
+
 
 
                                 </div>

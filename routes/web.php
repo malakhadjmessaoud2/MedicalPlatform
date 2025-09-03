@@ -16,12 +16,11 @@ use App\Http\Controllers\Donateur\DashboardController as DonateurDashboardContro
 use App\Http\Controllers\Medecin\DashboardController as MedecinDashboardController;
 use App\Http\Controllers\Patient\DashboardController as PatientDashboardController;
 use App\Http\Controllers\Patient\DossierController;
+use App\Http\Controllers\Patient\PaiementController;
 use Illuminate\Support\Facades\Auth;
 use App\Models\RendezVous;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', [DashboardController::class, 'welcome'])->name('welcome');
 
 Route::middleware(['guest'])->group(function () {
     Route::get('/login', [AuthenticatedSessionController::class, 'create'])
@@ -125,6 +124,11 @@ Route::middleware(['auth', 'role:patient'])->prefix('patient')->name('patient.')
 
     Route::get('/rendez-vous', [PatientRendezVousController::class, 'indexPatient'])
         ->name('rendez-vous.index');
+    Route::get('/rendez-vous/{rendezVous}/payer', [PatientRendezVousController::class, 'confirmationPayment'])
+        ->name('rendez-vous.payer');
+
+    Route::get('/rendez-vous/{rendezVous}/payment', [PaiementController::class, 'create'])
+        ->name('rendez-vous.payment');
 
     Route::post('/rendez-vous', [PatientRendezVousController::class, 'patientRendezVousStore'])
         ->name('rendez-vous.store');
@@ -136,6 +140,9 @@ Route::middleware(['auth', 'role:patient'])->prefix('patient')->name('patient.')
     Route::get('/dossier', [DossierController::class, 'index'])->name('dossier');
     Route::get('/ordonnance/download', [DossierController::class, 'downloadOrdonnance'])->name('ordonnance.download');
     Route::get('/ordonnance/view', [DossierController::class, 'viewOrdonnance'])->name('ordonnance.view');
+
+    // Notation des médecins
+    Route::post('/medecin/noter', [DossierController::class, 'noterMedecin'])->name('medecin.noter');
     Route::get('/messages', [PatientDashboardController::class, 'messages'])->name('messages');
     Route::get('/medicaments', [PatientDashboardController::class, 'medicaments'])->name('medicaments');
 

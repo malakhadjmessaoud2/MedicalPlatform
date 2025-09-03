@@ -6,6 +6,7 @@ import './dashboard'; // Fichier dashboard.js principal
 import './dashboard/navbar-timeline';
 import './dashboard/consultation-manager';
 import './dashboard/dossier-manager';
+import './dashboard/notifications';
 
 // Import FullCalendar et ses plugins
 import { Calendar } from '@fullcalendar/core';
