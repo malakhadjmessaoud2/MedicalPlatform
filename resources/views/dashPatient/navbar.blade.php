@@ -143,6 +143,7 @@
                             <span>{{ __('Déconnexion') }}</span>
                         </button>
                     </form>
+
                 </div>
             </div>
         </div>

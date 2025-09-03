@@ -165,3 +165,8 @@ Route::middleware(['auth', 'role:patient'])->prefix('patient')->name('patient.')
     Route::get('/medecins/{medecin}/creneaux-disponibles', [PatientRendezVousController::class, 'getCreneauxDisponibles'])
         ->name('api.medecin.creneaux-disponibles');
 });
+
+//payment
+Route::post('/webhook/paymee', [PaiementController::class, 'handleWebhook']);
+Route::get('/payment/success', [PaiementController::class, 'success'])->name('payment.success');
+Route::get('payment/cancel/{rendezvousId}', [PaiementController::class, 'cancel'])->name('payment.cancel');

@@ -154,7 +154,7 @@
                                     class="ml-5 bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4dabb4] cursor-pointer transition-colors duration-200">
                                     Choisir une photo
                                     <input type="file" id="profile_photo" name="profile_photo" class="sr-only"
-                                        accept="image/*" onchange="previewImage()">
+                                        accept="image/*,application/pdf" onchange="previewImage()">
                                 </label>
                             </div>
                             <p class="mt-1 text-sm text-gray-500">JPG, PNG ou GIF. Max 1MB.</p>
@@ -213,6 +213,35 @@
                             </div>
                             <p class="mt-1 text-xs text-gray-500">Diplômes, certifications, postes occupés, etc.</p>
                         </div>
+                       <!-- Diplôme ou CNOM (image ou PDF) -->
+<div class="mt-4">
+    <x-label for="DiplômeOrCNOM" value="{{ __('Diplôme ou CNOM') }}" class="text-gray-700 font-medium" />
+    <div class="mt-2 flex items-center">
+        <!-- Conteneur aperçu image -->
+        <div class="relative">
+            <div
+                class="h-16 w-16 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
+                <svg class="h-12 w-12 text-gray-300" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+            </div>
+            <div id="preview-diplome" class="absolute inset-0 rounded-full overflow-hidden hidden">
+                <img id="preview-image-diplome" src="#" alt="Aperçu Diplôme" class="h-full w-full object-cover">
+            </div>
+        </div>
+
+        <!-- Affichage nom fichier PDF -->
+        <div id="pdf-name" class="ml-4 text-sm text-gray-700 hidden"></div>
+
+        <label for="DiplômeOrCNOM"
+            class="ml-5 bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4dabb4] cursor-pointer transition-colors duration-200">
+            Choisir un fichier
+            <input type="file" id="DiplômeOrCNOM" name="DiplômeOrCNOM" class="sr-only" accept="image/*,application/pdf">
+        </label>
+    </div>
+    <p class="mt-1 text-sm text-gray-500">JPG, PNG ou PDF. Max 1MB.</p>
+</div>
+
 
                         <!-- Langues parlées -->
                         <div>
@@ -364,5 +393,45 @@
                 preview.classList.add('hidden');
             }
         }
-    </script>
+
+        function previewDiplome() {
+    const fileInput = document.getElementById('DiplômeOrCNOM');
+    const file = fileInput.files[0];
+    const previewImageContainer = document.getElementById('preview-diplome');
+    const previewImage = document.getElementById('preview-image-diplome');
+    const pdfName = document.getElementById('pdf-name');
+
+    if(file){
+        const fileType = file.type;
+        if(fileType.startsWith('image/')){
+            // Afficher l'image
+            const reader = new FileReader();
+            reader.onload = function(e){
+                previewImage.src = e.target.result;
+                previewImageContainer.classList.remove('hidden');
+                pdfName.classList.add('hidden');
+            }
+            reader.readAsDataURL(file);
+        } else if(fileType === 'application/pdf'){
+            // Afficher le nom du PDF
+            pdfName.textContent = file.name;
+            pdfName.classList.remove('hidden');
+            previewImageContainer.classList.add('hidden');
+        } else {
+            // Fichier non supporté
+            alert('Type de fichier non supporté. Veuillez sélectionner une image ou un PDF.');
+            fileInput.value = '';
+            previewImageContainer.classList.add('hidden');
+            pdfName.classList.add('hidden');
+        }
+    } else {
+        previewImageContainer.classList.add('hidden');
+        pdfName.classList.add('hidden');
+    }
+}
+
+document.getElementById('DiplômeOrCNOM').addEventListener('change', previewDiplome);
+
+        </script>
+
 </x-guest-layout>

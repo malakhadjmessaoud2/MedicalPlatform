@@ -1,6 +1,7 @@
 @extends('dashPatient.layout')
 
 @section('content')
-<div>
-    sucess
-</div>
+    <div>
+        sucess
+    </div>
+@endsection

@@ -42,6 +42,8 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
                 'experience' => ['nullable', 'integer', 'min:0'],
                 'formation' => ['nullable', 'string'],
                 'langues' => ['nullable', 'string'],
+                'prixConsultation' => ['nullable', 'integer', 'min:60'],
+                'DiplômeOrCNOM' => ['nullable', 'mimes:jpg,jpeg,png,pdf', 'max:1024'],
             ]);
         } elseif ($user->role === 'donateur') {
             // No extra mandatory fields currently
@@ -53,6 +55,17 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
 
         if (isset($input['profile_photo'])) {
             $user->updateProfilePhoto($input['profile_photo']);
+        }
+
+        // Handle DiplômeOrCNOM upload for medecin
+        if ($user->role === 'medecin' && isset($input['DiplômeOrCNOM'])) {
+            try {
+                $storedPath = Storage::disk('public')->putFile('diplomes', $input['DiplômeOrCNOM']);
+                $user->DiplômeOrCNOM = $storedPath;
+                $user->save();
+            } catch (\Exception $e) {
+                Log::error('Erreur lors du téléversement du DiplômeOrCNOM: ' . $e->getMessage());
+            }
         }
 
         // Prepare attributes to update based on role
@@ -75,6 +88,7 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
                 'experience' => $input['experience'] ?? $user->experience,
                 'formation' => $input['formation'] ?? $user->formation,
                 'langues' => $input['langues'] ?? $user->langues,
+                'prixConsultation' => $input['prixConsultation'] ?? $user->prixConsultation,
             ]);
         }
 

@@ -63,5 +63,12 @@ class UserSeeder extends Seeder
             'tel' => '0606060606',
             'adresse' => '123 Rue de la Paix, Paris, France',
         ]);
+        User::create([
+            'nom' => 'admin',
+            'prenom' => 'admin',
+            'email' => 'malakhmm2@gmail.com',
+            'password' => Hash::make('123456789'),
+            'role' => 'admin',
+        ]);
     }
 }

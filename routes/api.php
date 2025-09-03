@@ -67,7 +67,3 @@ Route::middleware(['web', 'auth', 'role:patient'])->prefix('patient')->group(fun
         ->name('api.patient.medecin.creneaux-disponibles');
 });
 
-//payment
-Route::post('/webhook/paymee', [PaiementController::class, 'handleWebhook']);
-Route::get('payment/success', [PaiementController::class, 'success'])->name('payment.success');
-Route::get('payment/cancel/{rendezvousId', [PaiementController::class, 'cancel'])->name('payment.cancel');

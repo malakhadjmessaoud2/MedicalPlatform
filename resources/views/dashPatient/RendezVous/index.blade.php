@@ -17,7 +17,7 @@
     </div>
 
     <!-- Indicateur de rafraîchissement automatique -->
-    <div id="refresh-indicator" class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 text-center">
+    {{-- <div id="refresh-indicator" class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 text-center">
         <div class="flex items-center justify-center gap-2 text-blue-700">
             <svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
@@ -25,7 +25,7 @@
             <span class="text-sm font-medium">Mise à jour automatique activée - </span>
             <span class="refresh-time text-sm font-medium">Prochain rafraîchissement dans 30s</span>
         </div>
-    </div>
+    </div> --}}
 
     <!-- Filtres et recherche -->
     <div class="bg-white rounded-xl shadow-sm p-4 mb-6">
@@ -207,7 +207,7 @@
                     $consultationEnCours = $maintenant->between($heureDebut, $heureFin);
                 @endphp
 
-                <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-blue-200 mb-4" data-rdv="{{ $rdv->id }}" data-debut="{{ $rdv->date_debut->toISOString() }}" data-fin="{{ ($rdv->date_fin ?? $rdv->date_debut->addMinutes(30))->toISOString() }}">
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-blue-200 mb-4 hover:shadow-md transition-shadow" data-rdv="{{ $rdv->id }}" data-debut="{{ $rdv->date_debut->toISOString() }}" data-fin="{{ ($rdv->date_fin ?? $rdv->date_debut->addMinutes(30))->toISOString() }}">
                     <div class="p-5 border-l-4 border-blue-500">
                         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <div class="flex items-center gap-4">
@@ -227,24 +227,23 @@
                             </div>
 
                             <div class="flex flex-col items-end">
-                                <button class="px-3 py-1 text-sm border border-blue-200 text-blue-500 rounded-lg hover:bg-blue-50 transition-colors flex items-center gap-1" >
-                                    <a href="{{ route('patient.rendez-vous.payer', $rdv->id) }}">
+                                <a href="{{ route('patient.rendez-vous.payer', $rdv->id) }}" class="inline-flex items-center gap-2 px-4 py-2 text-sm rounded-lg bg-blue-600 text-white font-medium shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h5M4 7h16a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V9a2 2 0 012-2z"/>
                                     </svg>
-                                    payer la consultation
-                                </button>
-                                <div class="flex items-center gap-2 mb-3">
+                                    Payer la consultation
+                                </a>
+                                <div class="flex items-center gap-2 mb-3 mt-3">
                                         @if($consultationEnCours)
-                                            <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+                                            <span class="px-3 py-1 bg-green-50 text-green-700 border border-green-200 rounded-full text-sm font-medium">
                                                 🟢 Consultation en cours
                                             </span>
                                     @elseif($consultationActive)
-                                            <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                                            <span class="px-3 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-full text-sm font-medium">
                                             🔵 Consultation peut commencer (5 min avant)
                                             </span>
                                     @else
-                                            <span class="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm font-medium">
+                                            <span class="px-3 py-1 bg-gray-50 text-gray-600 border border-gray-200 rounded-full text-sm font-medium">
                                             ⏰ Consultation programmée
                                             </span>
                                     @endif

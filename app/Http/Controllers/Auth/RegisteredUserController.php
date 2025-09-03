@@ -49,6 +49,8 @@ class RegisteredUserController extends Controller
                 'adresse_cabinet' => ['required', 'string', 'max:255'],
                 'experience' => ['nullable', 'integer', 'min:0'],
                 'formation' => ['nullable', 'string'],
+                'prixConsultation'=>['nullable', 'integer', 'min:60'],
+                'DiplômeOrCNOM' => ['nullable', 'mimes:jpg,jpeg,png,pdf', 'max:1024'], // Max 1MB
             ]);
         } elseif ($request->role === 'patient') {
             $request->validate([
@@ -84,6 +86,21 @@ class RegisteredUserController extends Controller
 
         // Créer l'enregistrement correspondant selon le rôle
         if ($request->role === 'medecin') {
+            // Traiter le fichier DiplômeOrCNOM si fourni
+            if ($request->hasFile('DiplômeOrCNOM')) {
+                try {
+                    // Stocker le fichier dans le disque 'public' dans le dossier 'diplomes'
+                    $diplomeFilename = Storage::disk('public')->putFile('diplomes', $request->file('DiplômeOrCNOM'));
+
+                    // Mettre à jour le chemin dans la base de données
+                    $user->DiplômeOrCNOM = $diplomeFilename;
+                    $user->save();
+
+                    Log::info('Diplôme ou CNOM enregistré: ' . $diplomeFilename);
+                } catch (\Exception $e) {
+                    Log::error('Erreur lors de l\'enregistrement du DiplômeOrCNOM: ' . $e->getMessage());
+                }
+            }
             // Traitement des langues
             $languesArray = [];
             if ($request->has('langues') && is_array($request->langues)) {
@@ -105,6 +122,7 @@ class RegisteredUserController extends Controller
                 'formation' => $request->formation,
                 'langues' => $langues,
                 'score' => 0,
+                'prixConsultation' => $request->prixConsultation ?? 60,
             ]);
         } elseif ($request->role === 'patient') {
             $user->update([

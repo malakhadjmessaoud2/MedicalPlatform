@@ -3,6 +3,10 @@
         Options -MultiViews -Indexes
     </IfModule>
 
+    <IfModule mod_headers.c>
+        Header set Content-Security-Policy "default-src 'self' data: https: 'unsafe-inline' 'unsafe-eval'; font-src 'self' https://fonts.gstatic.com data:; style-src 'self' https://fonts.googleapis.com 'unsafe-inline';"
+    </IfModule>
+
     RewriteEngine On
 
     # Handle Authorization Header

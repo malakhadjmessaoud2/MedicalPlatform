@@ -141,11 +141,42 @@
                     wire:model="state.experience" />
                 <x-input-error for="experience" class="mt-2" />
             </div>
+            <div class="col-span-6 sm:col-span-2">
+                <x-label for="prixConsultation" value="{{ __('Prix de consultation (DT)') }}" />
+                <x-input id="prixConsultation" type="number" min="60" step="1" class="mt-1 block w-full" wire:model="state.prixConsultation" />
+                <p class="text-xs text-gray-500 mt-1">Minimum 60 DT.</p>
+                <x-input-error for="prixConsultation" class="mt-2" />
+            </div>
             <div class="col-span-6 sm:col-span-4">
                 <x-label for="formation" value="{{ __('Formation') }}" />
                 <textarea id="formation" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" wire:model="state.formation"
                     rows="2"></textarea>
                 <x-input-error for="formation" class="mt-2" />
+            </div>
+            <div class="col-span-6 sm:col-span-4">
+                <x-label for="DiplômeOrCNOM" value="{{ __('Diplôme ou CNOM (jpg, png, pdf)') }}" />
+                @php
+                    $diplomePath = Auth::user()->DiplômeOrCNOM ?? null;
+                @endphp
+                @if($diplomePath)
+                    <div class="mt-1 text-sm flex items-center gap-3">
+                        <a href="{{ asset('storage/' . $diplomePath) }}" target="_blank" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-gray-200 bg-white text-gray-700 shadow-sm hover:bg-gray-50 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1">
+                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6M8 6h8l2 2v10a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2z"/>
+                            </svg>
+                            Voir le document actuel
+                        </a>
+                    </div>
+                @endif
+                <input id="DiplômeOrCNOM" type="file" class="sr-only" wire:model="state.DiplômeOrCNOM" accept=".jpg,.jpeg,.png,.pdf" />
+                <label for="DiplômeOrCNOM" class="mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-blue-600 text-white text-sm font-medium shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v4m0 0V4m0 4h4m-4 0H8m1 4h6m-7 4h8M7 4h8l2 2v12a2 2 0 01-2 2H7a2 2 0 01-2-2V6a2 2 0 012-2z"/>
+                    </svg>
+                    Choisir un fichier
+                </label>
+                <x-input-error for="DiplômeOrCNOM" class="mt-2" />
+                <p class="text-xs text-gray-500 mt-1">Taille maximale 1 Mo.</p>
             </div>
             <div class="col-span-6 sm:col-span-6">
                 <x-label for="langues" value="{{ __('Langues') }}" />

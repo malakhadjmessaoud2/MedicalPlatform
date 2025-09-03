@@ -25,43 +25,37 @@ class PaiementController extends Controller
             'last_name'   => $user->prenom,
             'email'       => $user->email,
             'phone'       => $user->tel,
-            'return_url'  => "https://d0007b64457b.ngrok.io/api/payment/success",
-            'cancel_url'  => "https://d0007b64457b.ngrok.io/api/payment/cancel/{$rendezVous->id}",
-            'webhook_url' => "https://d0007b64457b.ngrok.io/api/webhook/paymee",
+            'return_url'  => "https://7840fbbd25bb.ngrok-free.app/payment/success",
+            'cancel_url'  => "https://7840fbbd25bb.ngrok-free.app/payment/cancel/{$rendezVous->id}",
+            'webhook_url' => "https://7840fbbd25bb.ngrok-free.app/webhook/paymee",
         ];
 
         Log::info('Création du paiement Paymee', $paymentData);
 
+        $isSandbox = true; // false en production
+
+        $baseApiUrl  = $isSandbox ? 'https://sandbox.paymee.tn/api/v2' : 'https://app.paymee.tn/api/v2';
+        $gatewayUrl  = $isSandbox ? 'https://sandbox.paymee.tn/gateway/' : 'https://app.paymee.tn/gateway/';
+
         $response = Http::withHeaders([
             'Authorization' => 'Token ' . $PAYMEE_API_TOKEN,
-            'Content-Type' => 'application/json',
-            'Accept' => 'application/json',
-        ])->post('https://sandbox.paymee.tn/api/v2/payments/create', $paymentData);   //dev test
-
-        Log::info('Réponse Paymee create', [
-            'status' => $response->status(),
-            'body'   => $response->json(),
-        ]);
+            'Content-Type'  => 'application/json',
+            'Accept'        => 'application/json',
+        ])->post($baseApiUrl . '/payments/create', $paymentData);
 
         if ($response->successful()) {
-            $responseData = $response->json();
+            $token = $response->json()['data']['token'];
+            $paymeeUrl = $gatewayUrl . $token;
+            $rendezVous->update(['payment_token' => $token]);
 
-            if (isset($responseData['data']['token'])) {
-                $token = $responseData['data']['token'];
-
-                $rendezVous->update(['payment_token' => $token]);
-
-                $paymeeUrl = 'https://app.paymee.tn/gateway/' . $token; // prod
-                Log::info("Redirection vers Paymee URL: {$paymeeUrl}");
-
-                return view('payment.redirect', compact('rendezVous', 'token', 'paymeeUrl'));
-            } else {
-                Log::error('Réponse Paymee invalide : token manquant', (array) $responseData);
-                return redirect()->back()->with('error', 'Impossible de générer le paiement (token manquant)');
-            }
+            return view('payment.redirect', compact('rendezVous', 'token', 'paymeeUrl'));
         } else {
-            Log::error('Payment Error Response', ['response' => $response->json()]);
-            return redirect()->back()->with('error', 'Erreur de création du paiement');
+            Log::error('Erreur lors de la création du paiement Paymee', [
+                'status' => $response->status(),
+                'body'   => $response->body(),
+            ]);
+
+            return redirect()->back()->with('error', 'Erreur lors de la création du paiement. Veuillez réessayer.');
         }
     }
 
@@ -70,7 +64,7 @@ class PaiementController extends Controller
         $PAYMEE_API_TOKEN = '3db90865c567a43840ecefa9815d76e2b36f134b';
 
         $paymentToken = $request->query('payment_token');
-        $paymentId    = $request->query('payment_id');
+        $paymentId    = $request->query('payment_id') ?? $request->query('transaction');
 
         Log::info('Callback success reçu', [
             'payment_token' => $paymentToken,
@@ -82,7 +76,7 @@ class PaiementController extends Controller
             return response()->json(['error' => 'Missing parameters'], 400);
         }
 
-        $rendezvous = RendezVous::where('payment_token', $paymentToken)->first();
+        $rendezvous = RendezVous::where('payment_token', $paymentToken)->with('patient')->first();
 
         if (!$rendezvous) {
             Log::error("Rendez-vous non trouvé pour token {$paymentToken}");
@@ -120,7 +114,10 @@ class PaiementController extends Controller
 
             Log::info("Paiement enregistré avec succès pour rendez-vous #{$rendezvous->id}");
 
-            return view('dashPatient.RendezVous.success', compact('rendezvous'));
+            $user = $rendezvous->patient;
+            session(['impersonate_user_id' => $user->id]);
+
+            return view('payment.success', compact('rendezvous'));
         } else {
             $paiement = new Paiement();
             $paiement->paiement_id   = $paymentId;
@@ -135,16 +132,22 @@ class PaiementController extends Controller
 
             Log::warning("Paiement annulé pour rendez-vous #{$rendezvous->id}");
 
-            return view('dashPatient.RendezVous.cancel', compact('rendezvous'));
+            $user = $rendezvous->user;
+            session(['impersonate_user_id' => $user->id]);
+
+            return view('payment.cancel', compact('rendezvous'));
         }
     }
 
     public function cancel($rendezvousId)
     {
-        $rendezvous = RendezVous::findOrFail($rendezvousId);
+        $rendezvous = RendezVous::with('patient')->findOrFail($rendezvousId);
         $rendezvous->update(['status' => 'canceled']);
 
         Log::warning("Paiement annulé manuellement pour rendez-vous #{$rendezvous->id}");
+
+        $user = $rendezvous->patient;
+        session(['impersonate_user_id' => $user->id]);
 
         return view('payment.cancel', compact('rendezvous'));
     }
