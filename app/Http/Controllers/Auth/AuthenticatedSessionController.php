@@ -24,8 +24,19 @@ class AuthenticatedSessionController extends FortifyAuthenticatedSessionControll
         if (Auth::attempt($request->only('email', 'password'), $request->boolean('remember'))) {
              $request->session()->regenerate();
 
+            // Vérifier l'activation du compte pour les médecins
+            $user = Auth::user();
+            if ($user->role === 'medecin' && !$user->isActive) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+                return redirect()->route('activation.pending')
+                    ->withErrors(['email' => "Votre compte médecin est en attente d'activation par l'administrateur."])
+                    ->with('status', "Votre compte médecin est en attente d'activation par l'administrateur.");
+            }
+
             // Redirect based on user role
-            return redirect()->intended($this->getHomePath(Auth::user()));
+            return redirect()->intended($this->getHomePath($user));
         }
 
         // If authentication fails, redirect back
@@ -64,6 +75,8 @@ class AuthenticatedSessionController extends FortifyAuthenticatedSessionControll
             return '/pharmacie/dashboard';
         } elseif ($user->role === 'donateur') {
             return '/donateur/dashboard';
+        } elseif ($user->role === 'admin') {
+            return '/admin/dashboard';
         }
 
         // Default fallback

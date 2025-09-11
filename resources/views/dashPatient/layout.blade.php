@@ -7,6 +7,7 @@
     <title>Workspace</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="patient-id" content="{{ Auth::user()->patient->id ?? '' }}">
+    <meta name="user-id" content="{{ Auth::id() }}">
 
     @livewireStyles
 
@@ -27,6 +28,20 @@
     </div>
 
     @livewireScripts
+{{--
+
+
+    <script type="module">
+        console.log('Listening for new appointments...');
+        console.log('Echo:', window.Echo);
+
+        window.Echo.channel('rendez-vous')
+            .listen('.create', (data) => {
+                console.log('New appointment created: ');
+                console.log('Order status updated: ', data);
+
+            });
+    </script> --}}
 </body>
 
 </html>

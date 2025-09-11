@@ -42,7 +42,7 @@
 
         <div class="w-full max-w-4xl relative z-10">
             <div class="text-center mb-10 animate__animated animate__fadeIn">
-                <h2 class="mt-6 text-3xl font-extrabold text-gray-900">Bienvenue sur MediConnect</h2>
+                <h2 class="mt-6 text-3xl font-extrabold text-gray-900">Bienvenue sur MedicalPlatform</h2>
                 <p class="mt-3 text-xl text-gray-600">Choisissez votre type de compte pour commencer</p>
             </div>
 

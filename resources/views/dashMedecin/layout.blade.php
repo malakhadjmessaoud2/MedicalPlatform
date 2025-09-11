@@ -44,12 +44,15 @@
         console.log('Listening for new appointments...');
         console.log('Echo:', window.Echo);
 
-        window.Echo.channel('rendez-vous')
-            .listen('.create', (data) => {
-                console.log('New appointment created: ');
-                console.log('Order status updated: ', data);
-
-            });
+        if (window.Echo && typeof window.Echo.channel === 'function') {
+            window.Echo.channel('rendez-vous')
+                .listen('.create', (data) => {
+                    console.log('New appointment created: ');
+                    console.log('Order status updated: ', data);
+                });
+        } else {
+            console.warn('Laravel Echo is not initialized; skipping channel subscription.');
+        }
     </script>
 </body>
 

@@ -1,6 +1,7 @@
 // console.log('app-patient.js chargé');
 import './bootstrap';
 import './agenda'; // Importez votre fichier agenda.js
+import './dashboard/notifications';
 
 // Import FullCalendar et ses plugins
 import { Calendar } from '@fullcalendar/core';

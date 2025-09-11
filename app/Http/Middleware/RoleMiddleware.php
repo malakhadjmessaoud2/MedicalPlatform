@@ -23,6 +23,12 @@ class RoleMiddleware
         if (Auth::user()->role !== $role) {
             abort(403, 'Accès non autorisé.');
         }
+
+        // Bloquer l'accès au médecin si son compte n'est pas encore activé
+        if ($role === 'medecin' && !Auth::user()->isActive) {
+            return redirect()->route('activation.pending')
+                ->with('status', "Votre compte médecin est en attente d'activation par l'administrateur.");
+        }
         return $next($request);
     }
 }

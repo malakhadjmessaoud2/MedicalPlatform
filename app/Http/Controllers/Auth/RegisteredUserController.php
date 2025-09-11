@@ -58,13 +58,14 @@ class RegisteredUserController extends Controller
             ]);
         }
 
-        // Créer l'utilisateur
+        // Créer l'utilisateur (médecin créé inactif par défaut)
         $user = User::create([
             'nom' => $request->nom,
             'prenom' => $request->prenom,
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'role' => $request->role,
+            'isActive' => $request->role === 'medecin' ? 0 : 1,
         ]);
 
         // Traiter la photo de profil si elle est fournie
@@ -132,7 +133,12 @@ class RegisteredUserController extends Controller
 
         // Authentifier l'utilisateur après l'enregistrement
         Auth::login($user);
-        //    dd($user->isMedecin());
+
+        // Si médecin, afficher la page d'attente d'activation
+        if ($user->isMedecin() && !$user->isActive) {
+            return redirect()->route('activation.pending')
+                ->with('status', "Votre compte médecin a été créé et est en attente d'activation par l'administrateur.");
+        }
 
         return $user->isMedecin() ? redirect()->route('medecin.dashboard') : redirect()->route('patient.dashboard');
     }

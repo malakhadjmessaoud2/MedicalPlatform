@@ -501,10 +501,22 @@ class RendezVousController extends Controller
                     'date_fin_UTC' => $rendezVous->date_fin
                 ]);
 
+                // Préparer les changements pour notification (drag & drop)
+                $changes = [
+                    'date_debut' => [
+                        'old' => $rendezVous->getOriginal('date_debut'),
+                        'new' => $rendezVous->date_debut,
+                    ],
+                    'date_fin' => [
+                        'old' => $rendezVous->getOriginal('date_fin'),
+                        'new' => $rendezVous->date_fin,
+                    ],
+                ];
+
                 $rendezVous->save();
 
                 // Diffuser l'événement
-                broadcast(new RendezVousModifie($rendezVous, 'updated'))->toOthers();
+                broadcast(new RendezVousModifie($rendezVous, 'updated', $changes))->toOthers();
 
                 return response()->json([
                     'success' => true,
@@ -529,6 +541,17 @@ class RendezVousController extends Controller
                 // Calculer la date de fin en ajoutant la durée (convertie en minutes)
                 $dateFin = $dateDebut->copy()->addMinutes((int) $validated['duree']);
 
+                // Calculer les changements
+                $changes = [
+                    'patient_id' => [ 'old' => $rendezVous->patient_id, 'new' => $validated['patient_id'] ],
+                    'titre' => [ 'old' => $rendezVous->titre ?? null, 'new' => $validated['titre'] ],
+                    'date_debut' => [ 'old' => $rendezVous->date_debut, 'new' => $dateDebut ],
+                    'date_fin' => [ 'old' => $rendezVous->date_fin, 'new' => $dateFin ],
+                    'type' => [ 'old' => $rendezVous->type, 'new' => $validated['type'] ],
+                    'statut' => [ 'old' => $rendezVous->statut, 'new' => $validated['statut'] ],
+                    'description' => [ 'old' => $rendezVous->description ?? null, 'new' => $validated['description'] ?? null ],
+                ];
+
                 // Mettre à jour le rendez-vous
                 $rendezVous->update([
                     'patient_id' => $validated['patient_id'],
@@ -541,7 +564,7 @@ class RendezVousController extends Controller
                 ]);
 
                 // Diffuser l'événement
-                broadcast(new RendezVousModifie($rendezVous, 'updated'))->toOthers();
+                broadcast(new RendezVousModifie($rendezVous, 'updated', $changes))->toOthers();
 
                 // Rediriger vers la page d'agenda avec la date du rendez-vous
                 return redirect()->route('medecin.agenda', [

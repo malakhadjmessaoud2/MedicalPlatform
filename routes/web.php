@@ -17,10 +17,17 @@ use App\Http\Controllers\Medecin\DashboardController as MedecinDashboardControll
 use App\Http\Controllers\Patient\DashboardController as PatientDashboardController;
 use App\Http\Controllers\Patient\DossierController;
 use App\Http\Controllers\Patient\PaiementController;
+use App\Http\Controllers\Admin\GestionMedecinController;
+
 use Illuminate\Support\Facades\Auth;
 use App\Models\RendezVous;
 
 Route::get('/', [DashboardController::class, 'welcome'])->name('welcome');
+
+// Page d'attente d'activation pour les médecins
+Route::get('/activation-pending', function () {
+    return view('auth.activation-pending');
+})->name('activation.pending');
 
 Route::middleware(['guest'])->group(function () {
     Route::get('/login', [AuthenticatedSessionController::class, 'create'])
@@ -170,3 +177,21 @@ Route::middleware(['auth', 'role:patient'])->prefix('patient')->name('patient.')
 Route::post('/webhook/paymee', [PaiementController::class, 'handleWebhook']);
 Route::get('/payment/success', [PaiementController::class, 'success'])->name('payment.success');
 Route::get('payment/cancel/{rendezvousId}', [PaiementController::class, 'cancel'])->name('payment.cancel');
+
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    // Dashboard principal
+    Route::get('/dashboard', [App\Http\Controllers\Admin\AdminDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/statistiques', [App\Http\Controllers\Admin\AdminDashboardController::class, 'statistiques'])->name('statistiques');
+    Route::get('/utilisateurs', [App\Http\Controllers\Admin\AdminDashboardController::class, 'utilisateurs'])->name('utilisateurs');
+    Route::get('/rapports', [App\Http\Controllers\Admin\AdminDashboardController::class, 'rapports'])->name('rapports');
+
+    // Gestion des médecins
+    Route::get('/medecins', [GestionMedecinController::class, 'index'])->name('medecins.index');
+    Route::get('/medecins/create', [GestionMedecinController::class, 'create'])->name('medecins.create');
+    Route::post('/medecins', [GestionMedecinController::class, 'store'])->name('medecins.store');
+    Route::get('/medecins/{medecin}/edit', [GestionMedecinController::class, 'edit'])->name('medecins.edit');
+    Route::put('/medecins/{medecin}', [GestionMedecinController::class, 'update'])->name('medecins.update');
+    Route::patch('/medecins/{medecin}/toggle-status', [GestionMedecinController::class, 'toggleStatus'])->name('medecins.toggle-status');
+    Route::delete('/medecins/{medecin}', [GestionMedecinController::class, 'destroy'])->name('medecins.destroy');
+    Route::get('/medecins/{medecin}', [GestionMedecinController::class, 'show'])->name('medecins.show');
+});

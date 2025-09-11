@@ -18,3 +18,6 @@ php artisan make:event RendezVousCreate
 
 php artisan reverb:start --debug
 
+ngrok http 8000
+
+php artisan make:mail AccountActivedMail --view=emails.users.activation

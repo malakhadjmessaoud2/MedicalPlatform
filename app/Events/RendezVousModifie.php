@@ -18,14 +18,16 @@ class RendezVousModifie implements ShouldBroadcast
 
     public $rendezVous;
     public $action;
+    public $changes = [];
 
     /**
      * Create a new event instance.
      */
-    public function __construct(RendezVous $rendezVous, string $action)
+    public function __construct(RendezVous $rendezVous, string $action, array $changes = [])
     {
         $this->rendezVous = $rendezVous;
         $this->action = $action;
+        $this->changes = $changes;
     }
 
     /**
@@ -124,6 +126,7 @@ class RendezVousModifie implements ShouldBroadcast
 
         return [
             'action' => $this->action,
+            'changes' => $this->changes,
             'rendezVous' => [
                 'id' => $this->rendezVous->id,
                 'title' => $title,

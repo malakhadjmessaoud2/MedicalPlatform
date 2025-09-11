@@ -89,6 +89,12 @@ class User extends Authenticatable
         return $this->hasMany(RendezVous::class, 'patient_id');
     }
 
+    // Alias pour la relation rendez-vous (utilisé dans le contrôleur admin)
+    public function rendezVous()
+    {
+        return $this->rendezVousCommeMedecin();
+    }
+
 
 
     public function demandesDon()
@@ -132,5 +138,13 @@ class User extends Authenticatable
     public function isOperateurPharmacie()
     {
         return $this->role == 'operateurpharmacie';
+    }
+
+    /**
+     * Vérifie si l'utilisateur est un administrateur
+     */
+    public function isAdmin()
+    {
+        return $this->role == 'admin';
     }
 }

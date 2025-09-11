@@ -25,9 +25,9 @@ class PaiementController extends Controller
             'last_name'   => $user->prenom,
             'email'       => $user->email,
             'phone'       => $user->tel,
-            'return_url'  => "https://7840fbbd25bb.ngrok-free.app/payment/success",
-            'cancel_url'  => "https://7840fbbd25bb.ngrok-free.app/payment/cancel/{$rendezVous->id}",
-            'webhook_url' => "https://7840fbbd25bb.ngrok-free.app/webhook/paymee",
+            'return_url'  => "https://80434956b8e5.ngrok-free.app/payment/success",
+            'cancel_url'  => "https://80434956b8e5.ngrok-free.app/payment/cancel/{$rendezVous->id}",
+            'webhook_url' => "https://80434956b8e5.ngrok-free.app/webhook/paymee",
         ];
 
         Log::info('Création du paiement Paymee', $paymentData);
@@ -110,7 +110,7 @@ class PaiementController extends Controller
             $paiement->datePaiement  = now();
             $paiement->save();
 
-            $rendezvous->update(['status' => 'payed']);
+            $rendezvous->update(['statut' => 'payed']);
 
             Log::info("Paiement enregistré avec succès pour rendez-vous #{$rendezvous->id}");
 

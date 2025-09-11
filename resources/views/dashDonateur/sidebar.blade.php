@@ -1,6 +1,6 @@
 <div class="p-6 bg-gray-100 rounded-lg h-full" style="width: 255px;">
     <div class="mb-8">
-        <h1 class="text-xl font-semibold text-gray-900">MediConnect</h1>
+        <h1 class="text-xl font-semibold text-gray-900">MedicalPlatform</h1>
         <p class="text-sm text-gray-500">Espace Donateur</p>
 
     </div>
