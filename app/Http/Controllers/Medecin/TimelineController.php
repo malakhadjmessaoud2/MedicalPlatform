@@ -35,6 +35,7 @@ class TimelineController extends Controller
         $rendezVous = RendezVous::with(['patient'])
             ->where('medecin_id', $user->id)
             ->whereDate('date_debut', $today)
+            ->where('statut', '!=', 'payed')
             ->orderBy('date_debut')
             ->get();
 

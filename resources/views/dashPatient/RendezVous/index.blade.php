@@ -183,18 +183,46 @@
         </h2>
 
         @php
-            // Filtrer seulement les consultations qui doivent être affichées dans "Consultations en ligne"
-            // IMPORTANT: Les consultations restent affichées jusqu'à la date de fin du rendez-vous
+            // DEBUG: Afficher les informations de débogage
+            echo "<!-- DEBUG: Nombre total de prochains rendez-vous: " . $prochainsRendezVous->count() . " -->";
+
+            // Log détaillé pour chaque rendez-vous
+            \Log::info('=== DEBUG CONSULTATIONS EN LIGNE ===');
+            \Log::info('Nombre total de prochains rendez-vous: ' . $prochainsRendezVous->count());
+
+            // Filtrer les consultations qui doivent être affichées dans "Consultations en ligne"
+            // Afficher les rendez-vous payés jusqu'à la date de fin pour accéder au lien en ligne
             $consultationsEnLigne = $prochainsRendezVous->filter(function($rdv) {
                 $heureFin = \Carbon\Carbon::parse($rdv->date_fin ?? $rdv->date_debut->addMinutes(30));
                 $maintenant = \Carbon\Carbon::now();
 
-                // Afficher dès que le statut est confirmé ET jusqu'à la fin du rendez-vous
-                // Cela permet aux consultations de rester visibles pendant toute leur durée
-                return $rdv->statut === 'confirmed' &&
-                       $rdv->lien_en_ligne &&
-                       $maintenant <= $heureFin;
+                // DEBUG: Afficher les détails de chaque rendez-vous
+                echo "<!-- DEBUG RDV ID: " . $rdv->id . " | Statut: '" . $rdv->statut . "' | Date fin: " . $heureFin->format('Y-m-d H:i:s') . " | Maintenant: " . $maintenant->format('Y-m-d H:i:s') . " | Lien: " . ($rdv->lien_en_ligne ? 'OUI' : 'NON') . " -->";
+
+                // Log détaillé pour chaque rendez-vous
+                \Log::info("RDV ID: {$rdv->id} | Statut: '{$rdv->statut}' | Date fin: {$heureFin->format('Y-m-d H:i:s')} | Maintenant: {$maintenant->format('Y-m-d H:i:s')} | Lien: " . ($rdv->lien_en_ligne ? 'OUI' : 'NON'));
+
+                // Afficher si:
+                // 1. Le statut est 'payed' (paiement effectué)
+                // 2. On est encore dans la période du rendez-vous (jusqu'à la fin)
+                $condition1 = $rdv->statut === 'payed';
+                $condition2 = $maintenant <= $heureFin;
+
+                echo "<!-- DEBUG FILTER RDV ID: " . $rdv->id . " | Condition1 (payed): " . ($condition1 ? 'TRUE' : 'FALSE') . " | Condition2 (date): " . ($condition2 ? 'TRUE' : 'FALSE') . " | RESULT: " . (($condition1 && $condition2) ? 'INCLUDED' : 'EXCLUDED') . " -->";
+
+                // Log du résultat du filtre
+                \Log::info("FILTER RDV ID: {$rdv->id} | Condition1 (payed): " . ($condition1 ? 'TRUE' : 'FALSE') . " | Condition2 (date): " . ($condition2 ? 'TRUE' : 'FALSE') . " | RESULT: " . (($condition1 && $condition2) ? 'INCLUDED' : 'EXCLUDED'));
+
+                return $condition1 && $condition2;
             });
+
+            echo "<!-- DEBUG: Nombre de consultations en ligne après filtre: " . $consultationsEnLigne->count() . " -->";
+            \Log::info('Nombre de consultations en ligne après filtre: ' . $consultationsEnLigne->count());
+
+            // Log des consultations en ligne finales
+            foreach($consultationsEnLigne as $rdv) {
+                \Log::info("CONSULTATION FINALE ID: {$rdv->id} | Statut: {$rdv->statut} | Medecin: " . ($rdv->medecin->nom ?? 'N/A'));
+            }
         @endphp
 
         @if($consultationsEnLigne->count() > 0)
@@ -203,11 +231,18 @@
                     $heureDebut = \Carbon\Carbon::parse($rdv->date_debut);
                     $heureFin = \Carbon\Carbon::parse($rdv->date_fin ?? $rdv->date_debut->addMinutes(30));
                     $maintenant = \Carbon\Carbon::now();
-                    $consultationActive = $maintenant->between($heureDebut->copy()->subMinutes(5), $heureFin);
-                    $consultationEnCours = $maintenant->between($heureDebut, $heureFin);
+
+                    // Le lien est actif si:
+                    // 1. Le statut est 'payed' (paiement effectué)
+                    // 2. On est entre 5 minutes avant le début et la fin du rendez-vous
+                    $consultationActive = $rdv->statut === 'payed' &&
+                                        $maintenant->between($heureDebut->copy()->subMinutes(5), $heureFin);
+                    $consultationEnCours = $rdv->statut === 'payed' &&
+                                         $maintenant->between($heureDebut, $heureFin);
+                    $consultationTerminee = $maintenant > $heureFin;
                 @endphp
 
-                <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-blue-200 mb-4 hover:shadow-md transition-shadow" data-rdv="{{ $rdv->id }}" data-debut="{{ $rdv->date_debut->toISOString() }}" data-fin="{{ ($rdv->date_fin ?? $rdv->date_debut->addMinutes(30))->toISOString() }}">
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-blue-200 mb-4 hover:shadow-md transition-shadow" data-rdv="{{ $rdv->id }}" data-debut="{{ $rdv->date_debut->toISOString() }}" data-fin="{{ ($rdv->date_fin ?? $rdv->date_debut->addMinutes(30))->toISOString() }}" data-statut="{{ $rdv->statut }}">
                     <div class="p-5 border-l-4 border-blue-500">
                         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <div class="flex items-center gap-4">
@@ -227,29 +262,38 @@
                             </div>
 
                             <div class="flex flex-col items-end">
-                                <a href="{{ route('patient.rendez-vous.payer', $rdv->id) }}" class="inline-flex items-center gap-2 px-4 py-2 text-sm rounded-lg bg-blue-600 text-white font-medium shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h5M4 7h16a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V9a2 2 0 012-2z"/>
-                                    </svg>
-                                    Payer la consultation
-                                </a>
-                                <div class="flex items-center gap-2 mb-3 mt-3">
-                                        @if($consultationEnCours)
-                                            <span class="px-3 py-1 bg-green-50 text-green-700 border border-green-200 rounded-full text-sm font-medium">
-                                                🟢 Consultation en cours
-                                            </span>
+                                @if($rdv->statut !== 'payed')
+                                    <a href="{{ route('patient.rendez-vous.payer', $rdv->id) }}" class="inline-flex items-center gap-2 px-4 py-2 text-sm rounded-lg bg-blue-600 text-white font-medium shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h5M4 7h16a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V9a2 2 0 012-2z"/>
+                                        </svg>
+                                        Payer la consultation
+                                    </a>
+                                @else
+                                    <div class="inline-flex items-center gap-2 px-4 py-2 text-sm rounded-lg bg-green-100 text-green-800 font-medium">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                        </svg>
+                                        Consultation payée
+                                    </div>
+                                @endif
+                                <div class="flex items-center gap-2 mb-3 mt-3 consultation-indicator">
+                                    @if($consultationEnCours)
+                                        <span class="px-3 py-1 bg-green-50 text-green-700 border border-green-200 rounded-full text-sm font-medium">
+                                            🟢 Consultation en cours
+                                        </span>
                                     @elseif($consultationActive)
-                                            <span class="px-3 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-full text-sm font-medium">
+                                        <span class="px-3 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-full text-sm font-medium">
                                             🔵 Consultation peut commencer (5 min avant)
-                                            </span>
+                                        </span>
                                     @else
-                                            <span class="px-3 py-1 bg-gray-50 text-gray-600 border border-gray-200 rounded-full text-sm font-medium">
+                                        <span class="px-3 py-1 bg-gray-50 text-gray-600 border border-gray-200 rounded-full text-sm font-medium">
                                             ⏰ Consultation programmée
-                                            </span>
+                                        </span>
                                     @endif
                                 </div>
 
-                                @if($consultationActive)
+                                @if($consultationActive && $rdv->statut === 'payed' && $rdv->lien_en_ligne)
                                     <a href="{{ $rdv->lien_en_ligne }}"
                                        target="_blank"
                                        class="inline-flex items-center gap-2 px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors shadow-sm">
@@ -279,13 +323,15 @@
                                 @else
                                     <div class="text-center">
                                         <div class="text-sm text-gray-500 mb-2">
-                                            @if($consultationEnCours)
+                                            @if(!$rdv->lien_en_ligne)
+                                                Consultation sans lien en ligne
+                                            @elseif($consultationEnCours)
                                                 Consultation en cours
                                             @else
                                                 Le lien sera actif 5 minutes avant le début
                                             @endif
                                         </div>
-                                        @if(!$consultationEnCours)
+                                        @if(!$consultationEnCours && !$consultationTerminee)
                                         <div class="text-xs text-gray-400">
                                             {{ $heureDebut->diffForHumans() }}
                                         </div>
@@ -304,6 +350,7 @@
                 </svg>
                 <p class="text-gray-500 text-lg mb-2">Aucune consultation en ligne programmée</p>
                 <p class="text-gray-400 text-sm">Les consultations en ligne apparaîtront ici dès confirmation et resteront visibles jusqu'à la fin du rendez-vous</p>
+
             </div>
         @endif
     </div>
@@ -593,17 +640,19 @@
                 const dateDebut = new Date(consultation.dataset.debut);
                 const dateFin = new Date(consultation.dataset.fin);
                 const maintenant = new Date();
+                const statut = consultation.dataset.statut || 'pending';
 
-                // Vérifier si la consultation peut commencer (5 min avant)
-                const peutCommencer = maintenant >= new Date(dateDebut.getTime() - 5 * 60000);
-                const enCours = maintenant >= dateDebut && maintenant <= dateFin;
+                // Vérifier si la consultation peut commencer (5 min avant) ET si le statut est 'payed'
+                const peutCommencer = statut === 'payed' && maintenant >= new Date(dateDebut.getTime() - 5 * 60000);
+                const enCours = statut === 'payed' && maintenant >= dateDebut && maintenant <= dateFin;
+                const estTerminee = maintenant > dateFin;
 
                 if (enCours) {
-                    consultation.innerHTML = '<span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">🟢 Consultation en cours</span>';
+                    consultation.innerHTML = '<span class="px-3 py-1 bg-green-50 text-green-700 border border-green-200 rounded-full text-sm font-medium">🟢 Consultation en cours</span>';
                 } else if (peutCommencer) {
-                    consultation.innerHTML = '<span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">🔵 Consultation peut commencer (5 min avant)</span>';
+                    consultation.innerHTML = '<span class="px-3 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-full text-sm font-medium">🔵 Consultation peut commencer (5 min avant)</span>';
                 } else {
-                    consultation.innerHTML = '<span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">⏰ Consultation programmée</span>';
+                    consultation.innerHTML = '<span class="px-3 py-1 bg-gray-50 text-gray-600 border border-gray-200 rounded-full text-sm font-medium">⏰ Consultation programmée</span>';
                 }
             });
         }, 10000); // 10 secondes
@@ -624,6 +673,7 @@
                 consultation.classList.add('consultation-status');
                 consultation.dataset.debut = rdv.dataset.debut;
                 consultation.dataset.fin = rdv.dataset.fin;
+                consultation.dataset.statut = rdv.dataset.statut || 'pending';
             }
         });
     }
@@ -631,6 +681,47 @@
     // Initialiser le rafraîchissement automatique au chargement de la page
     document.addEventListener('DOMContentLoaded', function() {
         console.log('Initialisation du rafraîchissement automatique...');
+
+        // DEBUG: Afficher les informations de débogage dans la console
+        console.log('=== DEBUG: Consultations en ligne ===');
+
+        // Récupérer les données PHP via JSON
+        const prochainsRDV = @json($prochainsRendezVous);
+        const consultationsEnLigne = @json($consultationsEnLigne);
+
+        console.log('Nombre total de prochains rendez-vous:', prochainsRDV.length);
+        console.log('Nombre de consultations en ligne après filtre:', consultationsEnLigne.length);
+
+        console.log('=== Détails des prochains rendez-vous ===');
+        prochainsRDV.forEach((rdv, index) => {
+            const dateDebut = new Date(rdv.date_debut);
+            const dateFin = new Date(rdv.date_fin || new Date(dateDebut.getTime() + 30 * 60000));
+            const maintenant = new Date();
+            const estTermine = maintenant > dateFin;
+            const estPaye = rdv.statut === 'payed';
+
+            console.log(`RDV ${index + 1}:`, {
+                id: rdv.id,
+                statut: rdv.statut,
+                medecin: rdv.medecin?.nom + ' ' + rdv.medecin?.prenom,
+                date_debut: rdv.date_debut,
+                date_fin: rdv.date_fin,
+                lien_en_ligne: rdv.lien_en_ligne,
+                est_paye: estPaye,
+                est_termine: estTermine,
+                maintenant: maintenant.toISOString()
+            });
+        });
+
+        console.log('=== Consultations en ligne filtrées ===');
+        consultationsEnLigne.forEach((rdv, index) => {
+            console.log(`Consultation ${index + 1}:`, {
+                id: rdv.id,
+                statut: rdv.statut,
+                medecin: rdv.medecin?.nom + ' ' + rdv.medecin?.prenom,
+                lien_en_ligne: rdv.lien_en_ligne
+            });
+        });
 
         // Préparer les éléments pour le rafraîchissement
         preparerRafraichissement();

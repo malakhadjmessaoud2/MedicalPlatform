@@ -1,3 +1,6 @@
+<meta name="user-id" content="{{ Auth::id() }}">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+
 <nav class="px-4 py-2  shadow-sm">
     <div class="flex items-center justify-between">
         <!-- Left Section - Date, Search, Settings -->
@@ -46,10 +49,11 @@
                             d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                     </svg>
                     <!-- Notification Badge -->
-                    <span id="notifications-badge" class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white hidden"></span>
+                    <span id="notifications-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
                 </button>
                 <!-- Notifications Dropdown -->
-                <div class="absolute right-0 mt-2 w-[22rem] bg-white rounded-lg shadow-lg py-2 hidden z-50" id="notifications-dropdown">
+                <div class="absolute right-0 mt-2 w-[22rem] bg-white rounded-lg shadow-lg py-2 z-50 hidden"
+                     id="notifications-dropdown">
                     <div class="px-4 py-2 border-b border-gray-100 flex items-center justify-between">
                         <h3 class="text-sm font-semibold text-gray-900">Notifications</h3>
                         <button type="button" id="notifications-markread" class="text-xs text-blue-600 hover:text-blue-800">Tout marquer comme lu</button>
@@ -144,4 +148,6 @@
         </div>
     </div>
 </nav>
+
+<!-- Script pour les notifications - déjà inclus dans app.js -->
 

@@ -189,6 +189,115 @@ class ConsultationService
     }
 
     /**
+     * Récupère les consultations avec filtres pour un médecin
+     */
+    public function getConsultationsAvecFiltres(int $medecinId, string $filtre = 'aujourdhui', ?string $date = null): array
+    {
+        $query = RendezVous::with(['patient'])
+            ->where('medecin_id', $medecinId);
+
+        switch ($filtre) {
+            case 'aujourdhui':
+                $query->whereDate('date_debut', Carbon::today());
+                break;
+
+            case 'demain':
+                $query->whereDate('date_debut', Carbon::tomorrow());
+                break;
+
+            case 'semaine':
+                $query->whereBetween('date_debut', [
+                    Carbon::now()->startOfWeek(),
+                    Carbon::now()->endOfWeek()
+                ]);
+                break;
+
+            case 'semaine_prochaine':
+                $query->whereBetween('date_debut', [
+                    Carbon::now()->addWeek()->startOfWeek(),
+                    Carbon::now()->addWeek()->endOfWeek()
+                ]);
+                break;
+
+            case 'mois':
+                $query->whereBetween('date_debut', [
+                    Carbon::now()->startOfMonth(),
+                    Carbon::now()->endOfMonth()
+                ]);
+                break;
+
+            case 'date':
+                if ($date) {
+                    $query->whereDate('date_debut', Carbon::parse($date));
+                }
+                break;
+
+            case 'periode':
+                if ($date) {
+                    $dates = explode(' - ', $date);
+                    if (count($dates) === 2) {
+                        $query->whereBetween('date_debut', [
+                            Carbon::parse($dates[0])->startOfDay(),
+                            Carbon::parse($dates[1])->endOfDay()
+                        ]);
+                    }
+                }
+                break;
+        }
+
+        $rendezVous = $query->orderBy('date_debut')->get();
+
+        // Vérifier et mettre à jour automatiquement les statuts "payed" vers "completed"
+        $this->verifierEtMettreAJourStatutsAutomatiquement($rendezVous);
+
+        // Recharger les rendez-vous pour avoir les statuts mis à jour
+        $rendezVous = $rendezVous->fresh();
+
+        return $rendezVous->map(function ($rdv) {
+            $consultationService = app(ConsultationService::class);
+            $maintenant = Carbon::now();
+            $dateDebut = Carbon::parse($rdv->date_debut);
+            $dateFin = Carbon::parse($rdv->date_fin ?? $dateDebut->copy()->addMinutes(30));
+
+            // Déterminer l'état de la consultation basé sur le statut de la DB et l'heure
+            $consultationActive = false;
+            $consultationEnCours = false;
+            $consultationTerminee = false;
+
+            if ($rdv->statut === 'confirmed' || $rdv->statut === 'confirmé') {
+                $cinqMinutesAvant = $dateDebut->copy()->subMinutes(5);
+                $consultationActive = $maintenant->between($cinqMinutesAvant, $dateFin);
+                $consultationEnCours = $maintenant->between($dateDebut, $dateFin);
+                $consultationTerminee = $maintenant->gt($dateFin);
+            } elseif ($rdv->statut === 'completed') {
+                $consultationTerminee = true;
+            }
+
+            return [
+                'id' => $rdv->id,
+                'prenom' => $rdv->patient->prenom,
+                'nom' => $rdv->patient->nom,
+                'photo' => $rdv->patient->profile_photo_path
+                    ? asset('storage/' . $rdv->patient->profile_photo_path)
+                    : 'https://ui-avatars.com/api/?name=' . urlencode($rdv->patient->prenom . ' ' . $rdv->patient->nom),
+                'heure' => $dateDebut->format('H:i'),
+                'heure_fin' => $dateFin->format('H:i'),
+                'date' => $dateDebut->format('d/m/Y'),
+                'type' => $rdv->type ?? 'consultation',
+                'statut' => $rdv->statut, // Statut exact de la base de données
+                'lien_meet' => $consultationService->creerOuRecupererLien($rdv),
+                'consultation_active' => $consultationActive,
+                'consultation_en_cours' => $consultationEnCours,
+                'consultation_terminee' => $consultationTerminee,
+                'date_debut' => $rdv->date_debut,
+                'date_fin' => $rdv->date_fin,
+                'patient_id' => $rdv->patient_id,
+                'medecin_id' => $rdv->medecin_id
+            ];
+        })->toArray();
+    }
+
+    /**
      * Crée une nouvelle consultation
      */
     public function createConsultation(array $data, int $medecinId): Consultation
@@ -334,6 +443,37 @@ class ConsultationService
         }
 
         return $query->orderBy('date', 'desc')->get();
+    }
+
+    /**
+     * Vérifie et met à jour automatiquement les statuts "payed" vers "completed"
+     * lorsque la date système dépasse la date de fin du rendez-vous
+     */
+    private function verifierEtMettreAJourStatutsAutomatiquement($rendezVous)
+    {
+        $maintenant = Carbon::now();
+        $rendezVousAMettreAJour = [];
+
+        foreach ($rendezVous as $rdv) {
+            // Vérifier si le statut est "payed" et si la date de fin est dépassée
+            if ($rdv->statut === 'payed' && $rdv->date_fin) {
+                $dateFin = Carbon::parse($rdv->date_fin);
+
+                if ($maintenant->gt($dateFin)) {
+                    $rendezVousAMettreAJour[] = $rdv;
+                }
+            }
+        }
+
+        // Mettre à jour les statuts en lot
+        if (!empty($rendezVousAMettreAJour)) {
+            Log::info('[AUTO-UPDATE] Mise à jour automatique de ' . count($rendezVousAMettreAJour) . ' rendez-vous de "payed" vers "completed"');
+
+            foreach ($rendezVousAMettreAJour as $rdv) {
+                $rdv->update(['statut' => 'completed']);
+                Log::info('[AUTO-UPDATE] Rendez-vous ID ' . $rdv->id . ' mis à jour vers "completed"');
+            }
+        }
     }
 
     /**

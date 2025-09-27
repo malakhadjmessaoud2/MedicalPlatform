@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class DossierController extends Controller
@@ -530,6 +531,229 @@ class DossierController extends Controller
                 'error' => 'Erreur lors du téléchargement',
                 'message' => $e->getMessage()
             ], 500);
+        }
+    }
+
+    /**
+     * Permet à un patient de noter un médecin
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function noterMedecin(Request $request)
+    {
+        try {
+            // Validation des données d'entrée
+            $request->validate([
+                'medecin_id' => 'required|integer|exists:users,id',
+                'note' => 'required|integer|min:1|max:5',
+                'avis' => 'nullable|string|max:1000'
+            ]);
+
+            $patientId = Auth::id();
+            $medecinId = $request->input('medecin_id');
+            $note = $request->input('note');
+            $avis = $request->input('avis');
+            $previousNote = $request->input('previous_note');
+
+            // Vérifier que l'utilisateur est bien un patient
+            /** @var User $patient */
+            $patient = Auth::user();
+            if (!$patient || !$patient->isPatient()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Seuls les patients peuvent noter les médecins.'
+                ], 403);
+            }
+
+            // Vérifier que le médecin existe et est bien un médecin
+            $medecin = User::find($medecinId);
+            if (!$medecin || !$medecin->isMedecin()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Médecin non trouvé ou invalide.'
+                ], 404);
+            }
+
+            // Vérifier que le patient a eu au moins un rendez-vous avec ce médecin
+            $hasRendezVous = RendezVous::where('patient_id', $patientId)
+                ->where('medecin_id', $medecinId)
+                ->whereIn('statut', ['confirmed', 'confirmé', 'completed', 'terminé'])
+                ->exists();
+
+            if (!$hasRendezVous) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Vous ne pouvez noter que les médecins avec lesquels vous avez eu des rendez-vous.'
+                ], 403);
+            }
+
+            // Appeler la méthode métier pour ajouter l'avis
+            $result = $this->ajouterAvis($medecinId, $note, $previousNote);
+
+            if ($result['success']) {
+                // Log de l'avis pour audit
+                Log::info('Avis ajouté avec succès', [
+                    'patient_id' => $patientId,
+                    'medecin_id' => $medecinId,
+                    'note' => $note,
+                    'nouveau_score' => $result['nouveau_score'],
+                    'nouveau_nbr_avis' => $result['nouveau_nbr_avis']
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Médecin noté avec succès !',
+                    'action' => $result['action'] ?? null,
+                    'note_patient' => (int) ($result['note_patient'] ?? $note),
+                    'nouveau_score' => $result['nouveau_score'],
+                    'nouveau_nbr_avis' => $result['nouveau_nbr_avis']
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => $result['message']
+                ], 500);
+            }
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Données invalides',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de la notation du médecin', [
+                'patient_id' => Auth::id(),
+                'medecin_id' => $request->input('medecin_id'),
+                'note' => $request->input('note'),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Une erreur est survenue lors de la notation du médecin.'
+            ], 500);
+        }
+    }
+
+    /**
+     * Méthode métier pour ajouter un avis à un médecin
+     *
+     * Cette méthode implémente la logique métier pour :
+     * - Incrémenter le nombre d'avis (nbrAvis) de +1
+     * - Recalculer le score moyen du médecin selon la formule :
+     *   nouveauScore = ((ancienScore × (nbrAvis - 1)) + nouvelleNote) / nbrAvis
+     *
+     * @param int $medecinId ID du médecin à noter
+     * @param int $note Note attribuée (entre 1 et 5)
+     * @return array Résultat de l'opération avec les nouveaux scores
+     */
+    public function ajouterAvis($medecinId, $note, $previousNote = null)
+    {
+        try {
+            $patientId = Auth::id();
+
+            // Validation des paramètres
+            if (!is_numeric($medecinId) || $medecinId <= 0) {
+                return [
+                    'success' => false,
+                    'message' => 'ID du médecin invalide.'
+                ];
+            }
+
+            if (!is_numeric($note) || $note < 1 || $note > 5) {
+                return [
+                    'success' => false,
+                    'message' => 'La note doit être comprise entre 1 et 5.'
+                ];
+            }
+
+            $result = DB::transaction(function () use ($medecinId, $note, $patientId, $previousNote) {
+                // Récupérer le médecin avec verrouillage pour éviter les conditions de course
+                $medecin = User::where('id', $medecinId)
+                    ->where('role', 'medecin')
+                    ->lockForUpdate()
+                    ->first();
+
+                if (!$medecin) {
+                    return [
+                        'success' => false,
+                        'message' => 'Médecin non trouvé.'
+                    ];
+                }
+
+                // Valeurs actuelles
+                $ancienScore = (float) ($medecin->score ?? 0);
+                $ancienNbrAvis = (int) ($medecin->nbrAvis ?? 0);
+
+                // Calculs
+                if ($previousNote === null) {
+                    // Nouveau vote
+                    $nouveauNbrAvis = $ancienNbrAvis + 1;
+                    $nouveauScore = $ancienNbrAvis === 0
+                        ? $note
+                        : (($ancienScore * $ancienNbrAvis) + $note) / $nouveauNbrAvis;
+                    $action = 'created';
+                } else {
+                    // Mise à jour de vote existant (ne pas incrémenter nbrAvis)
+                    $nouveauNbrAvis = $ancienNbrAvis;
+                    if ($ancienNbrAvis === 0) {
+                        // Cas de sécurité, mais ne devrait pas arriver si previousNote existe
+                        $nouveauScore = $note;
+                    } else {
+                        // Remplacer l'ancienne note par la nouvelle dans la moyenne
+                        $nouveauScore = (($ancienScore * $ancienNbrAvis) - $previousNote + $note) / $ancienNbrAvis;
+                    }
+                    $action = 'updated';
+                }
+
+                // Arrondir le score à 2 décimales
+                $nouveauScore = round($nouveauScore, 2);
+
+                // Mettre à jour la table users (score, nbrAvis)
+                $medecin->update([
+                    'score' => $nouveauScore,
+                    'nbrAvis' => $nouveauNbrAvis,
+                ]);
+
+                // Log
+                Log::info('Notation médecin mise à jour', [
+                    'action' => $action,
+                    'medecin_id' => $medecinId,
+                    'patient_id' => $patientId,
+                    'ancien_score' => $ancienScore,
+                    'ancien_nbr_avis' => $ancienNbrAvis,
+                    'previous_note' => $previousNote,
+                    'nouvelle_note' => $note,
+                    'nouveau_score' => $nouveauScore,
+                    'nouveau_nbr_avis' => $nouveauNbrAvis,
+                ]);
+
+                return [
+                    'success' => true,
+                    'action' => $action,
+                    'nouveau_score' => $nouveauScore,
+                    'nouveau_nbr_avis' => $nouveauNbrAvis,
+                    'note_patient' => (int) $note,
+                ];
+            });
+
+            return $result;
+
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de l\'ajout/mise à jour de l\'avis', [
+                'medecin_id' => $medecinId,
+                'note' => $note,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Erreur lors de la mise à jour du score du médecin.'
+            ];
         }
     }
 

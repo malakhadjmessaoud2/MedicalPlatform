@@ -946,14 +946,12 @@ window.openRdvDetailsModal = function(event, mode = 'full') {
         button.onclick = () => {
             modal.classList.add('hidden');
             const rdvId = button.getAttribute('data-id');
-            const editModal = document.getElementById(`modal-edit-rdv-${rdvId}`);
-            if (editModal) {
-                editModal.classList.remove('hidden');
-            } else {
-                showNotification('Impossible de trouver le formulaire de modification', 'error');
-            }
+            openEditRdvModal(rdvId);
         };
     });
+
+    // Initialiser les événements de la modal de suppression si elle n'existe pas encore
+    initializeDeleteModalEvents();
 
     // Gérer le bouton de suppression
     const deleteButton = modal.querySelector('.delete-rdv');
@@ -961,32 +959,51 @@ window.openRdvDetailsModal = function(event, mode = 'full') {
         deleteButton.onclick = async (e) => {
             e.preventDefault();
 
-            if (!confirm('Êtes-vous sûr de vouloir supprimer ce rendez-vous ?')) {
-                return;
-            }
-
-            // Désactiver le bouton et montrer l'état de chargement
-            deleteButton.disabled = true;
-            const originalText = deleteButton.innerHTML;
-            deleteButton.innerHTML = `<span class="inline-flex items-center"><svg class="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Suppression...</span>`;
-
             const rdvId = deleteButton.getAttribute('data-id');
-            const success = await deleteEvent(rdvId);
+            console.log('🗑️ Suppression demandée pour RDV ID:', rdvId);
 
-            if (success) {
-                showNotification('Rendez-vous supprimé avec succès', 'success');
+            // Utiliser la modal personnalisée au lieu de confirm()
+            if (window.openDeleteModal) {
+                // Fermer la modal de détails d'abord
+                modal.classList.add('hidden');
 
-                // Fermer le modal avec animation
-                const modalContent = modal.querySelector('div');
-                modalContent.style.transform = 'scale(0.95)';
-                modalContent.style.opacity = '0';
-                setTimeout(() => modal.classList.add('hidden'), 300);
+                // Ouvrir la modal de confirmation personnalisée
+                window.openDeleteModal(rdvId);
             } else {
-                // Restaurer le bouton en cas d'échec
-                deleteButton.disabled = false;
-                deleteButton.innerHTML = originalText;
+                console.error('❌ Fonction openDeleteModal non disponible, utilisation de confirm()');
+                // Fallback vers confirm() si la fonction n'est pas disponible
+                if (!confirm('Êtes-vous sûr de vouloir supprimer ce rendez-vous ?')) {
+                    return;
+                }
+
+                // Continuer avec la suppression directe
+                await performDelete(rdvId, deleteButton, modal);
             }
         };
+    }
+
+    // Fonction pour effectuer la suppression
+    async function performDelete(rdvId, deleteButton, modal) {
+        // Désactiver le bouton et montrer l'état de chargement
+        deleteButton.disabled = true;
+        const originalText = deleteButton.innerHTML;
+        deleteButton.innerHTML = `<span class="inline-flex items-center"><svg class="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Suppression...</span>`;
+
+        const success = await deleteEvent(rdvId);
+
+        if (success) {
+            showNotification('Rendez-vous supprimé avec succès', 'success');
+
+            // Fermer le modal avec animation
+            const modalContent = modal.querySelector('div');
+            modalContent.style.transform = 'scale(0.95)';
+            modalContent.style.opacity = '0';
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        } else {
+            // Restaurer le bouton en cas d'échec
+            deleteButton.disabled = false;
+            deleteButton.innerHTML = originalText;
+        }
     }
 
     // Gérer le bouton de confirmation
@@ -1054,6 +1071,38 @@ window.openRdvDetailsModal = function(event, mode = 'full') {
     });
 };
 
+// Fonction pour ouvrir le modal de modification de rendez-vous
+window.openEditRdvModal = function(rdvId) {
+    console.log('🔧 openEditRdvModal appelée avec ID:', rdvId);
+
+    // Fermer toutes les modals ouvertes
+    const allModals = document.querySelectorAll('[id^="modal-rdv-"], [id^="modal-edit-rdv-"]');
+    allModals.forEach(modal => {
+        modal.classList.add('hidden');
+    });
+
+    // Ouvrir la modal de modification
+    const editModal = document.getElementById(`modal-edit-rdv-${rdvId}`);
+    console.log('✏️ Modal de modification trouvée:', editModal);
+
+    if (editModal) {
+        editModal.classList.remove('hidden');
+        console.log('✅ Modal de modification ouverte');
+
+        // Animation d'entrée
+        setTimeout(() => {
+            const modalContent = editModal.querySelector('div');
+            if (modalContent) {
+                modalContent.style.transform = 'scale(1)';
+                modalContent.style.opacity = '1';
+            }
+        }, 10);
+    } else {
+        console.error('❌ Modal de modification non trouvée avec ID: modal-edit-rdv-' + rdvId);
+        showNotification('Impossible de trouver le formulaire de modification', 'error');
+    }
+};
+
 // Fonction pour ouvrir le modal d'ajout de rendez-vous
 window.openAddRdvModal = function(date = null, heure = null) {
     const modal = document.getElementById('modal-add-rdv');
@@ -1116,4 +1165,176 @@ window.openAddRdvModal = function(date = null, heure = null) {
         }
     });
 };
+
+// Fonction de test pour diagnostiquer les modals
+window.testModals = function() {
+    console.log('🧪 Test des modals disponibles:');
+
+    // Vérifier les modals de détails
+    const detailModals = document.querySelectorAll('[id^="modal-rdv-"]');
+    console.log('📋 Modals de détails:', detailModals.length);
+    detailModals.forEach(modal => {
+        console.log('  -', modal.id);
+    });
+
+    // Vérifier les modals de modification
+    const editModals = document.querySelectorAll('[id^="modal-edit-rdv-"]');
+    console.log('✏️ Modals de modification:', editModals.length);
+    editModals.forEach(modal => {
+        console.log('  -', modal.id);
+    });
+
+    // Vérifier les boutons de modification
+    const editButtons = document.querySelectorAll('.edit-rdv');
+    console.log('🔘 Boutons de modification:', editButtons.length);
+    editButtons.forEach(button => {
+        console.log('  -', button.getAttribute('data-id'), button);
+    });
+
+    // Vérifier les boutons onclick
+    const onclickButtons = document.querySelectorAll('button[onclick*="modal-edit-rdv"]');
+    console.log('🔘 Boutons onclick:', onclickButtons.length);
+    onclickButtons.forEach(button => {
+        console.log('  -', button.getAttribute('onclick'), button);
+    });
+};
+
+// Fonction pour tester l'ouverture d'une modal spécifique
+window.testOpenModal = function(rdvId) {
+    console.log('🧪 Test d\'ouverture de modal pour ID:', rdvId);
+    openEditRdvModal(rdvId);
+};
+
+// Fonction pour ouvrir la modal de confirmation de suppression
+window.openDeleteModal = function(rdvId) {
+    console.log('🗑️ Ouverture de la modal de suppression pour RDV ID:', rdvId);
+
+    // Stocker l'ID du rendez-vous pour la suppression
+    window.currentDeleteRdvId = rdvId;
+
+    // Afficher la modal
+    const modal = document.getElementById('modal-confirm-delete');
+    if (modal) {
+        modal.classList.remove('hidden');
+
+        // Animation d'entrée
+        setTimeout(() => {
+            const modalContent = modal.querySelector('div');
+            if (modalContent) {
+                modalContent.style.transform = 'scale(1)';
+                modalContent.style.opacity = '1';
+            }
+        }, 10);
+    } else {
+        console.error('❌ Modal de suppression non trouvée');
+    }
+};
+
+// Fonction pour fermer la modal de suppression
+window.closeDeleteModal = function() {
+    const modal = document.getElementById('modal-confirm-delete');
+    if (!modal) return;
+
+    const modalContent = modal.querySelector('div');
+
+    // Animation de sortie
+    if (modalContent) {
+        modalContent.style.transform = 'scale(0.95)';
+        modalContent.style.opacity = '0';
+    }
+
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        // Nettoyer la variable globale
+        window.currentDeleteRdvId = null;
+    }, 300);
+};
+
+// Fonction pour confirmer la suppression
+window.confirmDelete = function() {
+    if (window.currentDeleteRdvId) {
+        console.log('✅ Confirmation de suppression pour RDV ID:', window.currentDeleteRdvId);
+
+        // Fermer la modal de confirmation
+        closeDeleteModal();
+
+        // Créer un formulaire HTML classique comme dans votre exemple
+        const form = document.createElement('form');
+        form.action = `/medecin/rendez-vous/${window.currentDeleteRdvId}`;
+        form.method = 'POST';
+        form.style.display = 'none';
+
+        // Ajouter le token CSRF
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = '_token';
+        csrfInput.value = csrfToken;
+        form.appendChild(csrfInput);
+
+        // Ajouter la méthode DELETE
+        const methodInput = document.createElement('input');
+        methodInput.type = 'hidden';
+        methodInput.name = '_method';
+        methodInput.value = 'DELETE';
+        form.appendChild(methodInput);
+
+        // Ajouter le formulaire au DOM et le soumettre
+        document.body.appendChild(form);
+        form.submit();
+    } else {
+        console.error('❌ Aucun ID de rendez-vous trouvé pour la suppression');
+    }
+};
+
+// Fonction pour initialiser les événements de la modal de suppression
+function initializeDeleteModalEvents() {
+    // Vérifier si les événements sont déjà initialisés
+    if (window.deleteModalEventsInitialized) {
+        return;
+    }
+
+    const cancelDeleteBtn = document.getElementById('cancel-delete');
+    const confirmDeleteBtn = document.getElementById('confirm-delete');
+    const deleteModal = document.getElementById('modal-confirm-delete');
+
+    console.log('🔧 Initialisation des événements de suppression:', {
+        cancelDeleteBtn: !!cancelDeleteBtn,
+        confirmDeleteBtn: !!confirmDeleteBtn,
+        deleteModal: !!deleteModal
+    });
+
+    if (cancelDeleteBtn) {
+        cancelDeleteBtn.addEventListener('click', function() {
+            console.log('🚫 Annulation de la suppression');
+            closeDeleteModal();
+        });
+    }
+
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener('click', function() {
+            console.log('✅ Confirmation de la suppression');
+            confirmDelete();
+        });
+    }
+
+    // Fermer la modal en cliquant en dehors
+    if (deleteModal) {
+        deleteModal.addEventListener('click', function(e) {
+            if (e.target === deleteModal) {
+                closeDeleteModal();
+            }
+        });
+    }
+
+    // Fermer la modal avec la touche Échap
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && deleteModal && !deleteModal.classList.contains('hidden')) {
+            closeDeleteModal();
+        }
+    });
+
+    // Marquer comme initialisé
+    window.deleteModalEventsInitialized = true;
+}
 

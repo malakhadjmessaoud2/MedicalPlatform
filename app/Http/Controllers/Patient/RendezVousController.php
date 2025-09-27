@@ -14,6 +14,9 @@ use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Illuminate\Validation\ValidationException;
 use App\Services\ConsultationService;
+use App\Notifications\RendezVousCreatedNotification;
+use App\Notifications\RendezVousModifiedNotification;
+use App\Notifications\RendezVousStatusChangedNotification;
 
 class RendezVousController extends Controller
 {
@@ -266,6 +269,13 @@ class RendezVousController extends Controller
                 $rdv->load('patient:id,nom,prenom', 'medecin:id,nom,prenom');
                 event(new RendezVousCreate($rdv));
                 Log::info("✅ Event RendezVousCreate lancé avec ID " . $rdv->id);
+
+                // Envoyer une notification au médecin
+                $medecin = User::find($rdv->medecin_id);
+                if ($medecin) {
+                    $medecin->notify(new RendezVousCreatedNotification($rdv));
+                    Log::info("✅ Notification RendezVousCreatedNotification envoyée au médecin ID " . $medecin->id);
+                }
             } catch (\Exception $e) {
                 Log::error("❌ Erreur lors de la publication de l'événement RendezVousCreate: " . $e->getMessage());
             }
@@ -716,7 +726,14 @@ class RendezVousController extends Controller
                 ], 400);
             }
 
-            $medecins = User::where('role', 'medecin')->where('specialite', $specialite)
+            $medecins = User::where('role', 'medecin')
+                ->where('specialite', $specialite)
+                // Priorité 1: médecins avec des avis en premier, ceux avec 0 avis en bas
+                ->orderByRaw('CASE WHEN COALESCE(nbrAvis, 0) = 0 THEN 1 ELSE 0 END ASC')
+                // Priorité 2: score décroissant (null traité comme 0)
+                ->orderByRaw('COALESCE(score, 0) DESC')
+                // Priorité 3: nombre d'avis décroissant pour départager les égalités de score
+                ->orderBy('nbrAvis', 'DESC')
                 ->get()
                 ->map(function ($medecin) {
                     return [
@@ -838,11 +855,19 @@ class RendezVousController extends Controller
             // Créer le service de consultation
             $consultationService = app(\App\Services\ConsultationService::class);
 
+            // Récupérer les prochains rendez-vous (confirmed et payed)
             $prochainsRendezVous = RendezVous::with('medecin')
                 ->where('patient_id', $user->id)
-                ->where('statut', 'confirmed')
+                ->whereIn('statut', ['confirmed', 'payed'])
                 ->orderBy('date_debut', 'asc')
                 ->get();
+
+            // DEBUG: Log des rendez-vous récupérés
+            Log::info('=== RENDEZ-VOUS RÉCUPÉRÉS DANS LE CONTRÔLEUR ===');
+            Log::info('Nombre total de rendez-vous récupérés: ' . $prochainsRendezVous->count());
+            foreach($prochainsRendezVous as $rdv) {
+                Log::info("RDV ID: {$rdv->id} | Statut: '{$rdv->statut}' | Date début: {$rdv->date_debut} | Date fin: {$rdv->date_fin}");
+            }
 
             // Générer les liens de consultation pour chaque rendez-vous
             foreach ($prochainsRendezVous as $rdv) {
@@ -862,10 +887,11 @@ class RendezVousController extends Controller
                 ->get();
 
             // Récupérer l'historique des rendez-vous
+            // L'historique contient tous les rendez-vous dont la date de fin a dépassé la date système
             $historiqueRendezVous = RendezVous::with('medecin')
                 ->where('patient_id', $user->id)
                 ->where(function ($query) {
-                    $query->where('date_debut', '<', now())
+                    $query->whereRaw('COALESCE(date_fin, DATE_ADD(date_debut, INTERVAL 30 MINUTE)) < ?', [now()])
                         ->orWhere('statut', 'cancelled');
                 })
                 ->orderBy('date_debut', 'desc')
@@ -893,9 +919,11 @@ class RendezVousController extends Controller
                 return redirect()->back()->with('error', 'Vous n\'êtes pas autorisé à annuler ce rendez-vous');
             }
 
-            $rendezVous->update([
-                'statut' => 'cancelled'
-            ]);
+            // Patient peut annuler seulement si pending ou confirmed
+            if (!in_array($rendezVous->statut, ['pending','confirmed'], true)) {
+                return redirect()->back()->with('error', 'Ce rendez-vous ne peut plus être annulé.');
+            }
+            $rendezVous->transitionTo('cancelled');
 
             // Notifier le médecin de l'annulation
             broadcast(new RendezVousModifie($rendezVous, 'updated'))->toOthers();
@@ -1033,11 +1061,11 @@ class RendezVousController extends Controller
                 ], 403);
             }
 
-            // Vérifier que le rendez-vous est confirmé
-            if ($rendezVous->statut !== 'confirmé') {
+            // Vérifier que le rendez-vous est payé
+            if ($rendezVous->statut !== 'payed') {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Le rendez-vous doit être confirmé pour créer un lien de consultation'
+                    'message' => 'Le rendez-vous doit être payé pour créer un lien de consultation'
                 ], 400);
             }
 

@@ -18,6 +18,7 @@ use App\Http\Controllers\Patient\DashboardController as PatientDashboardControll
 use App\Http\Controllers\Patient\DossierController;
 use App\Http\Controllers\Patient\PaiementController;
 use App\Http\Controllers\Admin\GestionMedecinController;
+use App\Http\Controllers\NotificationController;
 
 use Illuminate\Support\Facades\Auth;
 use App\Models\RendezVous;
@@ -115,6 +116,7 @@ Route::middleware(['auth', 'role:medecin'])->prefix('medecin')->name('medecin.')
     Route::get('/rendez-vous/{rendezVous}/consultation', [ConsultationController::class, 'redirectToConsultationFromRendezVous'])->name('rendezvous.to.consultation');
     // Route pour récupérer les rendez-vous du jour
     Route::get('/rendez-vous-du-jour', [MedecinDashboardController::class, 'getRendezVousDuJour'])->name('rendez-vous-du-jour');
+    Route::get('/consultations-filtrees', [App\Http\Controllers\Medecin\RendezVousController::class, 'getConsultationsFiltrees'])->name('consultations-filtrees');
 });
 // Endpoints JSON utilisés par le dashboard médecin (protégés par session web)
 Route::middleware(['auth', 'role:medecin'])->prefix('api/medecin')->group(function () {
@@ -194,4 +196,16 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::patch('/medecins/{medecin}/toggle-status', [GestionMedecinController::class, 'toggleStatus'])->name('medecins.toggle-status');
     Route::delete('/medecins/{medecin}', [GestionMedecinController::class, 'destroy'])->name('medecins.destroy');
     Route::get('/medecins/{medecin}', [GestionMedecinController::class, 'show'])->name('medecins.show');
+});
+
+// Routes pour les notifications (authentifiées)
+Route::middleware(['auth'])->group(function () {
+    Route::prefix('notifications')->name('notifications.')->group(function () {
+        Route::get('/', [NotificationController::class, 'index'])->name('index');
+        Route::get('/recent', [NotificationController::class, 'recent'])->name('recent');
+        Route::get('/unread-count', [NotificationController::class, 'unreadCount'])->name('unread-count');
+        Route::patch('/{id}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('mark-as-read');
+        Route::patch('/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('mark-all-as-read');
+        Route::delete('/{id}', [NotificationController::class, 'destroy'])->name('destroy');
+    });
 });

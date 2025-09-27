@@ -1,7 +1,8 @@
 // console.log('app.js chargé');
 import './bootstrap';
+import Alpine from 'alpinejs';
 import './agenda'; // Importez votre fichier agenda.js
-import './dashboard'; // Fichier dashboard.js principal
+// import './dashboard'; // Fichier dashboard.js principal - supprimé (duplication)
 // Import des fichiers du dashboard
 import './dashboard/navbar-timeline';
 import './dashboard/consultation-manager';
@@ -59,4 +60,37 @@ document.addEventListener('DOMContentLoaded', function() {
     popoverTriggerList.forEach(function(popoverTriggerEl) {
         new bootstrap.Popover(popoverTriggerEl);
     });
+});
+
+// Initialiser Alpine.js de manière conditionnelle pour éviter les conflits avec Livewire
+// On vérifie si Alpine n'est pas déjà initialisé par Livewire
+if (!window.Alpine) {
+    window.Alpine = Alpine;
+    Alpine.start();
+} else {
+    // Si Alpine est déjà initialisé par Livewire, on s'assure que nos composants fonctionnent
+    console.log('Alpine.js déjà initialisé par Livewire');
+}
+
+// Refresh avatar images when profile photo updates
+window.addEventListener('profile-photo-updated', () => {
+    fetch('/me/profile-photo-url', { credentials: 'same-origin' })
+        .then(r => r.json())
+        .then(({ url }) => {
+            window.__avatarVersion = Date.now();
+            const avatars = document.querySelectorAll('img[data-avatar]');
+            avatars.forEach((img) => {
+                const base = (url || img.getAttribute('src')?.split('?')[0] || '');
+                img.setAttribute('src', `${base}?v=${window.__avatarVersion}`);
+            });
+        })
+        .catch(() => {
+            // fallback to cache-busting current src
+            window.__avatarVersion = Date.now();
+            const avatars = document.querySelectorAll('img[data-avatar]');
+            avatars.forEach((img) => {
+                const base = img.getAttribute('src')?.split('?')[0] || '';
+                img.setAttribute('src', `${base}?v=${window.__avatarVersion}`);
+            });
+        });
 });

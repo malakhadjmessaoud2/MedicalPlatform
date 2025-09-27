@@ -51,7 +51,7 @@ class DashboardController extends Controller
             ->select('patient_id')
             ->distinct('patient_id')
             ->count('patient_id');
-            
+
         $rdvEnAttente = RendezVous::where('medecin_id', $user->id)
             ->where('statut', 'pending')
             ->count();
@@ -101,5 +101,22 @@ class DashboardController extends Controller
 
         $rendezVousDuJour = $this->consultationService->getRendezVousDuJour($user->id);
         return response()->json($rendezVousDuJour);
+    }
+
+    // API : Récupérer les consultations avec filtres
+    public function getConsultationsFiltrees(Request $request)
+    {
+        /** @var User $user */
+        $user = Auth::user();
+        if (!$user->isMedecin()) {
+            return response()->json(['error' => 'Accès non autorisé. Vous devez être un médecin.'], 403);
+        }
+
+        $filtre = $request->get('filtre', 'aujourdhui');
+        $date = $request->get('date');
+
+        $consultations = $this->consultationService->getConsultationsAvecFiltres($user->id, $filtre, $date);
+
+        return response()->json($consultations);
     }
 }

@@ -47,35 +47,54 @@ function updateTimeline(data) {
         const timeSlot = data.timeline.find(slot => slot.hour === hour);
         const isCurrentHour = hour === data.current_hour;
         const isPast = hour < data.current_hour;
-        const isFuture = hour > data.current_hour;
         const rdv = timeSlot ? timeSlot.rendez_vous[0] : null;
         timelineHTML += `
             <div class="timeline-slot ${isCurrentHour ? 'current' : isPast ? 'past' : 'future'}" data-hour="${hour}">
                 ${rdv ? `
-                    <div class="slot-chip enhanced" data-tooltip="👤 ${rdv.patient_name}${rdv.is_active ? ' (En cours)' : rdv.is_late ? ' (En retard)' : ''}${rdv.has_consultation_link ? ' - 📹 Téléconsultation' : ''} - 🕐 ${rdv.start_time} à ${rdv.end_time}${rdv.has_consultation_link ? (isConsultationLinkActive(rdv.start_time, rdv.end_time) ? ' - ✅ Lien actif' : ' - ⏰ Lien disponible de 5 min avant à la fin') : ''}">
-                        <img src="${rdv.patient_photo}" class="slot-avatar" alt="Patient">
-                        <span class="slot-name">${rdv.patient_name}</span>
-                        <span class="slot-time">${rdv.start_time}</span>
-                        ${rdv.has_consultation_link && isConsultationLinkActive(rdv.start_time, rdv.end_time) ?
-                            `<img src="https://upload.wikimedia.org/wikipedia/commons/9/9b/Google_Meet_icon_%282020%29.svg"
-                                  class="w-3 h-3 meet-icon"
-                                  alt="Meet"
-                                  title="Cliquer pour ouvrir la téléconsultation"
-                                  onclick="openConsultationLink('${rdv.lien_en_ligne ? rdv.lien_en_ligne.replace(/'/g, '\\\'') : ''}', ${rdv.id})"
-                                  style="cursor: pointer;">` :
-                            rdv.has_consultation_link ?
-                            `<img src="https://upload.wikimedia.org/wikipedia/commons/9/9b/Google_Meet_icon_%282020%29.svg"
-                                  class="w-3 h-3 meet-icon disabled"
-                                  alt="Meet (inactif)"
-                                  title="Lien de consultation disponible de 5 min avant le début jusqu'à la fin"
-                                  style="cursor: not-allowed;">` :
-                            ''
-                        }
+                    <div class="slot-chip enhanced ${rdv.is_active ? 'active' : ''} ${rdv.is_late ? 'late' : ''}"
+                         tabindex="0" role="listitem"
+                         aria-label="Rendez-vous ${rdv.patient_name} à ${rdv.start_time}"
+                         data-tooltip="👤 ${rdv.patient_name}${rdv.is_active ? ' (En cours)' : rdv.is_late ? ' (En retard)' : ''}${rdv.has_consultation_link ? ' - 📹 Téléconsultation' : ''} - 🕐 ${rdv.start_time} à ${rdv.end_time}${rdv.has_consultation_link ? (isConsultationLinkActive(rdv.start_time, rdv.end_time) ? ' - ✅ Lien actif' : ' - ⏰ Lien disponible de 5 min avant à la fin') : ''}"
+                         data-patient-name="${rdv.patient_name}"
+                         data-start-time="${rdv.start_time}"
+                         data-end-time="${rdv.end_time}"
+                         data-consultation-link="${rdv.lien_en_ligne || ''}"
+                         data-consultation-id="${rdv.id}"
+                         data-has-consultation="${rdv.has_consultation_link}"
+                         data-is-active="${rdv.is_active}"
+                         data-is-late="${rdv.is_late}">
+                        <div class="slot-avatar-container">
+                            <img src="${rdv.patient_photo}" class="slot-avatar" alt="Patient">
+                            ${rdv.is_active ? '<div class="status-indicator active"></div>' : rdv.is_late ? '<div class="status-indicator late"></div>' : ''}
+                        </div>
+                        <div class="slot-info">
+                            <span class="slot-name">${rdv.patient_name}</span>
+                            <span class="slot-time">${rdv.start_time}</span>
+                        </div>
+                        ${rdv.has_consultation_link ? (
+                            isConsultationLinkActive(rdv.start_time, rdv.end_time) ?
+                            `<div class="meet-icon-container active" title="Cliquer pour ouvrir la téléconsultation">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/9/9b/Google_Meet_icon_%282020%29.svg"
+                                     class="meet-icon"
+                                     alt="Meet"
+                                     onclick="openConsultationLink('${rdv.lien_en_ligne ? rdv.lien_en_ligne.replace(/'/g, '\\\'') : ''}', ${rdv.id})">
+                            </div>` :
+                            `<div class="meet-icon-container disabled" title="Lien disponible 5 min avant le début">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/9/9b/Google_Meet_icon_%282020%29.svg"
+                                     class="meet-icon"
+                                     alt="Meet (inactif)">
+                                <div class="time-remaining">5min</div>
+                            </div>`
+                        ) : ''}
                     </div>
                 ` : `
-                    <div class="slot-chip free" data-tooltip="🕐 Créneau libre de ${hour.toString().padStart(2, '0')}:00 à ${(hour + 1).toString().padStart(2, '0')}:00">
-                        <span class="slot-time">${hour.toString().padStart(2, '0')}:00</span>
-                        <span class="slot-name">Libre</span>
+                    <div class="slot-chip free" tabindex="0" role="listitem"
+                         aria-label="Créneau libre ${hour.toString().padStart(2, '0')}:00"
+                         data-tooltip="🕐 Créneau libre de ${hour.toString().padStart(2, '0')}:00 à ${(hour + 1).toString().padStart(2, '0')}:00">
+                        <div class="slot-info">
+                            <span class="slot-time">${hour.toString().padStart(2, '0')}:00</span>
+                            <span class="slot-name">Libre</span>
+                        </div>
                     </div>
                 `}
             </div>
@@ -99,35 +118,68 @@ function updateTimeline(data) {
 
     const tooltipBar = document.getElementById('timeline-tooltip');
     const tooltipInner = tooltipBar ? tooltipBar.querySelector('.tooltip-inner') : null;
+
     if (tooltipBar && tooltipInner) {
+        let hideTimer = null;
+        const showTooltip = (text) => {
+            clearTimeout(hideTimer);
+            tooltipInner.innerHTML = text;
+            tooltipBar.classList.add('visible');
+        };
+        const hideTooltip = () => { hideTimer = setTimeout(() => { tooltipBar.classList.remove('visible'); }, 120); };
+
         const chips = timelineContent.querySelectorAll('.slot-chip');
         chips.forEach(chip => {
-            const text = chip.getAttribute('data-tooltip') || chip.textContent.trim();
-            const isMeetIcon = chip.querySelector('.meet-icon');
+            const patientName = chip.getAttribute('data-patient-name') || chip.querySelector('.slot-name')?.textContent || '';
+            const startTime = chip.getAttribute('data-start-time') || chip.querySelector('.slot-time')?.textContent || '';
+            const endTime = chip.getAttribute('data-end-time') || '';
+            const hasConsultation = chip.getAttribute('data-has-consultation') === 'true';
+            const isActive = chip.getAttribute('data-is-active') === 'true';
+            const isLate = chip.getAttribute('data-is-late') === 'true';
+
+            const computeSimpleTooltip = () => {
+                if (chip.classList.contains('free')) {
+                    return `🕐 Créneau libre de ${startTime} à ${(parseInt(startTime.split(':')[0]) + 1).toString().padStart(2, '0')}:00`;
+                }
+
+                let statusText = '';
+                if (isActive) statusText = ' (En cours)';
+                else if (isLate) statusText = ' (En retard)';
+
+                let text = `👤 ${patientName}${statusText} - 🕐 ${startTime} → ${endTime}`;
+
+                if (hasConsultation) {
+                    const isLinkActive = isConsultationLinkActive(startTime, endTime);
+                    if (isLinkActive) {
+                        text += ' - 📹 Consultation disponible';
+                    } else {
+                        const timeUntilStart = getTimeUntilStart(startTime);
+                        if (timeUntilStart > 0) {
+                            text += ` - ⏰ Disponible dans ${timeUntilStart} min`;
+                        } else {
+                            text += ' - ⏰ Disponible 5 min avant';
+                        }
+                    }
+                }
+
+                return text;
+            };
+
             chip.addEventListener('mouseenter', () => {
-                let displayText = text;
-                if (isMeetIcon) {
-                    const patientName = chip.querySelector('.slot-name')?.textContent || '';
-                    const startTime = chip.querySelector('.slot-time')?.textContent || '';
-                    const isDisabled = chip.querySelector('.meet-icon.disabled');
-                    displayText = isDisabled ? `👤 ${patientName} - 🕐 ${startTime} - ⏰ Lien de consultation disponible de 5 min avant le début jusqu'à la fin` : `👤 ${patientName} - 🕐 ${startTime} - 📹 Cliquez sur l'icône Meet pour ouvrir la téléconsultation`;
-                }
-                tooltipInner.innerHTML = displayText;
-                tooltipBar.classList.add('visible');
+                showTooltip(computeSimpleTooltip());
             });
-            chip.addEventListener('mouseleave', () => { tooltipBar.classList.remove('visible'); });
+            chip.addEventListener('mouseleave', hideTooltip);
             chip.addEventListener('focus', () => {
-                let displayText = text;
-                if (isMeetIcon) {
-                    const patientName = chip.querySelector('.slot-name')?.textContent || '';
-                    const startTime = chip.querySelector('.slot-time')?.textContent || '';
-                    const isDisabled = chip.querySelector('.meet-icon.disabled');
-                    displayText = isDisabled ? `👤 ${patientName} - 🕐 ${startTime} - ⏰ Lien de consultation disponible de 5 min avant le début jusqu'à la fin` : `👤 ${patientName} - 🕐 ${startTime} - 📹 Cliquez sur l'icône Meet pour ouvrir la téléconsultation`;
-                }
-                tooltipInner.innerHTML = displayText;
-                tooltipBar.classList.add('visible');
+                showTooltip(computeSimpleTooltip());
             });
-            chip.addEventListener('blur', () => { tooltipBar.classList.remove('visible'); });
+            chip.addEventListener('blur', hideTooltip);
+
+            chip.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    const activeMeet = chip.querySelector('.meet-icon-container.active');
+                    if (activeMeet) activeMeet.click();
+                }
+            });
         });
     }
 
@@ -164,6 +216,20 @@ window.isConsultationLinkActive = function(startTime, endTime) {
     const fiveMinutesBefore = new Date(startDateTime.getTime() - 5 * 60 * 1000);
     return now >= fiveMinutesBefore && now <= endDateTime;
 };
+
+// Fonction pour calculer le temps restant avant le début
+function getTimeUntilStart(startTime) {
+    if (!startTime) return 0;
+    const now = new Date();
+    const today = now.toISOString().split('T')[0];
+    const startDateTime = new Date(`${today}T${startTime}`);
+    const fiveMinutesBefore = new Date(startDateTime.getTime() - 5 * 60 * 1000);
+
+    if (now < fiveMinutesBefore) {
+        return Math.ceil((fiveMinutesBefore.getTime() - now.getTime()) / (1000 * 60));
+    }
+    return 0;
+}
 
 // Rendre la fonction globale pour qu'elle soit accessible depuis le HTML
 window.openConsultationLink = function(link, rendezVousId) {

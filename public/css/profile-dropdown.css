@@ -1,0 +1,66 @@
+/* Styles pour le Profile Dropdown */
+.profile-dropdown {
+    /* Animation d'ouverture/fermeture plus fluide */
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Amélioration de l'accessibilité */
+.profile-dropdown button:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+/* Animation de la flèche */
+.profile-dropdown .dropdown-arrow {
+    transition: transform 0.2s ease-in-out;
+}
+
+.profile-dropdown .dropdown-arrow.rotated {
+    transform: rotate(180deg);
+}
+
+/* Amélioration des transitions des éléments du menu */
+.profile-dropdown .menu-item {
+    transition: all 0.15s ease-in-out;
+}
+
+.profile-dropdown .menu-item:hover {
+    background-color: #f9fafb;
+    transform: translateX(2px);
+}
+
+/* Animation de l'ombre du dropdown */
+.profile-dropdown .dropdown-menu {
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    transition: box-shadow 0.2s ease-in-out;
+}
+
+/* Effet de focus pour les éléments du menu */
+.profile-dropdown .menu-item:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: -2px;
+}
+
+/* Animation de l'icône de notification */
+.notification-badge {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* Responsive design pour mobile */
+@media (max-width: 640px) {
+    .profile-dropdown .dropdown-menu {
+        right: 0;
+        left: auto;
+        width: calc(100vw - 2rem);
+        max-width: 280px;
+    }
+}

@@ -112,7 +112,7 @@ class ConsultationController extends Controller
             $rendezVous = RendezVous::with(['patient', 'medecin'])
                 ->where('patient_id', $selectedPatient->id)
                 ->where('medecin_id', $medecinId)
-                ->where('statut', 'confirmed')
+                ->where('statut', 'payed')
                 ->orderBy('date_debut', 'desc')
                 ->get();
         }
@@ -251,11 +251,11 @@ class ConsultationController extends Controller
                     'message' => 'Rendez-vous invalide pour ce patient ou ce médecin'
                 ], 422);
             }
-            // Optionnel: exiger un RDV confirmé
-            if ($rv->statut !== 'confirmed') {
+            // Optionnel: exiger un RDV payé
+            if ($rv->statut !== 'payed') {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Le rendez-vous doit être confirmé pour créer une consultation'
+                    'message' => 'Le rendez-vous doit être payé pour créer une consultation'
                 ], 422);
             }
         }
@@ -697,7 +697,7 @@ class ConsultationController extends Controller
         $rendezVous = RendezVous::with(['patient.user', 'medecin.user'])
             ->where('patient_id', $patient->id)
             ->where('medecin_id', $medecinConnecte->id)
-            ->where('statut', 'confirmé')
+            ->where('statut', 'payed')
             ->whereDate('date_debut', $today)
             ->orderBy('date_debut', 'asc')
             ->get();

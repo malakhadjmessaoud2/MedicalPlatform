@@ -269,7 +269,7 @@
 </div>
 
 <!-- Modals pour afficher et modifier les rendez-vous existants -->
-@foreach($rendezVous as $rdv)
+@foreach($tousRendezVous as $rdv)
     <!-- Modal pour afficher les détails d'un rendez-vous -->
     <div id="modal-rdv-{{ $rdv->id }}" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
         <div class="bg-white rounded-lg shadow-xl max-w-lg w-full">
@@ -338,13 +338,10 @@
                     @endif
 
                     <div class="flex justify-end gap-3 pt-4">
-                        <form action="{{ route('medecin.rendez-vous.destroy', $rdv->id) }}" method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce rendez-vous ?')">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
+                        <button type="button" onclick="openDeleteModal({{ $rdv->id }})"
+                                class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
                                 Supprimer
                             </button>
-                        </form>
 
                         <button type="button"
                                 onclick="document.getElementById('modal-rdv-{{ $rdv->id }}').classList.add('hidden'); document.getElementById('modal-edit-rdv-{{ $rdv->id }}').classList.remove('hidden');"
@@ -463,20 +460,46 @@
                         </div>
                     </div>
 
-                    <!-- Section 3: Consultation en ligne (lecture seule) -->
+                    <!-- Section 3: Consultation en ligne -->
                     <div class="space-y-3">
                         <h4 class="text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2">🌐 Consultation en ligne</h4>
 
                         @if($rdv->lien_en_ligne)
-                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-3 flex items-center justify-between">
-                                <div>
-                                    <p class="text-sm text-gray-500">Lien Jitsi (non modifiable)</p>
-                                    <a href="{{ $rdv->lien_en_ligne }}" target="_blank" class="text-blue-600 hover:text-blue-800 underline break-all">{{ $rdv->lien_en_ligne }}</a>
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                                <div class="flex items-center justify-between mb-2">
+                                    <p class="text-sm text-gray-500">Lien Jitsi actuel</p>
+
                                 </div>
-                                <button type="button" class="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700" onclick="navigator.clipboard.writeText('{{ $rdv->lien_en_ligne }}');">Copier</button>
+
+                                <!-- Affichage du lien (par défaut) -->
+                                <div id="lien-display-{{ $rdv->id }}">
+                                    <a href="{{ $rdv->lien_en_ligne }}" target="_blank" class="text-blue-600 hover:text-blue-800 underline break-all">{{ $rdv->lien_en_ligne }}</a>
+                                    <button type="button" class="ml-2 px-2 py-1 text-xs bg-gray-600 text-white rounded hover:bg-gray-700" onclick="navigator.clipboard.writeText('{{ $rdv->lien_en_ligne }}');">Copier</button>
+                                </div>
+
+                                <!-- Formulaire de modification du lien (caché par défaut) -->
+                                <div id="lien-edit-{{ $rdv->id }}" class="hidden">
+                                    <input type="url" name="lien_en_ligne" value="{{ $rdv->lien_en_ligne }}"
+                                           data-original-value="{{ $rdv->lien_en_ligne }}"
+                                           class="w-full rounded-lg border-gray-300 shadow-sm focus:border-[#b9ff66] focus:ring focus:ring-[#b9ff66] focus:ring-opacity-50"
+                                           placeholder="https://meet.jit.si/...">
+                                    <div class="flex gap-2 mt-2">
+                                        <button type="button" class="px-3 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700" onclick="toggleLienEdit({{ $rdv->id }})">
+                                            Valider
+                                        </button>
+                                        <button type="button" class="px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700" onclick="resetLienEdit({{ $rdv->id }})">
+                                            Annuler
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         @else
-                            <p class="text-sm text-gray-500">Aucun lien Jitsi associé à ce rendez-vous.</p>
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                                <p class="text-sm text-gray-500 mb-2">Aucun lien Jitsi associé à ce rendez-vous.</p>
+                                <input type="url" name="lien_en_ligne" value=""
+                                       class="w-full rounded-lg border-gray-300 shadow-sm focus:border-[#b9ff66] focus:ring focus:ring-[#b9ff66] focus:ring-opacity-50"
+                                       placeholder="https://meet.jit.si/... (optionnel)">
+                            </div>
                         @endif
                     </div>
 
@@ -495,6 +518,39 @@
         </div>
     </div>
 @endforeach
+
+<!-- Modal de confirmation de suppression -->
+<div id="modal-confirm-delete" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 transform transition-all duration-300 ease-out">
+        <div class="p-6">
+            <div class="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-red-100 rounded-full">
+                <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                </svg>
+            </div>
+
+            <h3 class="text-lg font-semibold text-gray-900 text-center mb-2">
+                Confirmer la suppression
+            </h3>
+
+            <p class="text-sm text-gray-600 text-center mb-6">
+                Êtes-vous sûr de vouloir supprimer ce rendez-vous ?<br>
+                <span class="text-red-600 font-medium">Cette action est irréversible.</span>
+            </p>
+
+            <div class="flex gap-3 justify-center">
+                <button type="button" id="cancel-delete"
+                        class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors">
+                    Annuler
+                </button>
+                <button type="button" id="confirm-delete"
+                        class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
+                    Supprimer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- Affichage des messages de notification -->
 @if(session('success'))
@@ -546,6 +602,46 @@
 
     // Gestion de la génération automatique de lien Jitsi
     document.addEventListener('DOMContentLoaded', function() {
+        console.log('🚀 DOM Content Loaded - Initialisation des événements');
+
+        // Vérifier les modals disponibles
+        const allEditModals = document.querySelectorAll('[id^="modal-edit-rdv-"]');
+        console.log('📋 Modals de modification disponibles:', allEditModals.length);
+        allEditModals.forEach(modal => {
+            console.log('  -', modal.id);
+        });
+
+        // Gestion des boutons onclick pour la modification
+        const onclickButtons = document.querySelectorAll('button[onclick*="modal-edit-rdv"]');
+        console.log('🔘 Boutons onclick trouvés:', onclickButtons.length);
+
+        onclickButtons.forEach((button, index) => {
+            console.log(`📝 Bouton onclick ${index + 1}:`, {
+                element: button,
+                onclick: button.getAttribute('onclick'),
+                classes: button.className
+            });
+
+            // Remplacer l'onclick par un gestionnaire d'événements
+            const originalOnclick = button.getAttribute('onclick');
+            button.removeAttribute('onclick');
+
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('🎯 Clic sur bouton onclick - Original:', originalOnclick);
+
+                // Extraire l'ID du rendez-vous depuis l'onclick
+                const match = originalOnclick.match(/modal-edit-rdv-(\d+)/);
+                if (match) {
+                    const rdvId = match[1];
+                    console.log('🔍 ID extrait:', rdvId);
+                    openEditRdvModal(rdvId);
+                } else {
+                    console.error('❌ Impossible d\'extraire l\'ID du rendez-vous');
+                }
+            });
+        });
+
         const genererLienAuto = document.getElementById('generer_lien_auto');
         const lienManuelSection = document.getElementById('lien_manuel_section');
         const genererLienJitsi = document.getElementById('generer_lien_jitsi');
@@ -678,6 +774,173 @@
                 miniCalendarEl.classList.toggle('hidden');
             });
         }
+
+        // Gestion des événements de la modal de suppression
+        const cancelDeleteBtn = document.getElementById('cancel-delete');
+        const confirmDeleteBtn = document.getElementById('confirm-delete');
+        const deleteModal = document.getElementById('modal-confirm-delete');
+
+        console.log('🔧 Initialisation des événements de suppression:', {
+            cancelDeleteBtn: !!cancelDeleteBtn,
+            confirmDeleteBtn: !!confirmDeleteBtn,
+            deleteModal: !!deleteModal
+        });
+
+        if (cancelDeleteBtn) {
+            cancelDeleteBtn.addEventListener('click', function() {
+                console.log('🚫 Annulation de la suppression');
+                closeDeleteModal();
+            });
+        }
+
+        if (confirmDeleteBtn) {
+            confirmDeleteBtn.addEventListener('click', function() {
+                console.log('✅ Confirmation de la suppression');
+                confirmDelete();
+            });
+        }
+
+        // Fermer la modal en cliquant en dehors
+        if (deleteModal) {
+            deleteModal.addEventListener('click', function(e) {
+                if (e.target === deleteModal) {
+                    closeDeleteModal();
+                }
+            });
+        }
+
+        // Fermer la modal avec la touche Échap
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && !deleteModal.classList.contains('hidden')) {
+                closeDeleteModal();
+            }
+        });
+
+        // Variables globales pour la suppression
+        let currentDeleteForm = null;
+
+        // Fonction pour ouvrir la modal de confirmation de suppression
+        window.openDeleteModal = function(rdvId) {
+            console.log('🗑️ Ouverture de la modal de suppression pour RDV ID:', rdvId);
+
+            // Stocker l'ID du rendez-vous pour la suppression
+            window.currentDeleteRdvId = rdvId;
+
+            // Afficher la modal
+            const modal = document.getElementById('modal-confirm-delete');
+            if (modal) {
+                modal.classList.remove('hidden');
+
+                // Animation d'entrée
+                setTimeout(() => {
+                    const modalContent = modal.querySelector('div');
+                    if (modalContent) {
+                        modalContent.style.transform = 'scale(1)';
+                        modalContent.style.opacity = '1';
+                    }
+                }, 10);
+            } else {
+                console.error('❌ Modal de suppression non trouvée');
+            }
+        };
+
+        // Fonction pour fermer la modal de suppression
+        window.closeDeleteModal = function() {
+            const modal = document.getElementById('modal-confirm-delete');
+            if (!modal) return;
+
+            const modalContent = modal.querySelector('div');
+
+            // Animation de sortie
+            if (modalContent) {
+                modalContent.style.transform = 'scale(0.95)';
+                modalContent.style.opacity = '0';
+            }
+
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                // Nettoyer la variable globale
+                window.currentDeleteRdvId = null;
+            }, 300);
+        };
+
+        // Fonction pour confirmer la suppression
+        window.confirmDelete = function() {
+            if (window.currentDeleteRdvId) {
+                console.log('✅ Confirmation de suppression pour RDV ID:', window.currentDeleteRdvId);
+
+                // Fermer la modal de confirmation
+                closeDeleteModal();
+
+                // Créer un formulaire HTML classique comme dans votre exemple
+                const form = document.createElement('form');
+                form.action = `/medecin/rendez-vous/${window.currentDeleteRdvId}`;
+                form.method = 'POST';
+                form.style.display = 'none';
+
+                // Ajouter le token CSRF
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = '_token';
+                csrfInput.value = csrfToken;
+                form.appendChild(csrfInput);
+
+                // Ajouter la méthode DELETE
+                const methodInput = document.createElement('input');
+                methodInput.type = 'hidden';
+                methodInput.name = '_method';
+                methodInput.value = 'DELETE';
+                form.appendChild(methodInput);
+
+                // Ajouter le formulaire au DOM et le soumettre
+                document.body.appendChild(form);
+                form.submit();
+            } else {
+                console.error('❌ Aucun ID de rendez-vous trouvé pour la suppression');
+            }
+        };
+
+        // Fonction de test pour la modal de suppression
+        window.testDeleteModal = function() {
+            console.log('🧪 Test de la modal de suppression');
+            openDeleteModal(1); // Test avec ID 1
+        };
     });
+
+    // Fonctions pour gérer l'édition du lien de consultation
+    window.toggleLienEdit = function(rdvId) {
+        const displayDiv = document.getElementById(`lien-display-${rdvId}`);
+        const editDiv = document.getElementById(`lien-edit-${rdvId}`);
+        const toggleBtn = document.getElementById(`toggle-lien-edit-${rdvId}`);
+
+        if (displayDiv.classList.contains('hidden')) {
+            // Passer en mode affichage
+            displayDiv.classList.remove('hidden');
+            editDiv.classList.add('hidden');
+            toggleBtn.textContent = 'Modifier';
+        } else {
+            // Passer en mode édition
+            displayDiv.classList.add('hidden');
+            editDiv.classList.remove('hidden');
+            toggleBtn.textContent = 'Annuler';
+        }
+    };
+
+    window.resetLienEdit = function(rdvId) {
+        const displayDiv = document.getElementById(`lien-display-${rdvId}`);
+        const editDiv = document.getElementById(`lien-edit-${rdvId}`);
+        const toggleBtn = document.getElementById(`toggle-lien-edit-${rdvId}`);
+        const input = editDiv.querySelector('input[name="lien_en_ligne"]');
+
+        // Réinitialiser la valeur du champ
+        const originalValue = input.getAttribute('data-original-value') || '';
+        input.value = originalValue;
+
+        // Revenir en mode affichage
+        displayDiv.classList.remove('hidden');
+        editDiv.classList.add('hidden');
+        toggleBtn.textContent = 'Modifier';
+    };
 </script>
 @endpush

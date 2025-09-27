@@ -10,9 +10,10 @@
 /* Timeline container - strict overflow control */
 .timeline-container {
     position: relative;
-    overflow: hidden;
+    overflow: hidden; /* clip inner green content */
     width: 100%;
-    height: 48px; /* Fixed height */
+    height: 56px; /* Increased height for better UX */
+    box-sizing: border-box;
 }
 
 /* Gradient fade on edges */
@@ -61,9 +62,9 @@
     scroll-snap-type: x proximity;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     white-space: nowrap;
-    padding: 0 8px;
+    padding: 0 10px;
     box-sizing: border-box;
 }
 .timeline-scrollable::-webkit-scrollbar {
@@ -76,7 +77,7 @@
     scroll-snap-align: center;
     position: relative;
     cursor: pointer;
-    height: 32px;
+    height: 44px; /* Increased height for better tap targets */
 }
 .timeline-slot:hover {
     transform: translateY(-2px) scale(1.02);
@@ -97,15 +98,17 @@
 .slot-chip {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    height: 32px;
-    padding: 0 10px;
+    gap: 8px;
+    height: 44px;
+    padding: 0 16px;
     border-radius: 9999px;
     background: rgba(255, 255, 255, 0.95);
     border: 1px solid rgba(255,255,255,0.5);
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     backdrop-filter: blur(6px);
     transition: all 0.2s ease;
+    min-width: 140px;
+    position: relative;
 }
 .slot-chip:hover {
     transform: scale(1.02);
@@ -128,7 +131,7 @@
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 600;
     color: rgba(0,0,0,0.9);
     line-height: 1;
@@ -341,4 +344,163 @@
 .slot-chip .meet-icon.disabled:hover {
     background: none;
     transform: none;
+}
+
+/* Enhanced slot chip layout */
+.slot-avatar-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.slot-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+}
+
+.slot-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(0,0,0,0.9);
+    line-height: 1.2;
+    max-width: 80px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.slot-time {
+    font-size: 10px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    color: rgba(0,0,0,0.6);
+    line-height: 1;
+}
+
+/* Status indicators */
+.status-indicator {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+.status-indicator.active {
+    background: #10b981;
+    animation: pulse 2s infinite;
+}
+
+.status-indicator.late {
+    background: #f59e0b;
+}
+
+/* Meet icon container */
+.meet-icon-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 4px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.meet-icon-container.active {
+    background: rgba(34, 197, 94, 0.1);
+    cursor: pointer;
+}
+
+.meet-icon-container.active:hover {
+    background: rgba(34, 197, 94, 0.2);
+    transform: scale(1.1);
+}
+
+.meet-icon-container.disabled {
+    background: rgba(156, 163, 175, 0.1);
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.meet-icon {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+}
+
+.time-remaining {
+    font-size: 8px;
+    font-weight: 600;
+    color: rgba(0,0,0,0.6);
+    line-height: 1;
+}
+
+/* Simple tooltip styles */
+.timeline-tooltip {
+    width: 100%;
+    margin-top: 8px;
+    max-height: 0;
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: all 0.2s ease;
+    pointer-events: none;
+}
+
+.timeline-tooltip.visible {
+    max-height: 40px;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.timeline-tooltip .tooltip-inner {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0,0,0,0.85);
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 9999px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin: 0 48px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* Active and late states */
+.slot-chip.active {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: #10b981;
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+
+.slot-chip.late {
+    background: rgba(245, 158, 11, 0.1);
+    border-color: #f59e0b;
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+}
+
+/* Free slot improvements */
+.slot-chip.free {
+    background: rgba(255,255,255,0.2);
+    border: 1px dashed rgba(0,0,0,0.3);
+    color: rgba(0,0,0,0.7);
+    min-width: 100px;
+}
+
+.slot-chip.free .slot-info {
+    align-items: center;
+    text-align: center;
 }

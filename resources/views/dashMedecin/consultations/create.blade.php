@@ -80,7 +80,7 @@
                         <div class="w-full p-3 bg-gray-50 rounded-lg border border-gray-300">
                             <p class="text-sm text-gray-600">
                                 @if($selectedPatient)
-                                    Aucun rendez-vous confirmé trouvé pour ce patient
+                                    Aucun rendez-vous payé trouvé pour ce patient
                                 @else
                                     Sélectionnez d'abord un patient
                                 @endif

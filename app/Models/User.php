@@ -67,6 +67,8 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'two_factor_confirmed_at' => 'datetime',
+        'score' => 'float',
+        'nbrAvis' => 'integer',
     ];
 
     /**
@@ -146,5 +148,39 @@ class User extends Authenticatable
     public function isAdmin()
     {
         return $this->role == 'admin';
+    }
+
+    /**
+     * Accessor: retourne un tableau de langues parlées par le médecin.
+     * Accepte plusieurs formats en base: JSON (array), CSV (string), ou null.
+     *
+     * @return array<int, string>
+     */
+    public function getLanguesArrayAttribute(): array
+    {
+        $raw = $this->attributes['langues'] ?? null;
+
+        if (is_array($this->langues)) {
+            return array_values(array_filter(array_map(static function ($v) {
+                return is_string($v) ? trim($v) : '';
+            }, $this->langues)));
+        }
+
+        if (is_string($raw)) {
+            // Essayer JSON d'abord
+            $decoded = json_decode($raw, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                return array_values(array_filter(array_map(static function ($v) {
+                    return is_string($v) ? trim($v) : '';
+                }, $decoded)));
+            }
+            // Fallback: CSV
+            $parts = array_map('trim', explode(',', $raw));
+            return array_values(array_filter($parts, static function ($v) {
+                return $v !== '';
+            }));
+        }
+
+        return [];
     }
 }

@@ -15,6 +15,9 @@ use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Illuminate\Validation\ValidationException;
 use App\Services\ConsultationService;
+use App\Notifications\RendezVousCreatedNotification;
+use App\Notifications\RendezVousModifiedNotification;
+use App\Notifications\RendezVousStatusChangedNotification;
 
 class RendezVousController extends Controller
 {
@@ -59,9 +62,14 @@ class RendezVousController extends Controller
                 $endDate = $selectedDate->copy()->endOfMonth()->endOfWeek(Carbon::SUNDAY);
             }
 
-            // Récupérer tous les rendez-vous du médecin pour la période
+            // Récupérer tous les rendez-vous du médecin pour la période (pour l'affichage)
             $rendezVous = RendezVous::where('medecin_id', $user->id)
                 ->whereBetween('date_debut', [$startDate->startOfDay(), $endDate->endOfDay()])
+                ->with('patient:id,nom,prenom')
+                ->get();
+
+            // Récupérer TOUS les rendez-vous du médecin (pour les modals de modification)
+            $tousRendezVous = RendezVous::where('medecin_id', $user->id)
                 ->with('patient:id,nom,prenom')
                 ->get();
 
@@ -113,6 +121,7 @@ class RendezVousController extends Controller
 
             return view('dashMedecin.AgendaRendezvous.index', compact(
                 'rendezVous',
+                'tousRendezVous',
                 'selectedDate',
                 'view',
                 'startDate',
@@ -398,6 +407,13 @@ class RendezVousController extends Controller
             // Diffuser l'événement pour les mises à jour en temps réel
             broadcast(new RendezVousModifie($rendezVous, 'created'));
 
+            // Envoyer une notification au patient
+            $patient = User::find($rendezVous->patient_id);
+            if ($patient) {
+                $patient->notify(new RendezVousCreatedNotification($rendezVous));
+                Log::info("✅ Notification RendezVousCreatedNotification envoyée au patient ID " . $patient->id);
+            }
+
             // Réponse JSON si la requête attend du JSON
             if ($request->expectsJson()) {
                 return response()->json([
@@ -550,6 +566,13 @@ class RendezVousController extends Controller
                 // Diffuser l'événement
                 broadcast(new RendezVousModifie($rendezVous, 'updated', $changes))->toOthers();
 
+                // Envoyer une notification au patient
+                $patient = User::find($rendezVous->patient_id);
+                if ($patient) {
+                    $patient->notify(new RendezVousModifiedNotification($rendezVous, $changes));
+                    Log::info("✅ Notification RendezVousModifiedNotification envoyée au patient ID " . $patient->id);
+                }
+
                 return response()->json([
                     'success' => true,
                     'message' => 'Rendez-vous mis à jour avec succès'
@@ -613,6 +636,13 @@ class RendezVousController extends Controller
                 // Diffuser l'événement
                 broadcast(new RendezVousModifie($rendezVous, 'updated', $changes))->toOthers();
 
+                // Envoyer une notification au patient
+                $patient = User::find($rendezVous->patient_id);
+                if ($patient) {
+                    $patient->notify(new RendezVousModifiedNotification($rendezVous, $changes));
+                    Log::info("✅ Notification RendezVousModifiedNotification envoyée au patient ID " . $patient->id);
+                }
+
                 // Rediriger vers la page d'agenda avec la date du rendez-vous
                 return redirect()->route('medecin.agenda', [
                     'date' => $dateDebut->format('Y-m-d'),
@@ -635,34 +665,95 @@ class RendezVousController extends Controller
     }
 
     /**
-     * Supprime un rendez-vous
+     * Supprime un rendez-vous - Version simplifiée et robuste
      */
-    public function destroy(RendezVous $rendezVous)
+    public function destroy($id)
     {
         try {
-            // Vérifier si l'utilisateur est autorisé à supprimer ce rendez-vous
-            /** @var User $user */
             $user = Auth::user();
-            $medecin = $user->isMedecin();
 
-            if (!$medecin || $rendezVous->medecin_id !== $user->id) {
-                if (request()->expectsJson()) {
-                    return response()->json([
-                        'message' => 'Vous n\'êtes pas autorisé à supprimer ce rendez-vous'
-                    ], 403);
-                }
-
-                return redirect()->back()->with('error', 'Vous n\'êtes pas autorisé à supprimer ce rendez-vous');
+            // Vérifications de base
+            if (!$user) {
+                Log::error('DESTROY_RDV: Utilisateur non connecté');
+                return redirect()->back()->with('error', 'Vous devez être connecté');
             }
 
-            // Stocker la date avant suppression pour la redirection
+            if (!$user->isMedecin()) {
+                Log::warning('DESTROY_RDV: Utilisateur n\'est pas médecin', [
+                    'user_id' => $user->id,
+                    'user_role' => $user->role
+                ]);
+                return redirect()->back()->with('error', 'Accès refusé');
+            }
+
+            // Récupérer le rendez-vous par ID
+            $rendezVous = RendezVous::find($id);
+            if (!$rendezVous) {
+                Log::error('DESTROY_RDV: Rendez-vous introuvable', [
+                    'rdv_id' => $id,
+                    'user_id' => $user->id
+                ]);
+
+                if (request()->expectsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Rendez-vous introuvable'
+                    ], 404);
+                }
+
+                return redirect()->back()->with('error', 'Rendez-vous introuvable');
+            }
+
+            // Log de la tentative de suppression
+            Log::info('DESTROY_RDV: Suppression demandée', [
+                'user_id' => $user->id,
+                'rdv_id' => $rendezVous->id,
+                'rdv_medecin_id' => $rendezVous->medecin_id,
+                'match' => $rendezVous->medecin_id == $user->id
+            ]);
+
+            // Stocker l'ID et la date avant suppression
+            $rdvId = $rendezVous->id;
             $dateRdv = Carbon::parse($rendezVous->date_debut)->format('Y-m-d');
 
-            // Diffuser l'événement avant de supprimer
-            broadcast(new RendezVousModifie($rendezVous, 'deleted'))->toOthers();
-
             // Supprimer le rendez-vous
-            $rendezVous->delete();
+            $deleted = $rendezVous->delete();
+
+            if (!$deleted) {
+                Log::error('DESTROY_RDV: Échec de la suppression', [
+                    'rdv_id' => $rdvId
+                ]);
+
+                if (request()->expectsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Échec de la suppression'
+                    ], 500);
+                }
+
+                return redirect()->back()->with('error', 'Échec de la suppression du rendez-vous');
+            }
+
+            // Vérifier que la suppression a vraiment eu lieu
+            $rdvStillExists = RendezVous::find($rdvId);
+            if ($rdvStillExists) {
+                Log::error('DESTROY_RDV: Rendez-vous toujours présent après suppression', [
+                    'rdv_id' => $rdvId
+                ]);
+
+                if (request()->expectsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Le rendez-vous n\'a pas été supprimé'
+                    ], 500);
+                }
+
+                return redirect()->back()->with('error', 'Le rendez-vous n\'a pas été supprimé');
+            }
+
+            Log::info('DESTROY_RDV: Suppression réussie', [
+                'rdv_id' => $rdvId
+            ]);
 
             if (request()->expectsJson()) {
                 return response()->json([
@@ -671,21 +762,25 @@ class RendezVousController extends Controller
                 ]);
             }
 
-            // Rediriger vers la page d'agenda avec la date du rendez-vous supprimé
             return redirect()->route('medecin.agenda', [
                 'date' => $dateRdv,
                 'view' => 'day'
             ])->with('success', 'Rendez-vous supprimé avec succès');
+
         } catch (\Exception $e) {
-            Log::error('Erreur lors de la suppression du rendez-vous: ' . $e->getMessage());
+            Log::error('DESTROY_RDV: Exception lors de la suppression', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
 
             if (request()->expectsJson()) {
                 return response()->json([
-                    'error' => 'Erreur lors de la suppression du rendez-vous: ' . $e->getMessage()
+                    'success' => false,
+                    'message' => 'Erreur lors de la suppression'
                 ], 500);
             }
 
-            return redirect()->back()->with('error', 'Erreur lors de la suppression du rendez-vous: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Erreur lors de la suppression du rendez-vous');
         }
     }
 
@@ -771,36 +866,47 @@ class RendezVousController extends Controller
             }
 
             $validated = $request->validate([
-                'statut' => 'required|string|in:pending,confirmed,cancelled,rejected,completed'
+                'statut' => 'required|string|in:pending,confirmed,rejected,cancelled,payed,completed'
             ]);
 
             $nouveauStatut = $validated['statut'];
 
-            // Vérifier que le changement de statut est logique
-            $statutsValides = [
-                'pending' => ['confirmed', 'cancelled'],
-                'confirmed' => ['cancelled', 'pending'],
-                'cancelled' => ['pending', 'confirmed'],  // Permettre de repasser en confirmed
-                'rejected' => ['pending'],
-                'completed' => []
-            ];
+            // Le médecin a un contrôle total sur les statuts des rendez-vous
+            // Seules restrictions : pas de retour en arrière vers des statuts antérieurs dans certains cas
+            $allowed = true;
 
-            if (!in_array($nouveauStatut, $statutsValides[$rendezVous->statut] ?? [])) {
-                Log::warning('UPDATE_STATUT_RDV: Changement de statut non autorisé', [
-                    'statut_actuel' => $rendezVous->statut,
+            // Logique métier pour les transitions de statut
+            $currentStatus = $rendezVous->statut;
+
+            // Vérifications de cohérence métier (mais pas bloquantes)
+            if ($currentStatus === 'completed' && in_array($nouveauStatut, ['pending', 'confirmed', 'payed'])) {
+                Log::info('UPDATE_STATUT_RDV: Tentative de retour en arrière depuis completed', [
+                    'statut_actuel' => $currentStatus,
                     'nouveau_statut' => $nouveauStatut,
-                    'statuts_autorisés' => $statutsValides[$rendezVous->statut] ?? []
+                    'rendezvous_id' => $rendezVous->id
                 ]);
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Changement de statut non autorisé'
-                ], 422);
+                // Permettre mais logger pour audit
             }
 
-            $oldStatut = $rendezVous->statut;
-            $rendezVous->update([
-                'statut' => $nouveauStatut
+            if ($currentStatus === 'cancelled' && in_array($nouveauStatut, ['pending', 'confirmed', 'payed', 'completed'])) {
+                Log::info('UPDATE_STATUT_RDV: Réactivation d\'un rendez-vous annulé', [
+                    'statut_actuel' => $currentStatus,
+                    'nouveau_statut' => $nouveauStatut,
+                    'rendezvous_id' => $rendezVous->id
+                ]);
+                // Permettre la réactivation
+            }
+
+            Log::info('UPDATE_STATUT_RDV: Changement de statut autorisé', [
+                'statut_actuel' => $currentStatus,
+                'nouveau_statut' => $nouveauStatut,
+                'rendezvous_id' => $rendezVous->id,
+                'medecin_id' => $user->id
             ]);
+
+            $oldStatut = $rendezVous->statut;
+            // Utiliser la machine à états du modèle
+            $rendezVous->transitionTo($nouveauStatut);
 
             // Inclure uniquement le statut modifié
             $changes = [];
@@ -812,6 +918,13 @@ class RendezVousController extends Controller
             }
 
             broadcast(new RendezVousModifie($rendezVous, 'updated', $changes))->toOthers();
+
+            // Envoyer une notification de changement de statut au patient
+            $patient = User::find($rendezVous->patient_id);
+            if ($patient) {
+                $patient->notify(new RendezVousStatusChangedNotification($rendezVous, $oldStatut, $nouveauStatut));
+                Log::info("✅ Notification RendezVousStatusChangedNotification envoyée au patient ID " . $patient->id);
+            }
 
             Log::info('UPDATE_STATUT_RDV: succès', [
                 'rendezvous_id' => $rendezVous->id,
@@ -1168,6 +1281,30 @@ class RendezVousController extends Controller
     }
 
     /**
+     * Récupère les consultations filtrées pour le dashboard médecin
+     */
+    public function getConsultationsFiltrees(Request $request)
+    {
+        try {
+            /** @var User $user */
+            $user = Auth::user();
+            if (!$user->isMedecin()) {
+                return response()->json(['error' => 'Accès non autorisé. Vous devez être un médecin.'], 403);
+            }
+
+            $filtre = $request->get('filtre', 'aujourdhui');
+            $date = $request->get('date');
+
+            $consultations = $this->consultationService->getConsultationsAvecFiltres($user->id, $filtre, $date);
+
+            return response()->json($consultations);
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de la récupération des consultations filtrées: ' . $e->getMessage());
+            return response()->json(['error' => 'Erreur lors de la récupération des consultations'], 500);
+        }
+    }
+
+    /**
      * Crée le lien de consultation pour un rendez-vous
      */
     public function creerLienConsultation(RendezVous $rendezVous)
@@ -1185,11 +1322,11 @@ class RendezVousController extends Controller
                 ], 403);
             }
 
-            // Vérifier que le rendez-vous est confirmé
-            if ($rendezVous->statut !== 'confirmé') {
+            // Vérifier que le rendez-vous est payé
+            if ($rendezVous->statut !== 'payed') {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Le rendez-vous doit être confirmé pour créer un lien de consultation'
+                    'message' => 'Le rendez-vous doit être payé pour créer un lien de consultation'
                 ], 400);
             }
 

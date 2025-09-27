@@ -8,183 +8,359 @@
     </x-slot>
 
     <x-slot name="form">
-        <!-- Profile Photo -->
-        <div x-data="{ photoName: null, photoPreview: null }" class="col-span-6 sm:col-span-4">
-            <!-- Profile Photo File Input -->
-            <input type="file" id="photo" class="hidden" wire:model="state.profile_photo" x-ref="photo"
-                x-on:change="
-                                    photoName = $refs.photo.files[0].name;
-                                    const reader = new FileReader();
-                                    reader.onload = (e) => {
-                                        photoPreview = e.target.result;
-                                    };
-                                    reader.readAsDataURL($refs.photo.files[0]);
-                            " />
-
-            <x-label for="photo" value="{{ __('Photo de profil') }}" />
-
-            <!-- Current Profile Photo -->
-            <div class="mt-2" x-show="! photoPreview">
-                <img src="{{ asset('storage/' . Auth::user()->profile_photo_path) }}"
-                    alt="{{ $this->user->prenom . ' ' . $this->user->nom }}"
-                    class="rounded-full size-24 object-cover ring-2 ring-white shadow">
-            </div>
-
-            <!-- New Profile Photo Preview -->
-            <div class="mt-2" x-show="photoPreview" style="display: none;">
-                <span class="block rounded-full size-24 bg-cover bg-no-repeat bg-center ring-2 ring-white shadow"
-                    x-bind:style="'background-image: url(\'' + photoPreview + '\');'">
-                </span>
-            </div>
-
-            <x-secondary-button class="mt-2 me-2" type="button" x-on:click.prevent="$refs.photo.click()">
-                {{ __('choisir une nouvelle photo') }}
-            </x-secondary-button>
-
-            @if ($this->user->profile_photo_path)
-                <x-secondary-button type="button" class="mt-2" wire:click="deleteProfilePhoto"
-                    wire:loading.attr="disabled">
-                    {{ __('supprimer la Photo') }}
-                </x-secondary-button>
-            @endif
-
-            <x-input-error for="photo" class="mt-2" />
+        <!-- Notifications succès/erreur -->
+        <div x-data="{show:false,message:'',type:'success'}" x-on:saved.window="type='success';message='{{ __('Profil mis à jour avec succès.') }}';show=true;setTimeout(()=>show=false,3000)" class="col-span-6">
+            <template x-if="show">
+                <div x-bind:class="type==='success' ? 'bg-emerald-50 text-emerald-700 ring-emerald-200' : 'bg-rose-50 text-rose-700 ring-rose-200'" class="mb-4 px-4 py-3 rounded-md ring-1 shadow-sm">
+                    <span x-text="message"></span>
+                </div>
+            </template>
         </div>
-
-        <!-- Nom & Prénom -->
-        <div class="col-span-6 sm:col-span-3">
-            <x-label for="prenom" value="{{ __('Prénom') }}" />
-            <x-input id="prenom" type="text" class="mt-1 block w-full" wire:model="state.prenom" required
-                autocomplete="given-name" />
-            <x-input-error for="prenom" class="mt-2" />
-        </div>
-        <div class="col-span-6 sm:col-span-3">
-            <x-label for="nom" value="{{ __('Nom') }}" />
-            <x-input id="nom" type="text" class="mt-1 block w-full" wire:model="state.nom" required
-                autocomplete="family-name" />
-            <x-input-error for="nom" class="mt-2" />
-        </div>
-        <!-- Champ name masqué pour compat Jetstream -->
-        <div class="hidden">
-            <x-input id="name" type="text" wire:model="state.name" x-data x-init="$watch('$root.__livewire.find($root.closest(' [wire\\: id]
-                ')?.getAttribute('
-                wire: id ')).get('
-                state.prenom ')', v => $wire.set('state.name', (v || '') + ' ' + ($wire.get('state.nom') || '')));
-            $watch('$root.__livewire.find($root.closest(' [wire\\: id]
-                ')?.getAttribute('
-                wire: id ')).get('
-                state.nom ')', v => $wire.set('state.name', ($wire.get('state.prenom') || '') + ' ' + (v || '')));" />
-        </div>
-
-        <!-- Email -->
-        <div class="col-span-6 sm:col-span-4">
-            <x-label for="email" value="{{ __('Email') }}" />
-            <x-input id="email" type="email" class="mt-1 block w-full" wire:model="state.email" required
-                autocomplete="username" />
-            <x-input-error for="email" class="mt-2" />
-
-            @if (Laravel\Fortify\Features::enabled(Laravel\Fortify\Features::emailVerification()) &&
-                    !$this->user->hasVerifiedEmail())
-                <p class="text-sm mt-2">
-                    {{ __('Your email address is unverified.') }}
-
-                    <button type="button"
-                        class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                        wire:click.prevent="sendEmailVerification">
-                        {{ __('Click here to re-send the verification email.') }}
-                    </button>
-                </p>
-
-                @if ($this->verificationLinkSent)
-                    <p class="mt-2 font-medium text-sm text-green-600">
-                        {{ __('A new verification link has been sent to your email address.') }}
-                    </p>
-                @endif
-            @endif
-        </div>
-
-        @if (auth()->user()?->role === 'patient')
-            <!-- Champs Patient -->
-            <div class="col-span-6 sm:col-span-2">
-                <x-label for="dateNaissance" value="{{ __('Date de naissance') }}" />
-                <x-input id="dateNaissance" type="date" class="mt-1 block w-full" wire:model="state.dateNaissance" />
-                <x-input-error for="dateNaissance" class="mt-2" />
-            </div>
-            <div class="col-span-6 sm:col-span-2">
-                <x-label for="tel" value="{{ __('Téléphone') }}" />
-                <x-input id="tel" type="text" class="mt-1 block w-full" wire:model="state.tel"
-                    autocomplete="tel" />
-                <x-input-error for="tel" class="mt-2" />
-            </div>
-            <div class="col-span-6 sm:col-span-6">
-                <x-label for="adresse" value="{{ __('Adresse') }}" />
-                <x-input id="adresse" type="text" class="mt-1 block w-full" wire:model="state.adresse"
-                    autocomplete="street-address" />
-                <x-input-error for="adresse" class="mt-2" />
-            </div>
-        @elseif (auth()->user()?->role === 'medecin')
-            <!-- Champs Médecin -->
-            <div class="col-span-6 sm:col-span-3">
-                <x-label for="specialite" value="{{ __('Spécialité') }}" />
-                <x-input id="specialite" type="text" class="mt-1 block w-full" wire:model="state.specialite" />
-                <x-input-error for="specialite" class="mt-2" />
-            </div>
-            <div class="col-span-6 sm:col-span-3">
-                <x-label for="adresse_cabinet" value="{{ __('Adresse du cabinet') }}" />
-                <x-input id="adresse_cabinet" type="text" class="mt-1 block w-full"
-                    wire:model="state.adresse_cabinet" />
-                <x-input-error for="adresse_cabinet" class="mt-2" />
-            </div>
-            <div class="col-span-6 sm:col-span-2">
-                <x-label for="experience" value="{{ __('Expérience (années)') }}" />
-                <x-input id="experience" type="number" min="0" class="mt-1 block w-full"
-                    wire:model="state.experience" />
-                <x-input-error for="experience" class="mt-2" />
-            </div>
-            <div class="col-span-6 sm:col-span-2">
-                <x-label for="prixConsultation" value="{{ __('Prix de consultation (DT)') }}" />
-                <x-input id="prixConsultation" type="number" min="60" step="1" class="mt-1 block w-full" wire:model="state.prixConsultation" />
-                <p class="text-xs text-gray-500 mt-1">Minimum 60 DT.</p>
-                <x-input-error for="prixConsultation" class="mt-2" />
-            </div>
-            <div class="col-span-6 sm:col-span-4">
-                <x-label for="formation" value="{{ __('Formation') }}" />
-                <textarea id="formation" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" wire:model="state.formation"
-                    rows="2"></textarea>
-                <x-input-error for="formation" class="mt-2" />
-            </div>
-            <div class="col-span-6 sm:col-span-4">
-                <x-label for="DiplômeOrCNOM" value="{{ __('Diplôme ou CNOM (jpg, png, pdf)') }}" />
-                @php
-                    $diplomePath = Auth::user()->DiplômeOrCNOM ?? null;
-                @endphp
-                @if($diplomePath)
-                    <div class="mt-1 text-sm flex items-center gap-3">
-                        <a href="{{ asset('storage/' . $diplomePath) }}" target="_blank" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-gray-200 bg-white text-gray-700 shadow-sm hover:bg-gray-50 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1">
-                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6M8 6h8l2 2v10a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2z"/>
-                            </svg>
-                            Voir le document actuel
-                        </a>
-                    </div>
-                @endif
-                <input id="DiplômeOrCNOM" type="file" class="sr-only" wire:model="state.DiplômeOrCNOM" accept=".jpg,.jpeg,.png,.pdf" />
-                <label for="DiplômeOrCNOM" class="mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-blue-600 text-white text-sm font-medium shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 cursor-pointer">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v4m0 0V4m0 4h4m-4 0H8m1 4h6m-7 4h8M7 4h8l2 2v12a2 2 0 01-2 2H7a2 2 0 01-2-2V6a2 2 0 012-2z"/>
-                    </svg>
-                    Choisir un fichier
-                </label>
-                <x-input-error for="DiplômeOrCNOM" class="mt-2" />
-                <p class="text-xs text-gray-500 mt-1">Taille maximale 1 Mo.</p>
-            </div>
-            <div class="col-span-6 sm:col-span-6">
-                <x-label for="langues" value="{{ __('Langues') }}" />
-                <x-input id="langues" type="text" class="mt-1 block w-full" wire:model="state.langues"
-                    placeholder="ex: Français, Arabe, Anglais" />
-                <x-input-error for="langues" class="mt-2" />
+        @if ($errors->any())
+            <div class="col-span-6 mb-4 px-4 py-3 rounded-md ring-1 ring-rose-200 bg-rose-50 text-rose-700">
+                {{ __('Échec de la mise à jour. Veuillez corriger les champs indiqués en rouge.') }}
             </div>
         @endif
+        <!-- Disposition 2 colonnes: infos personnelles (gauche) / professionnelles (droite) -->
+        <div class="col-span-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Colonne gauche: Informations personnelles -->
+            <div class="space-y-6">
+                <h3 id="section-infos-personnelles" class="text-base font-semibold text-gray-900 flex items-center gap-2">
+                    <span>👤</span>
+                    <span>Informations personnelles</span>
+                </h3>
+                <!-- Photo de profil -->
+                <div x-data="{
+                    photoName: null,
+                    photoPreview: null,
+                    cacheBuster: Date.now(),
+                    isUploading: false,
+                    uploadProgress: 0,
+                    error: ''
+                }"
+                x-on:saved.window="console.log('Saved event received'); cacheBuster = Date.now(); window.dispatchEvent(new CustomEvent('profile-photo-updated')); setTimeout(() => { photoPreview = null; photoName = null; }, 100)"
+                x-on:livewire-upload-start="isUploading = true; error = ''; uploadProgress = 0; clearTimeout(window.uploadTimeout); console.log('Livewire upload started'); console.log('Event detail:', $event.detail)"
+                x-on:livewire-upload-finish="isUploading = false; uploadProgress = 100; cacheBuster = Date.now(); clearTimeout(window.uploadTimeout); console.log('Livewire upload finished'); console.log('Event detail:', $event.detail); setTimeout(() => { uploadProgress = 0; }, 1000)"
+                x-on:livewire-upload-error="isUploading = false; error = 'Erreur lors du téléchargement'; uploadProgress = 0; clearTimeout(window.uploadTimeout); console.log('Livewire upload error'); console.log('Error detail:', $event.detail)"
+                x-on:livewire-upload-progress="uploadProgress = $event.detail.progress; console.log('Livewire upload progress:', $event.detail.progress + '%'); console.log('Progress event detail:', $event.detail)"
+                role="group" aria-labelledby="section-infos-personnelles"
+                class="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+
+                    <div class="mb-4">
+                        <x-label for="photo" value="{{ __('Photo de profil') }}" class="text-sm font-semibold text-gray-900" />
+                        <p class="text-xs text-gray-500 mt-1">JPG, JPEG ou PNG. Taille max 1 Mo.</p>
+                    </div>
+
+                    <!-- Input fichier caché -->
+                    <input type="file" id="photo" class="hidden" wire:model="photo" x-ref="photo" accept="image/*"
+                        x-on:change="
+                            error='';
+                            uploadProgress = 0;
+                            const file = $refs.photo.files[0];
+                            if (!file) {
+                                isUploading = false;
+                                photoName = null;
+                                photoPreview = null;
+                                return;
+                            }
+                            if (file.size > 1024 * 1024) {
+                                error = 'La taille maximale autorisée est 1 Mo.';
+                                isUploading = false;
+                                uploadProgress = 0;
+                                $refs.photo.value = null;
+                                photoName = null;
+                                photoPreview = null;
+                                return;
+                            }
+                            photoName = file.name;
+                            const reader = new FileReader();
+                            reader.onload = (e) => { photoPreview = e.target.result };
+                            reader.readAsDataURL(file);
+                            // Upload via Livewire standard
+                            isUploading = true;
+                            console.log('Starting Livewire upload for file:', file.name, 'Size:', file.size);
+
+                            // Timeout pour détecter si l'upload reste bloqué
+                            window.uploadTimeout = setTimeout(() => {
+                                if (isUploading) {
+                                    console.error('Upload timeout - upload stuck at', uploadProgress + '%');
+                                    isUploading = false;
+                                    error = 'Timeout: L\'upload a pris trop de temps';
+                                }
+                            }, 30000); // 30 secondes timeout
+
+                            $wire.upload('photo', file);
+                        " />
+
+                    <!-- Aperçu de la photo -->
+                    <div class="flex justify-center">
+                        <div class="relative">
+                            <template x-if="!photoPreview">
+                                <div class="relative">
+                                    <img :src="'{{ asset('storage/' . ($this->user->profile_photo_path ?? Auth::user()->profile_photo_path)) }}?v=' + cacheBuster"
+                                         alt="{{ $this->user->prenom . ' ' . $this->user->nom }}"
+                                         class="rounded-full size-32 sm:size-36 object-cover ring-4 ring-gray-100 shadow-lg border-2 border-white" />
+                                    <button type="button" title="Changer la photo" aria-label="Changer la photo" x-on:click.prevent="$refs.photo.click()" class="absolute -bottom-2 -right-2 inline-flex items-center justify-center rounded-full bg-indigo-600 text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" style="width:36px;height:36px;">
+                                        ✏️
+                                    </button>
+                                </div>
+                            </template>
+                            <template x-if="photoPreview">
+                                <div class="relative">
+                                    <span class="rounded-full size-32 sm:size-36 bg-cover bg-no-repeat bg-center ring-4 ring-indigo-100 shadow-lg border-2 border-indigo-200 block"
+                                          x-bind:style="'background-image: url(\'' + photoPreview + '\');'"></span>
+                                    <button type="button" title="Changer la photo" aria-label="Changer la photo" x-on:click.prevent="$refs.photo.click()" class="absolute -bottom-2 -right-2 inline-flex items-center justify-center rounded-full bg-indigo-600 text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" style="width:36px;height:36px;">
+                                        ✏️
+                                    </button>
+                                </div>
+                            </template>
+
+                            <!-- Indicateur de chargement -->
+                            <div x-show="isUploading" class="absolute inset-0 rounded-full bg-black bg-opacity-50 flex items-center justify-center">
+                                <div class="flex flex-col items-center gap-2">
+                                    <div class="animate-spin rounded-full h-8 w-8 border-2 border-white border-t-transparent"></div>
+                                    <span class="text-xs text-white" x-text="uploadProgress + '%' "></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Nom du fichier sélectionné -->
+                    <div x-show="photoName" class="mt-4 text-center">
+                        <p class="text-sm text-gray-600">
+                            <span class="font-medium">Fichier sélectionné:</span>
+                            <span x-text="photoName" class="text-indigo-600"></span>
+                        </p>
+                    </div>
+
+                    <x-input-error for="photo" class="mt-3" />
+                    <template x-if="error">
+                        <div class="mt-3 px-3 py-2 rounded-md bg-rose-50 text-rose-700 ring-1 ring-rose-200 text-sm" role="alert">
+                            <span x-text="error"></span>
+                        </div>
+                    </template>
+                    <div x-show="isUploading" class="mt-3">
+                        <div class="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                            <div class="h-2 bg-indigo-500 transition-all duration-200" :style="`width: ${uploadProgress}%;`"></div>
+                        </div>
+                    </div>
+
+                    <!-- Actions sous la photo -->
+                    <div class="mt-4 flex items-center justify-center gap-3">
+                        <button type="button"
+                            class="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-white text-gray-700 border border-gray-200 text-sm font-medium shadow-sm hover:bg-gray-50 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            x-on:click.prevent="$refs.photo.click()"
+                            :disabled="isUploading">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <span x-text="isUploading ? 'Téléchargement...' : 'Choisir une photo'"></span>
+                        </button>
+                        @if ($this->user->profile_photo_path)
+                            <button type="button"
+                                class="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-rose-50 text-rose-700 border border-rose-200 text-sm font-medium shadow-sm hover:bg-rose-100 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                                wire:click="deleteProfilePhoto"
+                                wire:loading.attr="disabled"
+                                wire:confirm="Êtes-vous sûr de vouloir supprimer votre photo de profil ?">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                                <span>Supprimer</span>
+                            </button>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- Nom & Prénom -->
+                <div>
+                    <x-label for="prenom" value="{{ __('Prénom') }}" />
+                    <span class="text-rose-600 ml-1" aria-hidden="true">*</span>
+                    <div class="relative mt-1">
+                        <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center">👤</span>
+                        <x-input id="prenom" type="text" class="mt-0 block w-full pl-9 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" wire:model="state.prenom" required aria-required="true" autocomplete="given-name" placeholder="Ex: Amine" />
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Votre prénom tel qu'il apparaîtra sur votre profil.</p>
+                    <x-input-error for="prenom" class="mt-2" />
+                </div>
+
+                <div>
+                    <x-label for="nom" value="{{ __('Nom') }}" />
+                    <span class="text-rose-600 ml-1" aria-hidden="true">*</span>
+                    <div class="relative mt-1">
+                        <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center">👤</span>
+                        <x-input id="nom" type="text" class="mt-0 block w-full pl-9 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" wire:model="state.nom" required aria-required="true" autocomplete="family-name" placeholder="Ex: Ben Ali" />
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Nom de famille.</p>
+                    <x-input-error for="nom" class="mt-2" />
+                </div>
+        <!-- Champ name masqué pour compat Jetstream -->
+        <div class="hidden" x-data="{ prenom: @entangle('state.prenom'), nom: @entangle('state.nom') }" x-effect="$wire.set('state.name', ((prenom || '') + ' ' + (nom || '')).trim())">
+            <x-input id="name" type="text" wire:model="state.name" />
+        </div>
+
+                <!-- Email (HTML5 + pré-remplissage serveur) -->
+                <div>
+                    <x-label for="email" value="{{ __('Email') }}" />
+                    <span class="text-rose-600 ml-1" aria-hidden="true">*</span>
+                    <div class="relative mt-1">
+                        <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center">📧</span>
+                        <x-input id="email" type="email" class="mt-0 block w-full pl-9 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" wire:model.defer="state.email" required aria-required="true" autocomplete="username" placeholder="exemple@domaine.tn" value="{{ old('email', $this->user->email ?? Auth::user()->email) }}" pattern="^(?!\.)[^\s@]+@[^\s@]+\.[^\s@]+$" title="Email invalide (ex. nom@domaine.tld)" />
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Utilisé pour la connexion et les notifications.</p>
+                    <x-input-error for="email" class="mt-2" />
+
+                    @if (Laravel\Fortify\Features::enabled(Laravel\Fortify\Features::emailVerification()) && !$this->user->hasVerifiedEmail())
+                        <p class="text-sm mt-2">
+                            {{ __('Your email address is unverified.') }}
+
+                            <button type="button"
+                                class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                wire:click.prevent="sendEmailVerification">
+                                {{ __('Click here to re-send the verification email.') }}
+                            </button>
+                        </p>
+
+                        @if ($this->verificationLinkSent)
+                            <p class="mt-2 font-medium text-sm text-green-600">
+                                {{ __('A new verification link has been sent to your email address.') }}
+                            </p>
+                        @endif
+                    @endif
+                </div>
+
+                @if (auth()->user()?->role === 'patient')
+                    <!-- Champs Patient -->
+                    <div>
+                        <x-label for="dateNaissance" value="{{ __('Date de naissance') }}" />
+                        <div class="relative mt-1">
+                            <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center">📅</span>
+                            <x-input id="dateNaissance" type="date" class="mt-0 block w-full pl-9" wire:model="state.dateNaissance" />
+                        </div>
+                        <x-input-error for="dateNaissance" class="mt-2" />
+                    </div>
+                    <div>
+                        <x-label for="tel" value="{{ __('Téléphone') }}" />
+                        <div class="relative mt-1">
+                            <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center">📞</span>
+                            <x-input id="tel" type="text" class="mt-0 block w-full pl-9" wire:model="state.tel" autocomplete="tel" placeholder="Ex: +216 12 345 678" />
+                        </div>
+                        <x-input-error for="tel" class="mt-2" />
+                    </div>
+                    <div>
+                        <x-label for="adresse" value="{{ __('Adresse') }}" />
+                        <div class="relative mt-1">
+                            <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center">🏠</span>
+                            <x-input id="adresse" type="text" class="mt-0 block w-full pl-9" wire:model="state.adresse" autocomplete="street-address" placeholder="Rue, Ville, Code postal" />
+                        </div>
+                        <x-input-error for="adresse" class="mt-2" />
+                    </div>
+                @endif
+            </div>
+
+            <!-- Colonne droite: Informations professionnelles (Médecin) -->
+            @if (auth()->user()?->role === 'medecin')
+                <div class="space-y-6">
+                    <h3 id="section-infos-professionnelles" class="text-base font-semibold text-gray-900 flex items-center gap-2">
+                        <span>🩺</span>
+                        <span>Informations professionnelles</span>
+                    </h3>
+                    <div>
+                        <x-label for="specialite" value="{{ __('Spécialité') }}" />
+                        @php
+                            // Charger dynamiquement les spécialités de médecins pouvant consulter en ligne
+                            $specialitesEnLigne = \App\Models\User::query()
+                                ->where('role', 'medecin')
+                                ->whereNotNull('specialite')
+                                ->pluck('specialite')
+                                ->unique()
+                                ->sort()
+                                ->values()
+                                ->all();
+                        @endphp
+                        <div class="relative mt-1">
+                            <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center">🩺</span>
+                            <select id="specialite" class="mt-0 block w-full pl-9 pr-10 border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500" wire:model="state.specialite" aria-required="true">
+                                <option value="">{{ __('Sélectionner une spécialité') }}</option>
+                                @foreach ($specialitesEnLigne as $sp)
+                                    <option value="{{ $sp }}">{{ $sp }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Seules les spécialités ci-dessus acceptent la consultation en ligne.</p>
+                        <x-input-error for="specialite" class="mt-2" />
+                    </div>
+                    <div>
+                        <x-label for="adresse_cabinet" value="{{ __('Adresse du cabinet') }}" />
+                        <div class="relative mt-1">
+                            <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center">🏥</span>
+                            <x-input id="adresse_cabinet" type="text" class="mt-0 block w-full pl-9 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" wire:model="state.adresse_cabinet" placeholder="Saisissez votre adresse du cabinet (Rue, Ville, Code postal)" />
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Adresse visible par vos patients pour se rendre au cabinet.</p>
+                        <x-input-error for="adresse_cabinet" class="mt-2" />
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div>
+                            <x-label for="experience" value="{{ __('Expérience (années)') }}" />
+                            <div class="relative mt-1">
+                                <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center">⏳</span>
+                                <x-input id="experience" type="number" min="0" class="mt-0 block w-full pl-9 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" wire:model="state.experience" placeholder="Nombre d'années" />
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">Nombre total d'années d'expérience.</p>
+                            <x-input-error for="experience" class="mt-2" />
+                        </div>
+                        <div>
+                            <x-label for="prixConsultation" value="{{ __('Prix de consultation (DT)') }}" />
+                            <div class="relative mt-1">
+                                <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center">💵</span>
+                                <x-input id="prixConsultation" type="number" min="60" step="1" class="mt-0 block w-full pl-9 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" wire:model="state.prixConsultation" placeholder="Ex: 70" />
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">Minimum 60 DT.</p>
+                            <x-input-error for="prixConsultation" class="mt-2" />
+                        </div>
+                    </div>
+                    <div>
+                        <x-label for="formation" value="{{ __('Formation') }}" />
+                        <div class="relative mt-1">
+                            <span class="pointer-events-none absolute inset-y-0 left-3 flex items-start pt-2">🎓</span>
+                            <textarea id="formation" class="mt-0 block w-full border-gray-300 rounded-md shadow-sm pl-9 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" wire:model="state.formation" rows="3" placeholder="Ex: Faculté de Médecine de Tunis, Résidence..."></textarea>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Listez vos formations principales et résidences.</p>
+                        <x-input-error for="formation" class="mt-2" />
+                    </div>
+                    <div x-data="{ fileName: '', error: '' }">
+                        <x-label for="DiplômeOrCNOM" value="{{ __('Diplôme ou CNOM (jpg, png, pdf)') }}" />
+                        <p class="text-xs text-gray-500 mt-1">Formats acceptés: JPG, PNG ou PDF. Taille max 2 Mo.</p>
+                        @php $diplomePath = $this->user->DiplômeOrCNOM ?? Auth::user()->DiplômeOrCNOM ?? null; @endphp
+                        @if($diplomePath)
+                            <div class="mt-1 text-sm flex items-center gap-3">
+                                <a href="{{ asset('storage/' . $diplomePath) }}" target="_blank" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-gray-200 bg-white text-gray-700 shadow-sm hover:bg-gray-50 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1">
+                                    📄 <span>Voir le document</span>
+                                </a>
+                            </div>
+                        @else
+                            <p class="mt-1 text-sm text-gray-500">Aucun document enregistré.</p>
+                        @endif
+                    </div>
+                    <div x-data="{ options: ['Français','Arabe','Anglais','Italien','Allemand'], custom:'', selected: (() => { const initial = @js(old('langues', $this->user->langues ?? '')) || ''; return initial.split(',').map(s=>s.trim()).filter(Boolean); })(), add(){ if(this.custom && !this.selected.includes(this.custom)) { this.selected.push(this.custom); this.custom=''; } }, toggle(lang){ const i=this.selected.indexOf(lang); if(i>-1){this.selected.splice(i,1)} else {this.selected.push(lang)} } }" x-init="$watch('selected', v => $wire.set('state.langues', v.join(', ')))">
+                        <x-label value="{{ __('Langues') }}" />
+                        <div class="mt-2 flex flex-wrap gap-2">
+                            <template x-for="lang in options" :key="lang">
+                                <button type="button" class="px-3 py-1.5 rounded-full text-sm border shadow-sm" :class="selected.includes(lang) ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'" x-on:click="toggle(lang)" x-text="lang"></button>
+                            </template>
+                        </div>
+                        <div class="mt-3 flex items-center gap-2">
+                            <input type="text" x-model="custom" placeholder="Ajouter une langue" class="flex-1 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" />
+                            <button type="button" class="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-emerald-600 text-white text-xs font-medium shadow-sm hover:bg-emerald-700" x-on:click="add()">➕ Ajouter</button>
+                        </div>
+                        <input type="hidden" wire:model="state.langues" />
+                        <x-input-error for="langues" class="mt-2" />
+                    </div>
+                </div>
+            @endif
+        </div>
+
+
     </x-slot>
 
     <x-slot name="actions">
@@ -192,8 +368,9 @@
             {{ __('Profil mis à jour avec succès.') }}
         </x-action-message>
 
-        <x-button wire:loading.attr="disabled" wire:target="photo">
-            {{ __('enregistrer') }}
+        <x-button type="submit" wire:loading.attr="disabled" wire:target="photo" class="inline-flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            <span>{{ __('Enregistrer les modifications') }}</span>
         </x-button>
     </x-slot>
 </x-form-section>

@@ -19,13 +19,25 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
      */
     public function update(User $user, array $input): void
     {
-        //  dd($input);
+        Log::info('[ProfileUpdate] Start', [
+            'user_id' => $user->id,
+            'role' => $user->role,
+            'input_keys' => array_keys($input),
+            'has_photo_key' => array_key_exists('photo', $input),
+            'has_profile_photo_key' => array_key_exists('profile_photo', $input),
+            'photo_is_file' => isset($input['photo']) && $input['photo'] instanceof \Illuminate\Http\UploadedFile,
+            'profile_photo_is_file' => isset($input['profile_photo']) && $input['profile_photo'] instanceof \Illuminate\Http\UploadedFile,
+            'photo_value' => isset($input['photo']) ? get_class($input['photo']) : 'not_set',
+            'profile_photo_value' => isset($input['profile_photo']) ? get_class($input['profile_photo']) : 'not_set',
+        ]);
         // Base rules common to all roles
         $rules = [
             'nom' => ['required', 'string', 'max:255'],
             'prenom' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'profile_photo' => ['nullable', 'mimes:jpg,jpeg,png', 'max:1024'],
+            // Also accept Jetstream's default 'photo' key
+            'photo' => ['nullable', 'mimes:jpg,jpeg,png', 'max:1024'],
         ];
 
         // Role-specific rules
@@ -43,7 +55,8 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
                 'formation' => ['nullable', 'string'],
                 'langues' => ['nullable', 'string'],
                 'prixConsultation' => ['nullable', 'integer', 'min:60'],
-                'DiplômeOrCNOM' => ['nullable', 'mimes:jpg,jpeg,png,pdf', 'max:1024'],
+                // Validate only when an actual file is present
+                'DiplômeOrCNOM' => ['sometimes', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:1024'],
             ]);
         } elseif ($user->role === 'donateur') {
             // No extra mandatory fields currently
@@ -51,10 +64,65 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
             // No extra mandatory fields currently
         }
 
+        // Ignore non-file DiplômeOrCNOM to avoid false validation errors
+        if (
+            $user->role === 'medecin'
+            && array_key_exists('DiplômeOrCNOM', $input)
+            && !($input['DiplômeOrCNOM'] instanceof \Illuminate\Http\UploadedFile)
+        ) {
+            unset($input['DiplômeOrCNOM']);
+        }
+
         Validator::make($input, $rules)->validateWithBag('updateProfileInformation');
 
-        if (isset($input['profile_photo'])) {
-            $user->updateProfilePhoto($input['profile_photo']);
+        // Update profile photo if provided under either key (fallback to request()->file if absent in $input)
+        if (!empty($input['photo']) && $input['photo'] instanceof \Illuminate\Http\UploadedFile) {
+            try {
+                $user->updateProfilePhoto($input['photo']);
+                Log::info('[ProfileUpdate] Updated using key photo', [
+                    'user_id' => $user->id,
+                    'stored_path' => $user->profile_photo_path,
+                ]);
+            } catch (\Throwable $e) {
+                Log::error('[ProfileUpdate] Error updating photo (photo key)', [
+                    'user_id' => $user->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        } elseif (!empty($input['profile_photo']) && $input['profile_photo'] instanceof \Illuminate\Http\UploadedFile) {
+            try {
+                $user->updateProfilePhoto($input['profile_photo']);
+                Log::info('[ProfileUpdate] Updated using key profile_photo', [
+                    'user_id' => $user->id,
+                    'stored_path' => $user->profile_photo_path,
+                ]);
+            } catch (\Throwable $e) {
+                Log::error('[ProfileUpdate] Error updating photo (profile_photo key)', [
+                    'user_id' => $user->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        } else {
+            // Fallback: sometimes Livewire/Jetstream passes files only via the HTTP request, not the $input array
+            $requestPhoto = request()->file('photo') ?? request()->file('profile_photo');
+            if ($requestPhoto instanceof \Illuminate\Http\UploadedFile) {
+                try {
+                    $user->updateProfilePhoto($requestPhoto);
+                    Log::info('[ProfileUpdate] Updated using request()->file fallback', [
+                        'user_id' => $user->id,
+                        'stored_path' => $user->profile_photo_path,
+                    ]);
+                } catch (\Throwable $e) {
+                    Log::error('[ProfileUpdate] Error updating photo (request file fallback)', [
+                        'user_id' => $user->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            } else {
+                Log::info('[ProfileUpdate] No uploaded file provided for photo', [
+                    'user_id' => $user->id,
+                ]);
+            }
         }
 
         // Handle DiplômeOrCNOM upload for medecin
@@ -97,6 +165,12 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
         } else {
             $user->forceFill($attributes)->save();
         }
+
+        Log::info('[ProfileUpdate] Success', [
+            'user_id' => $user->id,
+            'role' => $user->role,
+            'final_profile_photo_path' => $user->profile_photo_path,
+        ]);
     }
 
     /**

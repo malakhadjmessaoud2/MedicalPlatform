@@ -25,9 +25,9 @@ class PaiementController extends Controller
             'last_name'   => $user->prenom,
             'email'       => $user->email,
             'phone'       => $user->tel,
-            'return_url'  => "https://80434956b8e5.ngrok-free.app/payment/success",
-            'cancel_url'  => "https://80434956b8e5.ngrok-free.app/payment/cancel/{$rendezVous->id}",
-            'webhook_url' => "https://80434956b8e5.ngrok-free.app/webhook/paymee",
+            'return_url'  => "https://7af41469bacc.ngrok-free.app/payment/success",
+            'cancel_url'  => "https://7af41469bacc.ngrok-free.app/payment/cancel/{$rendezVous->id}",
+            'webhook_url' => "https://7af41469bacc.ngrok-free.app/webhook/paymee",
         ];
 
         Log::info('Création du paiement Paymee', $paymentData);
@@ -110,7 +110,12 @@ class PaiementController extends Controller
             $paiement->datePaiement  = now();
             $paiement->save();
 
-            $rendezvous->update(['statut' => 'payed']);
+            // Transition autorisée: confirmed -> payed
+            if ($rendezvous->statut !== 'confirmed') {
+                Log::warning("Paiement reçu mais statut actuel invalide pour payer", ['rdv_id' => $rendezvous->id, 'statut' => $rendezvous->statut]);
+                return redirect()->back()->with('error', "Le rendez-vous n'est pas dans un état payable.");
+            }
+            $rendezvous->transitionTo('payed');
 
             Log::info("Paiement enregistré avec succès pour rendez-vous #{$rendezvous->id}");
 
@@ -128,7 +133,7 @@ class PaiementController extends Controller
             $paiement->datePaiement  = now();
             $paiement->save();
 
-            $rendezvous->update(['status' => 'canceled']);
+            // Aucun changement de statut ici si le paiement échoue; l'utilisateur peut réessayer
 
             Log::warning("Paiement annulé pour rendez-vous #{$rendezvous->id}");
 
@@ -142,7 +147,10 @@ class PaiementController extends Controller
     public function cancel($rendezvousId)
     {
         $rendezvous = RendezVous::with('patient')->findOrFail($rendezvousId);
-        $rendezvous->update(['status' => 'canceled']);
+        // Patient peut annuler si pending ou confirmed
+        if (in_array($rendezvous->statut, ['pending','confirmed'], true)) {
+            $rendezvous->transitionTo('cancelled');
+        }
 
         Log::warning("Paiement annulé manuellement pour rendez-vous #{$rendezvous->id}");
 

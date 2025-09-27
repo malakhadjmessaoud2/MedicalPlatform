@@ -1,16 +1,23 @@
 <div x-data="{ isOpen: false }"
+     x-init="console.log('Sidebar Alpine component initialized')"
      class="flex flex-col h-screen bg-[#e4e4e4] transition-all duration-300"
      :class="{ 'w-64': isOpen, 'w-16': !isOpen }">
 
-    <!-- Logo -->
-    <div class="flex justify-start pl-4 py-4">
-        <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <circle cx="12" cy="12" r="3" stroke-width="2"/>
-            <circle cx="12" cy="4" r="3" stroke-width="2"/>
-            <circle cx="20" cy="12" r="3" stroke-width="2"/>
-            <circle cx="4" cy="12" r="3" stroke-width="2"/>
-        </svg>
-    </div>
+    <!--  Brand -->
+    <a href="{{ route('medecin.dashboard') }}" class="flex items-center pl-3 pr-2 py-4 group" title="MedicalPlatform">
+        <div class="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center ring-1 ring-black/10 shadow-sm">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+        </div>
+        <span x-show="isOpen"
+              x-transition:enter="transition-opacity duration-300"
+              x-transition:enter-start="opacity-0"
+              x-transition:enter-end="opacity-100"
+              class="ml-3 text-base font-semibold tracking-tight bg-gradient-to-r from-[#b9ff66] to-[#a8f055] bg-clip-text text-transparent">
+            MedicalPlatform
+        </span>
+    </a>
 
     <!-- Navigation Links -->
     <nav class="flex flex-col space-y-4 mt-4">

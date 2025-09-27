@@ -713,12 +713,19 @@
 
     <!-- Modal Nouvelle Consultation -->
     <div id="newConsultationModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-        <div class="bg-white rounded-[20px] p-8 w-full max-w-4xl mx-4 relative max-h-[90vh] overflow-y-auto">
+        <div class="bg-white rounded-[20px] p-8 w-full max-w-5xl mx-4 relative max-h-[95vh] overflow-y-auto">
             <!-- En-tête Modal -->
-            <div class="flex justify-between items-center mb-8">
-                <h2 class="text-2xl font-bold">
+            <div class="flex justify-between items-center mb-8 border-b border-gray-200 pb-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-[#b9ff66] rounded-full flex items-center justify-center">
+                        <svg class="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-800">
                     NOUVELLE CONSULT<span class="text-[#b9ff66]">A</span>TION
                 </h2>
+                </div>
                 <button onclick="closeConsultationModal()"
                     class="hover:bg-gray-100 p-2 rounded-full transition-all duration-200">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -734,34 +741,46 @@
                 <input type="hidden" name="medecin_id" value="{{ auth()->user()->medecin->id ?? '' }}">
                 <input type="hidden" name="date_consultation" value="{{ now() }}">
 
-                <!-- Informations sur la Consultation -->
-                <div class="bg-[#f8fafc] p-6 rounded-[20px] shadow-sm space-y-6">
-                    <h3 class="text-xl font-bold flex items-center gap-2">
+                <!-- 1. INFORMATIONS ESSENTIELLES -->
+                <div class="bg-gradient-to-r from-[#f0f9ff] to-[#e0f2fe] p-6 rounded-[20px] shadow-sm border-l-4 border-[#b9ff66]">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-8 h-8 bg-[#b9ff66] rounded-full flex items-center justify-center">
+                            <span class="text-gray-800 font-bold text-sm">1</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
                         <svg class="w-6 h-6 text-[#b9ff66]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        Informations sur la Consultation
+                            Informations Essentielles
                     </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Type de consultation - PRIORITÉ 1 -->
                         <div class="space-y-2">
-                            <label class="block text-sm font-medium text-gray-700">Type de consultation</label>
-                            <select name="type_consultation" required
-                                class="w-full rounded-lg border-gray-300 focus:ring-[#b9ff66] focus:border-[#b9ff66]">
+                            <label class="block text-sm font-bold text-gray-700 flex items-center gap-2">
+                                <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                </svg>
+                                Type de consultation *
+                            </label>
+                            <select name="type_consultation" id="type_consultation" required
+                                class="w-full rounded-lg border-2 border-gray-300 focus:ring-[#b9ff66] focus:border-[#b9ff66] transition-all duration-200">
                                 @if (isset($typesConsultation))
                                     @foreach ($typesConsultation as $key => $label)
-                                        <option value="{{ is_string($key) ? $key : $label }}">{{ $label }}
-                                        </option>
+                                        <option value="{{ is_string($key) ? $key : $label }}">{{ $label }}</option>
                                     @endforeach
                                 @else
                                     <option value="premiere">Première consultation</option>
                                     <option value="routine">Consultation de routine</option>
                                     <option value="controle">Consultation de contrôle</option>
+                                    <option value="urgence">Consultation d'urgence</option>
                                     <option value="suivi">Consultation de suivi</option>
                                 @endif
                             </select>
                         </div>
 
+                        <!-- Rendez-vous du jour -->
                         <div class="space-y-2">
                             <label class="block text-sm font-medium text-gray-700">Rendez-vous du jour</label>
                             @php
@@ -770,13 +789,8 @@
                                     $rvItems = isset($rvItems) ? [$rvItems] : [];
                                 }
                                 $rvItems = collect($rvItems)->filter(function ($rv) use ($patient) {
-                                    $dtRaw =
-                                        $rv->date_debut ??
-                                        ($rv->date ??
-                                            ($rv->date_rendezvous ?? ($rv->scheduled_at ?? ($rv->datetime ?? null))));
-                                    $samePatient = property_exists($rv, 'patient_id')
-                                        ? $rv->patient_id == ($patient->id ?? null)
-                                        : true;
+                                    $dtRaw = $rv->date_debut ?? ($rv->date ?? ($rv->date_rendezvous ?? ($rv->scheduled_at ?? ($rv->datetime ?? null))));
+                                    $samePatient = property_exists($rv, 'patient_id') ? $rv->patient_id == ($patient->id ?? null) : true;
                                     return $samePatient && ($dtRaw ? \Carbon\Carbon::parse($dtRaw)->isToday() : true);
                                 });
                             @endphp
@@ -785,18 +799,12 @@
                                     class="w-full rounded-lg border-gray-300 focus:ring-[#b9ff66] focus:border-[#b9ff66]">
                                     @foreach ($rvItems as $rv)
                                         @php
-                                            $dtRaw =
-                                                $rv->date_debut ??
-                                                ($rv->date ??
-                                                    ($rv->date_rendezvous ??
-                                                        ($rv->scheduled_at ?? ($rv->datetime ?? null))));
+                                            $dtRaw = $rv->date_debut ?? ($rv->date ?? ($rv->date_rendezvous ?? ($rv->scheduled_at ?? ($rv->datetime ?? null))));
                                             $timeLabel = $dtRaw ? \Carbon\Carbon::parse($dtRaw)->format('H:i') : '';
                                             $label = $rv->titre ?? ($rv->objet ?? ($rv->description ?? null));
                                         @endphp
                                         <option value="{{ $rv->id }}">#{{ $rv->id }} — {{ $timeLabel }}
-                                            @if ($label)
-                                                — {{ $label }}
-                                            @endif
+                                            @if ($label) — {{ $label }} @endif
                                         </option>
                                     @endforeach
                                 </select>
@@ -806,195 +814,302 @@
                             @endif
                         </div>
 
+                        <!-- Motif de consultation - PRIORITÉ 1 -->
+                        <div class="lg:col-span-2 space-y-2">
+                            <label class="block text-sm font-bold text-gray-700 flex items-center gap-2">
+                                <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                </svg>
+                                Motif de consultation *
+                            </label>
+                            <input type="text" name="motif_consultation" required placeholder="Motif principal de la consultation"
+                                class="w-full rounded-lg border-2 border-gray-300 focus:ring-[#b9ff66] focus:border-[#b9ff66] transition-all duration-200">
+                        </div>
 
+                        <!-- Symptômes - PRIORITÉ 1 -->
+                        <div class="lg:col-span-2 space-y-2">
+                            <label class="block text-sm font-bold text-gray-700 flex items-center gap-2">
+                                <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                </svg>
+                                Symptômes *
+                            </label>
+                            <textarea name="symptomes" rows="3" placeholder="Décrire les symptômes du patient"
+                                class="w-full rounded-lg border-2 border-gray-300 focus:ring-[#b9ff66] focus:border-[#b9ff66] transition-all duration-200"></textarea>
+                        </div>
 
+                        <!-- Gravité - PRIORITÉ 1 -->
                         <div class="space-y-2">
+                            <label class="block text-sm font-bold text-gray-700 flex items-center gap-2">
+                                <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                </svg>
+                                Gravité *
+                            </label>
+                            <select name="gravite" required
+                                class="w-full rounded-lg border-2 border-gray-300 focus:ring-[#b9ff66] focus:border-[#b9ff66] transition-all duration-200">
+                                <option value="">Sélectionner la gravité</option>
+                                <option value="faible">Faible</option>
+                                <option value="moderee">Modérée</option>
+                                <option value="severe">Sévère</option>
+                                <option value="critique">Critique</option>
+                            </select>
+                        </div>
+
+                        <!-- Début des symptômes - PRIORITÉ 1 -->
+                        <div class="space-y-2">
+                            <label class="block text-sm font-bold text-gray-700 flex items-center gap-2">
+                                <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                </svg>
+                                Début des symptômes *
+                            </label>
+                            <input type="date" name="debut_symptomes" required
+                                class="w-full rounded-lg border-2 border-gray-300 focus:ring-[#b9ff66] focus:border-[#b9ff66] transition-all duration-200">
+                        </div>
+
+                        <!-- Symptômes aigus - PRIORITÉ URGENCE -->
+                        <div id="symptomes-aigus-section" class="lg:col-span-2 space-y-2 hidden">
+                            <label class="block text-sm font-bold text-red-700 flex items-center gap-2">
+                                <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                </svg>
+                                Symptômes aigus (URGENCE)
+                            </label>
+                            <textarea name="symptomes_aigus" rows="2" placeholder="Décrire les symptômes aigus nécessitant une attention immédiate"
+                                class="w-full rounded-lg border-2 border-red-300 focus:ring-red-500 focus:border-red-500 transition-all duration-200"></textarea>
+                        </div>
+
+                        <!-- Orientation du patient -->
+                        <div class="lg:col-span-2 space-y-2">
                             <label class="block text-sm font-medium text-gray-700">Orientation du patient</label>
                             <input type="text" name="orientation_patient"
                                 class="w-full rounded-lg border-gray-300 focus:ring-[#b9ff66] focus:border-[#b9ff66]"
                                 placeholder="Ex: Spécialiste, Urgences, etc.">
                         </div>
-
-                        <div class="md:col-span-2 space-y-2">
-                            <label class="block text-sm font-medium text-gray-700">Motif de consultation</label>
-                            <input type="text" name="motif_consultation" required placeholder="Motif principal"
-                                class="w-full rounded-lg border-gray-300 focus:ring-[#b9ff66] focus:border-[#b9ff66]">
-                        </div>
-
-                        <div class="md:col-span-2 space-y-2">
-                            <label class="block text-sm font-medium text-gray-700">Symptômes</label>
-                            <textarea name="symptomes" rows="3" placeholder="Décrire les symptômes"
-                                class="w-full rounded-lg border-gray-300 focus:ring-[#b9ff66] focus:border-[#b9ff66]"></textarea>
-                        </div>
-
-                        <div class="space-y-2">
-                            <label class="block text-sm font-medium text-gray-700">Début des symptômes</label>
-                            <input type="date" name="debut_symptomes"
-                                class="w-full rounded-lg border-gray-300 focus:ring-[#b9ff66] focus:border-[#b9ff66]">
-                        </div>
-
-                        <div class="space-y-2">
-                            <label class="block text-sm font-medium text-gray-700">Gravité</label>
-                            <select name="gravite"
-                                class="w-full rounded-lg border-gray-300 focus:ring-[#b9ff66] focus:border-[#b9ff66]">
-                                <option value="">Sélectionner</option>
-                                <option value="faible">Faible</option>
-                                <option value="moderee">Modérée</option>
-                                <option value="severe">Sévère</option>
-                            </select>
-                        </div>
-
-                        <div class="md:col-span-2 space-y-2">
-                            <label class="block text-sm font-medium text-gray-700">Symptômes aigus</label>
-                            <textarea name="symptomes_aigus" rows="2" placeholder="Décrire les symptômes aigus"
-                                class="w-full rounded-lg border-gray-300 focus:ring-[#b9ff66] focus:border-[#b9ff66]"></textarea>
-                        </div>
                     </div>
                 </div>
 
-                <!-- Paramètres Cliniques -->
-                <div class="bg-[#f8fafc] p-6 rounded-[20px] shadow-sm space-y-6">
-                    <h3 class="text-xl font-bold flex items-center gap-2">
+                <!-- 2. PARAMÈTRES CLINIQUES VITAUX -->
+                <div id="parametres-cliniques-section" class="bg-gradient-to-r from-[#f0fdf4] to-[#dcfce7] p-6 rounded-[20px] shadow-sm border-l-4 border-[#b9ff66]">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-8 h-8 bg-[#b9ff66] rounded-full flex items-center justify-center">
+                            <span class="text-gray-800 font-bold text-sm">2</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
                         <svg class="w-6 h-6 text-[#b9ff66]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                         </svg>
-                        Paramètres Cliniques
+                            Paramètres Cliniques Vitaux
                     </h3>
-                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-6">
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Tension artérielle -->
                         <div class="space-y-2">
-                            <label class="block text-sm font-medium text-gray-700">Tension artérielle</label>
-                            <input type="text" name="tension_arterielle" placeholder="120/80 mmHg"
-                                class="w-full rounded-lg border-gray-300 focus:ring-[#b9ff66] focus:border-[#b9ff66]">
+                            <label class="block text-sm font-bold text-gray-700 flex items-center gap-2">
+                                <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                </svg>
+                                Tension artérielle *
+                            </label>
+                            <input type="text" name="tension_arterielle" required placeholder="120/80 mmHg"
+                                class="w-full rounded-lg border-2 border-gray-300 focus:ring-[#b9ff66] focus:border-[#b9ff66] transition-all duration-200">
                         </div>
+
+                        <!-- Saturation O₂ -->
                         <div class="space-y-2">
-                            <label class="block text-sm font-medium text-gray-700">Saturation O₂ (%)</label>
-                            <input type="number" name="saturation_o2" placeholder="98"
-                                class="w-full rounded-lg border-gray-300 focus:ring-[#b9ff66] focus:border-[#b9ff66]">
+                            <label class="block text-sm font-bold text-gray-700 flex items-center gap-2">
+                                <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                </svg>
+                                Saturation O₂ (%) *
+                            </label>
+                            <input type="number" name="saturation_o2" required min="0" max="100" placeholder="98"
+                                class="w-full rounded-lg border-2 border-gray-300 focus:ring-[#b9ff66] focus:border-[#b9ff66] transition-all duration-200">
                         </div>
+
+                        <!-- Fréquence cardiaque -->
                         <div class="space-y-2">
-                            <label class="block text-sm font-medium text-gray-700">Fréquence cardiaque (bpm)</label>
-                            <input type="number" name="frequence_cardiaque" placeholder="75"
-                                class="w-full rounded-lg border-gray-300 focus:ring-[#b9ff66] focus:border-[#b9ff66]">
+                            <label class="block text-sm font-bold text-gray-700 flex items-center gap-2">
+                                <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                </svg>
+                                Fréquence cardiaque (bpm) *
+                            </label>
+                            <input type="number" name="frequence_cardiaque" required min="30" max="200" placeholder="75"
+                                class="w-full rounded-lg border-2 border-gray-300 focus:ring-[#b9ff66] focus:border-[#b9ff66] transition-all duration-200">
                         </div>
+
+                        <!-- Température -->
                         <div class="space-y-2">
-                            <label class="block text-sm font-medium text-gray-700">Température (°C)</label>
-                            <input type="number" step="0.1" name="temperature" placeholder="37.0"
-                                class="w-full rounded-lg border-gray-300 focus:ring-[#b9ff66] focus:border-[#b9ff66]">
+                            <label class="block text-sm font-bold text-gray-700 flex items-center gap-2">
+                                <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                </svg>
+                                Température (°C) *
+                            </label>
+                            <input type="number" step="0.1" name="temperature" required min="30" max="45" placeholder="37.0"
+                                class="w-full rounded-lg border-2 border-gray-300 focus:ring-[#b9ff66] focus:border-[#b9ff66] transition-all duration-200">
                         </div>
+
+                        <!-- Score Glasgow -->
                         <div class="space-y-2">
-                            <label class="block text-sm font-medium text-gray-700">Score Glasgow</label>
-                            <input type="number" min="3" max="15" name="score_glasgow" placeholder="15"
-                                class="w-full rounded-lg border-gray-300 focus:ring-[#b9ff66] focus:border-[#b9ff66]">
+                            <label class="block text-sm font-bold text-gray-700 flex items-center gap-2">
+                                <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                </svg>
+                                Score Glasgow *
+                            </label>
+                            <input type="number" min="3" max="15" name="score_glasgow" required placeholder="15"
+                                class="w-full rounded-lg border-2 border-gray-300 focus:ring-[#b9ff66] focus:border-[#b9ff66] transition-all duration-200">
                         </div>
                     </div>
                 </div>
 
-                <!-- Mesures Physiques -->
-                <div class="bg-[#f8fafc] p-6 rounded-[20px] shadow-sm space-y-6">
-                    <h3 class="text-xl font-bold flex items-center gap-2">
+                <!-- 3. MESURES PHYSIQUES -->
+                <div id="mesures-physiques-section" class="bg-gradient-to-r from-[#f0f9ff] to-[#e0f2fe] p-6 rounded-[20px] shadow-sm border-l-4 border-[#b9ff66]">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-8 h-8 bg-[#b9ff66] rounded-full flex items-center justify-center">
+                            <span class="text-gray-800 font-bold text-sm">3</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
                         <svg class="w-6 h-6 text-[#b9ff66]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
                         Mesures Physiques
                     </h3>
+                    </div>
+
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div class="space-y-2">
                             <label class="block text-sm font-medium text-gray-700">Poids (kg)</label>
                             <input type="number" step="0.1" name="poids" id="poids-input" placeholder="70"
-                                class="w-full rounded-lg border-gray-300 focus:ring-[#b9ff66] focus:border-[#b9ff66]">
+                                class="w-full rounded-lg border-gray-300 focus:ring-[#b9ff66] focus:border-[#b9ff66] transition-all duration-200">
                         </div>
                         <div class="space-y-2">
                             <label class="block text-sm font-medium text-gray-700">Taille (cm)</label>
                             <input type="number" step="0.1" name="taille" id="taille-input" placeholder="175"
-                                class="w-full rounded-lg border-gray-300 focus:ring-[#b9ff66] focus:border-[#b9ff66]">
+                                class="w-full rounded-lg border-gray-300 focus:ring-[#b9ff66] focus:border-[#b9ff66] transition-all duration-200">
                         </div>
                         <div class="space-y-2">
-                            <label class="block text-sm font-medium text-gray-700">IMC</label>
-                            <input type="number" step="0.1" name="imc" id="imc-input" placeholder="Auto"
-                                class="w-full rounded-lg border-gray-300 focus:ring-[#b9ff66] focus:border-[#b9ff66]">
+                            <label class="block text-sm font-medium text-gray-700">IMC (calculé automatiquement)</label>
+                            <input type="number" step="0.1" name="imc" id="imc-input" placeholder="Auto-calculé" readonly
+                                class="w-full rounded-lg border-gray-300 bg-gray-100 text-gray-600">
                         </div>
                     </div>
                 </div>
 
-                <!-- Examen/Diagnostic/Traitement/Suivi -->
-                <div class="bg-[#f8fafc] p-6 rounded-[20px] shadow-sm space-y-6">
-                    <h3 class="text-xl font-bold">Examen, Diagnostic et Suivi</h3>
+                <!-- 4. EXAMEN, DIAGNOSTIC ET SUIVI -->
+                <div id="examen-diagnostic-section" class="bg-gradient-to-r from-[#f0fdf4] to-[#dcfce7] p-6 rounded-[20px] shadow-sm border-l-4 border-[#b9ff66]">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-8 h-8 bg-[#b9ff66] rounded-full flex items-center justify-center">
+                            <span class="text-gray-800 font-bold text-sm">4</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                            <svg class="w-6 h-6 text-[#b9ff66]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Examen, Diagnostic et Suivi
+                        </h3>
+                    </div>
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="space-y-2">
                             <label class="block text-sm font-medium text-gray-700">Examen physique</label>
-                            <textarea name="examen_physique" rows="3"
-                                class="w-full rounded-lg border-gray-300 focus:ring-[#b9ff66] focus:border-[#b9ff66]"></textarea>
+                            <textarea name="examen_physique" rows="3" placeholder="Décrire l'examen physique effectué"
+                                class="w-full rounded-lg border-gray-300 focus:ring-[#b9ff66] focus:border-[#b9ff66] transition-all duration-200"></textarea>
                         </div>
                         <div class="space-y-2">
                             <label class="block text-sm font-medium text-gray-700">Diagnostic présumé</label>
-                            <textarea name="diagnostic_presume" rows="3"
-                                class="w-full rounded-lg border-gray-300 focus:ring-[#b9ff66] focus:border-[#b9ff66]"></textarea>
+                            <textarea name="diagnostic_presume" rows="3" placeholder="Diagnostic présumé ou différentiel"
+                                class="w-full rounded-lg border-gray-300 focus:ring-[#b9ff66] focus:border-[#b9ff66] transition-all duration-200"></textarea>
                         </div>
                         <div class="space-y-2 md:col-span-2">
                             <label class="block text-sm font-medium text-gray-700">Médicaments prescrits</label>
-                            <textarea name="medicaments_prescrits" rows="3"
-                                class="w-full rounded-lg border-gray-300 focus:ring-[#b9ff66] focus:border-[#b9ff66]"></textarea>
+                            <textarea name="medicaments_prescrits" rows="3" placeholder="Liste des médicaments prescrits avec posologie"
+                                class="w-full rounded-lg border-gray-300 focus:ring-[#b9ff66] focus:border-[#b9ff66] transition-all duration-200"></textarea>
                         </div>
                         <div class="space-y-2">
                             <label class="block text-sm font-medium text-gray-700">Propositions de suivi</label>
-                            <textarea name="propositions_suivi" rows="2"
-                                class="w-full rounded-lg border-gray-300 focus:ring-[#b9ff66] focus:border-[#b9ff66]"></textarea>
+                            <textarea name="propositions_suivi" rows="2" placeholder="Plan de suivi proposé"
+                                class="w-full rounded-lg border-gray-300 focus:ring-[#b9ff66] focus:border-[#b9ff66] transition-all duration-200"></textarea>
                         </div>
                         <div class="space-y-2">
                             <label class="block text-sm font-medium text-gray-700">Instructions particulières</label>
-                            <textarea name="instructions_particulieres" rows="2"
-                                class="w-full rounded-lg border-gray-300 focus:ring-[#b9ff66] focus:border-[#b9ff66]"></textarea>
+                            <textarea name="instructions_particulieres" rows="2" placeholder="Instructions spéciales pour le patient"
+                                class="w-full rounded-lg border-gray-300 focus:ring-[#b9ff66] focus:border-[#b9ff66] transition-all duration-200"></textarea>
                         </div>
                     </div>
                 </div>
 
-                <!-- Habitudes de vie / Évolution -->
-                <div class="bg-[#f8fafc] p-6 rounded-[20px] shadow-sm space-y-6">
-                    <h3 class="text-xl font-bold">Habitudes de vie et Évolution</h3>
+                <!-- 5. HABITUDES DE VIE ET ÉVOLUTION -->
+                <div id="habitudes-evolution-section" class="bg-gradient-to-r from-[#fdf2f8] to-[#fce7f3] p-6 rounded-[20px] shadow-sm border-l-4 border-[#b9ff66]">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-8 h-8 bg-[#b9ff66] rounded-full flex items-center justify-center">
+                            <span class="text-gray-800 font-bold text-sm">5</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                            <svg class="w-6 h-6 text-[#b9ff66]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                            </svg>
+                            Habitudes de vie et Évolution
+                        </h3>
+                    </div>
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="space-y-2">
                             <label class="block text-sm font-medium text-gray-700">Habitudes de vie</label>
-                            <textarea name="habitudes_vie" rows="2"
-                                class="w-full rounded-lg border-gray-300 focus:ring-[#b9ff66] focus:border-[#b9ff66]"></textarea>
+                            <textarea name="habitudes_vie" rows="2" placeholder="Tabac, alcool, activité physique, alimentation..."
+                                class="w-full rounded-lg border-gray-300 focus:ring-[#b9ff66] focus:border-[#b9ff66] transition-all duration-200"></textarea>
                         </div>
                         <div class="space-y-2">
                             <label class="block text-sm font-medium text-gray-700">Traitement actuel</label>
-                            <textarea name="traitement_actuel" rows="2"
-                                class="w-full rounded-lg border-gray-300 focus:ring-[#b9ff66] focus:border-[#b9ff66]"></textarea>
+                            <textarea name="traitement_actuel" rows="2" placeholder="Médicaments en cours, posologie..."
+                                class="w-full rounded-lg border-gray-300 focus:ring-[#b9ff66] focus:border-[#b9ff66] transition-all duration-200"></textarea>
                         </div>
                         <div class="space-y-2">
                             <label class="block text-sm font-medium text-gray-700">Évolution des symptômes</label>
-                            <textarea name="evolution_symptomes" rows="2"
-                                class="w-full rounded-lg border-gray-300 focus:ring-[#b9ff66] focus:border-[#b9ff66]"></textarea>
+                            <textarea name="evolution_symptomes" rows="2" placeholder="Amélioration, aggravation, stabilité..."
+                                class="w-full rounded-lg border-gray-300 focus:ring-[#b9ff66] focus:border-[#b9ff66] transition-all duration-200"></textarea>
                         </div>
                         <div class="space-y-2">
                             <label class="block text-sm font-medium text-gray-700">Effets secondaires</label>
-                            <textarea name="effets_secondaires" rows="2"
-                                class="w-full rounded-lg border-gray-300 focus:ring-[#b9ff66] focus:border-[#b9ff66]"></textarea>
+                            <textarea name="effets_secondaires" rows="2" placeholder="Effets indésirables observés..."
+                                class="w-full rounded-lg border-gray-300 focus:ring-[#b9ff66] focus:border-[#b9ff66] transition-all duration-200"></textarea>
                         </div>
                         <div class="space-y-2 md:col-span-2">
                             <label class="block text-sm font-medium text-gray-700">Examens de contrôle</label>
-                            <textarea name="examens_controle" rows="2"
-                                class="w-full rounded-lg border-gray-300 focus:ring-[#b9ff66] focus:border-[#b9ff66]"></textarea>
+                            <textarea name="examens_controle" rows="2" placeholder="Examens complémentaires prescrits..."
+                                class="w-full rounded-lg border-gray-300 focus:ring-[#b9ff66] focus:border-[#b9ff66] transition-all duration-200"></textarea>
                         </div>
                     </div>
                 </div>
 
                 <!-- Boutons d'action -->
-                <div class="flex justify-end gap-4 pt-6">
+                <div class="flex flex-col sm:flex-row justify-between items-center gap-4 pt-8 border-t border-gray-200">
+                    <div class="flex items-center gap-2 text-sm text-gray-500">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Les champs marqués d'un * sont obligatoires</span>
+                    </div>
+                    <div class="flex gap-4">
                     <button type="button" onclick="closeConsultationModal()"
-                        class="px-6 py-2.5 bg-white text-gray-700 hover:bg-gray-100 rounded-lg transition-all duration-200">
+                            class="px-6 py-2.5 bg-white text-gray-700 hover:bg-gray-100 border border-gray-300 rounded-lg transition-all duration-200 flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
                         Annuler
                     </button>
-                    <button type="submit"
-                        class="px-6 py-2.5 bg-[#b9ff66] hover:bg-[#a8eb5f] rounded-lg flex items-center gap-2 transition-all duration-200">
+                        <button type="submit" id="submit-consultation-btn"
+                            class="px-6 py-2.5 bg-[#b9ff66] hover:bg-[#a8eb5f] text-gray-800 rounded-lg flex items-center gap-2 transition-all duration-200 font-medium">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                         </svg>
                         Enregistrer la consultation
                     </button>
+                    </div>
                 </div>
             </form>
         </div>
@@ -1359,6 +1474,35 @@
                 });
             }
 
+            // Logique d'affichage dynamique des champs selon le type de consultation
+            const typeConsultationSelect = document.getElementById('type_consultation');
+            if (typeConsultationSelect) {
+                typeConsultationSelect.addEventListener('change', function() {
+                    toggleFieldsByConsultationType(this.value);
+                });
+
+                // Initialiser l'affichage au chargement
+                toggleFieldsByConsultationType(typeConsultationSelect.value);
+            }
+
+            // Nettoyer les erreurs de validation quand l'utilisateur tape
+            const form = document.getElementById('newConsultationForm');
+            if (form) {
+                form.addEventListener('input', function(e) {
+                    if (e.target.classList.contains('border-red-500')) {
+                        e.target.classList.remove('border-red-500');
+                        e.target.classList.add('border-gray-300');
+                    }
+                });
+
+                form.addEventListener('change', function(e) {
+                    if (e.target.classList.contains('border-red-500')) {
+                        e.target.classList.remove('border-red-500');
+                        e.target.classList.add('border-gray-300');
+                    }
+                });
+            }
+
             // Auto-calc IMC when poids/taille change
             const poidsInput = document.getElementById('poids-input');
             const tailleInput = document.getElementById('taille-input');
@@ -1383,6 +1527,12 @@
             if (consultationForm) {
                 consultationForm.addEventListener('submit', function(e) {
                     e.preventDefault();
+
+                    // Validation personnalisée avant soumission
+                    if (!validateConsultationForm()) {
+                        return false;
+                    }
+
                     const submitBtn = consultationForm.querySelector('button[type="submit"]');
                     const originalBtnHtml = submitBtn ? submitBtn.innerHTML : '';
                     if (submitBtn) {
@@ -1390,6 +1540,7 @@
                         submitBtn.innerHTML =
                             '<svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 12a8 8 0 018-8v0m0 0a8 8 0 018 8m0 0a8 8 0 01-8 8m0 0a8 8 0 01-8-8"/></svg> Enregistrement...';
                     }
+
                     const formData = new FormData(consultationForm);
                     fetch(consultationForm.action, {
                         method: 'POST',
@@ -1403,16 +1554,19 @@
                         if (!res.ok || data.success === false) {
                             const message = (data && (data.message || (data.errors ?
                                 'Veuillez vérifier les champs.' : 'Erreur.'))) || 'Erreur';
-                            alert(message);
+                            showToast(message, 'error');
                             throw new Error(message);
                         }
                         // Success
-                        showToast('Consultation créée avec succès');
+                        showToast('Consultation créée avec succès', 'success');
                         closeConsultationModal();
                         // Recharger pour refléter la nouvelle consultation
+                        setTimeout(() => {
                         window.location.reload();
-                    }).catch(() => {
-                        // already alerted
+                        }, 1000);
+                    }).catch((error) => {
+                        console.error('Erreur lors de la soumission:', error);
+                        showToast('Erreur lors de l\'enregistrement de la consultation', 'error');
                     }).finally(() => {
                         if (submitBtn) {
                             submitBtn.disabled = false;
@@ -1422,16 +1576,116 @@
                 });
             }
 
-            // Minimal toast
-            function showToast(message) {
+            // Fonction de validation personnalisée du formulaire
+            function validateConsultationForm() {
+                const form = document.getElementById('newConsultationForm');
+                const typeConsultation = form.querySelector('select[name="type_consultation"]').value;
+                let isValid = true;
+                let firstInvalidField = null;
+
+                // Validation des champs obligatoires de base
+                const requiredFields = [
+                    'type_consultation',
+                    'motif_consultation',
+                    'symptomes',
+                    'gravite',
+                    'debut_symptomes'
+                ];
+
+                requiredFields.forEach(fieldName => {
+                    const field = form.querySelector(`[name="${fieldName}"]`);
+                    if (field && !field.value.trim()) {
+                        isValid = false;
+                        if (!firstInvalidField) firstInvalidField = field;
+                        field.classList.add('border-red-500');
+                        field.classList.remove('border-gray-300');
+                    } else if (field) {
+                        field.classList.remove('border-red-500');
+                        field.classList.add('border-gray-300');
+                    }
+                });
+
+                // Validation des champs selon le type de consultation
+                const visibleSections = document.querySelectorAll('#newConsultationModal [id$="-section"]:not(.hidden-section)');
+                visibleSections.forEach(section => {
+                    const requiredInputs = section.querySelectorAll('input[required], select[required], textarea[required]');
+                    requiredInputs.forEach(input => {
+                        if (!input.value.trim()) {
+                            isValid = false;
+                            if (!firstInvalidField) firstInvalidField = input;
+                            input.classList.add('border-red-500');
+                            input.classList.remove('border-gray-300');
+                        } else {
+                            input.classList.remove('border-red-500');
+                            input.classList.add('border-gray-300');
+                        }
+                    });
+                });
+
+                // Validation spécifique pour les champs numériques
+                const numericFields = [
+                    { name: 'saturation_o2', min: 0, max: 100 },
+                    { name: 'frequence_cardiaque', min: 30, max: 200 },
+                    { name: 'temperature', min: 30, max: 45 },
+                    { name: 'score_glasgow', min: 3, max: 15 }
+                ];
+
+                numericFields.forEach(fieldConfig => {
+                    const field = form.querySelector(`[name="${fieldConfig.name}"]`);
+                    if (field && field.value) {
+                        const value = parseFloat(field.value);
+                        if (isNaN(value) || value < fieldConfig.min || value > fieldConfig.max) {
+                            isValid = false;
+                            if (!firstInvalidField) firstInvalidField = field;
+                            field.classList.add('border-red-500');
+                            field.classList.remove('border-gray-300');
+                            showToast(`Valeur invalide pour ${fieldConfig.name}. Doit être entre ${fieldConfig.min} et ${fieldConfig.max}`, 'error');
+                        } else {
+                            field.classList.remove('border-red-500');
+                            field.classList.add('border-gray-300');
+                        }
+                    }
+                });
+
+                // Focus sur le premier champ invalide
+                if (!isValid && firstInvalidField) {
+                    firstInvalidField.focus();
+                    firstInvalidField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    showToast('Veuillez remplir tous les champs obligatoires', 'error');
+                }
+
+                return isValid;
+            }
+
+            // Fonction toast améliorée
+            function showToast(message, type = 'info') {
                 const toast = document.createElement('div');
                 toast.textContent = message;
-                toast.className =
-                    'fixed top-4 right-4 z-[60] bg-gray-900 text-white px-4 py-2 rounded-lg shadow-lg';
+
+                const colors = {
+                    success: 'bg-green-500 text-white',
+                    error: 'bg-red-500 text-white',
+                    warning: 'bg-yellow-500 text-gray-800',
+                    info: 'bg-blue-500 text-white'
+                };
+
+                toast.className = `fixed top-4 right-4 z-[60] ${colors[type] || colors.info} px-4 py-2 rounded-lg shadow-lg transition-all duration-300 transform translate-x-full`;
                 document.body.appendChild(toast);
+
+                // Animation d'entrée
                 setTimeout(() => {
-                    toast.remove();
-                }, 2500);
+                    toast.classList.remove('translate-x-full');
+                }, 100);
+
+                // Auto-remove après 4 secondes
+                setTimeout(() => {
+                    toast.classList.add('translate-x-full');
+                    setTimeout(() => {
+                        if (toast.parentNode) {
+                            toast.parentNode.removeChild(toast);
+                        }
+                    }, 300);
+                }, 4000);
             }
 
             // Dynamique: charger les consultations du patient
@@ -1625,6 +1879,176 @@
                 };
             }
         });
+
+        // Fonction pour afficher/masquer les champs selon le type de consultation
+        function toggleFieldsByConsultationType(type) {
+            const sections = {
+                'parametres-cliniques-section': document.getElementById('parametres-cliniques-section'),
+                'mesures-physiques-section': document.getElementById('mesures-physiques-section'),
+                'examen-diagnostic-section': document.getElementById('examen-diagnostic-section'),
+                'habitudes-evolution-section': document.getElementById('habitudes-evolution-section'),
+                'symptomes-aigus-section': document.getElementById('symptomes-aigus-section')
+            };
+
+            // Désactiver la validation des champs dans les sections masquées
+            Object.values(sections).forEach(section => {
+                if (section) {
+                    const inputs = section.querySelectorAll('input, select, textarea');
+                    inputs.forEach(input => {
+                        input.removeAttribute('required');
+                        input.setAttribute('data-was-required', input.hasAttribute('required') ? 'true' : 'false');
+                    });
+                }
+            });
+
+            // Masquer toutes les sections d'abord avec animation
+            Object.values(sections).forEach(section => {
+                if (section) {
+                    section.style.opacity = '0';
+                    section.style.transform = 'translateY(-10px)';
+                    section.classList.add('hidden-section');
+                    setTimeout(() => {
+                        section.style.display = 'none';
+                    }, 300);
+                }
+            });
+
+            // Définir les sections à afficher selon le type de consultation
+            let sectionsToShow = [];
+            let delay = 100;
+
+            switch (type) {
+                case 'premiere':
+                    // Première consultation : tous les champs
+                    sectionsToShow = [
+                        'parametres-cliniques-section',
+                        'mesures-physiques-section',
+                        'examen-diagnostic-section',
+                        'habitudes-evolution-section'
+                    ];
+                    break;
+
+                case 'urgence':
+                    // Consultation d'urgence : champs vitaux et symptômes aigus en priorité
+                    sectionsToShow = [
+                        'parametres-cliniques-section',
+                        'symptomes-aigus-section',
+                        'examen-diagnostic-section'
+                    ];
+                    break;
+
+                case 'controle':
+                    // Consultation de contrôle : suivi du traitement et évolution
+                    sectionsToShow = [
+                        'examen-diagnostic-section',
+                        'habitudes-evolution-section',
+                        'parametres-cliniques-section'
+                    ];
+                    break;
+
+                case 'routine':
+                    // Consultation de routine : paramètres de base et suivi simple
+                    sectionsToShow = [
+                        'parametres-cliniques-section',
+                        'mesures-physiques-section',
+                        'examen-diagnostic-section'
+                    ];
+                    break;
+
+                case 'suivi':
+                    // Consultation de suivi : évolution et examens de contrôle
+                    sectionsToShow = [
+                        'habitudes-evolution-section',
+                        'examen-diagnostic-section'
+                    ];
+                    break;
+
+                default:
+                    // Par défaut, afficher toutes les sections
+                    sectionsToShow = [
+                        'parametres-cliniques-section',
+                        'mesures-physiques-section',
+                        'examen-diagnostic-section',
+                        'habitudes-evolution-section'
+                    ];
+            }
+
+            // Afficher les sections sélectionnées avec animation
+            sectionsToShow.forEach(sectionId => {
+                const section = sections[sectionId];
+                if (section) {
+                    setTimeout(() => {
+                        section.style.display = 'block';
+                        section.classList.remove('hidden-section');
+                        // Forcer le repaint
+                        section.offsetHeight;
+                        section.style.opacity = '1';
+                        section.style.transform = 'translateY(0)';
+
+                        // Réactiver la validation des champs dans les sections visibles
+                        const inputs = section.querySelectorAll('input, select, textarea');
+                        inputs.forEach(input => {
+                            if (input.getAttribute('data-was-required') === 'true') {
+                                input.setAttribute('required', 'required');
+                            }
+                        });
+                    }, delay);
+                    delay += 150; // Délai progressif pour l'animation
+                }
+            });
+
+            // Ajouter des transitions CSS à toutes les sections
+            Object.values(sections).forEach(section => {
+                if (section) {
+                    section.style.transition = 'all 0.3s ease-in-out';
+                }
+            });
+
+            // Mettre à jour l'indicateur visuel du type de consultation
+            updateConsultationTypeIndicator(type);
+        }
+
+        // Fonction pour mettre à jour l'indicateur visuel du type de consultation
+        function updateConsultationTypeIndicator(type) {
+            const typeLabels = {
+                'premiere': 'Première consultation - Tous les champs requis',
+                'urgence': 'Consultation d\'urgence - Champs vitaux prioritaires',
+                'controle': 'Consultation de contrôle - Suivi du traitement',
+                'routine': 'Consultation de routine - Paramètres de base',
+                'suivi': 'Consultation de suivi - Évolution et examens'
+            };
+
+            // Créer ou mettre à jour l'indicateur
+            let indicator = document.getElementById('consultation-type-indicator');
+            if (!indicator) {
+                indicator = document.createElement('div');
+                indicator.id = 'consultation-type-indicator';
+                indicator.className = 'fixed top-4 right-4 z-50 bg-[#b9ff66] text-gray-800 px-4 py-2 rounded-lg shadow-lg text-sm font-medium';
+                document.body.appendChild(indicator);
+            }
+
+            indicator.textContent = typeLabels[type] || 'Type de consultation sélectionné';
+
+            // Animation d'apparition
+            indicator.style.opacity = '0';
+            indicator.style.transform = 'translateX(100%)';
+            setTimeout(() => {
+                indicator.style.transition = 'all 0.3s ease-in-out';
+                indicator.style.opacity = '1';
+                indicator.style.transform = 'translateX(0)';
+            }, 100);
+
+            // Masquer l'indicateur après 3 secondes
+            setTimeout(() => {
+                indicator.style.opacity = '0';
+                indicator.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    if (indicator.parentNode) {
+                        indicator.parentNode.removeChild(indicator);
+                    }
+                }, 300);
+            }, 3000);
+        }
     </script>
 
     <style>
@@ -1663,6 +2087,218 @@
         /* Améliorer le contraste des onglets inactifs au survol */
         .tab-btn:hover:not(.active) {
             color: #4a5568;
+        }
+
+        /* Styles pour la modal de consultation améliorée */
+        #newConsultationModal .bg-gradient-to-r {
+            background-size: 200% 200%;
+            animation: gradientShift 3s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Améliorer les transitions des sections */
+        #newConsultationModal [id$="-section"] {
+            transition: all 0.3s ease-in-out;
+            transform: translateY(0);
+        }
+
+        #newConsultationModal [id$="-section"]:not([style*="display: block"]) {
+            transform: translateY(-10px);
+        }
+
+        /* Styles pour les champs obligatoires */
+        #newConsultationModal input[required],
+        #newConsultationModal select[required],
+        #newConsultationModal textarea[required] {
+            border-left: 3px solid #ef4444;
+        }
+
+        #newConsultationModal input[required]:focus,
+        #newConsultationModal select[required]:focus,
+        #newConsultationModal textarea[required]:focus {
+            border-left-color: #b9ff66;
+        }
+
+        /* Améliorer l'apparence des labels avec icônes */
+        #newConsultationModal label svg {
+            transition: transform 0.2s ease;
+        }
+
+        #newConsultationModal label:hover svg {
+            transform: scale(1.1);
+        }
+
+        /* Styles pour les sections avec numérotation */
+        #newConsultationModal .w-8.h-8 {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* Améliorer la lisibilité des placeholders */
+        #newConsultationModal input::placeholder,
+        #newConsultationModal textarea::placeholder {
+            color: #9ca3af;
+            font-style: italic;
+        }
+
+        /* Styles pour les boutons d'action */
+        #submit-consultation-btn {
+            box-shadow: 0 4px 6px rgba(185, 255, 102, 0.3);
+        }
+
+        #submit-consultation-btn:hover {
+            box-shadow: 0 6px 8px rgba(185, 255, 102, 0.4);
+            transform: translateY(-1px);
+        }
+
+        /* Responsive improvements */
+        @media (max-width: 768px) {
+            #newConsultationModal .grid {
+                grid-template-columns: 1fr;
+            }
+
+            #newConsultationModal .lg\\:col-span-2 {
+                grid-column: span 1;
+            }
+        }
+
+        /* Styles pour l'affichage dynamique des sections */
+        #newConsultationModal [id$="-section"] {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        #newConsultationModal [id$="-section"].hidden {
+            opacity: 0;
+            transform: translateY(-20px);
+            pointer-events: none;
+        }
+
+        /* Animation pour l'indicateur de type de consultation */
+        #consultation-type-indicator {
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(185, 255, 102, 0.3);
+            box-shadow: 0 8px 32px rgba(185, 255, 102, 0.2);
+        }
+
+        /* Améliorer les transitions des champs obligatoires */
+        #newConsultationModal input[required]:focus,
+        #newConsultationModal select[required]:focus,
+        #newConsultationModal textarea[required]:focus {
+            box-shadow: 0 0 0 3px rgba(185, 255, 102, 0.1);
+            border-color: #b9ff66;
+        }
+
+        /* Animation pour les sections qui apparaissent */
+        @keyframes slideInFromTop {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        #newConsultationModal [id$="-section"].animate-in {
+            animation: slideInFromTop 0.4s ease-out;
+        }
+
+        /* Styles pour les sections selon leur priorité */
+        #newConsultationModal #parametres-cliniques-section {
+            border-left: 4px solid #b9ff66;
+        }
+
+        #newConsultationModal #mesures-physiques-section {
+            border-left: 4px solid #b9ff66;
+        }
+
+        #newConsultationModal #examen-diagnostic-section {
+            border-left: 4px solid #b9ff66;
+        }
+
+        #newConsultationModal #habitudes-evolution-section {
+            border-left: 4px solid #b9ff66;
+        }
+
+        #newConsultationModal #symptomes-aigus-section {
+            border-left: 4px solid #ef4444;
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+        }
+
+        /* Améliorer la visibilité des champs critiques */
+        #newConsultationModal #symptomes-aigus-section label {
+            color: #dc2626;
+            font-weight: 700;
+        }
+
+        #newConsultationModal #symptomes-aigus-section textarea {
+            border-color: #fca5a5;
+            background-color: #fef2f2;
+        }
+
+        #newConsultationModal #symptomes-aigus-section textarea:focus {
+            border-color: #dc2626;
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+        }
+
+        /* Styles pour les champs en erreur */
+        #newConsultationModal .border-red-500 {
+            border-color: #ef4444 !important;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+        }
+
+        #newConsultationModal .border-red-500:focus {
+            border-color: #dc2626 !important;
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.2) !important;
+        }
+
+        /* Animation pour les champs en erreur */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        #newConsultationModal .border-red-500 {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        /* Améliorer la visibilité des sections masquées */
+        #newConsultationModal .hidden-section {
+            display: none !important;
+            opacity: 0;
+            transform: translateY(-20px);
+            pointer-events: none;
+        }
+
+        /* Styles pour les toasts */
+        .toast-enter {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+
+        .toast-enter-active {
+            transform: translateX(0);
+            opacity: 1;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .toast-exit {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .toast-exit-active {
+            transform: translateX(100%);
+            opacity: 0;
+            transition: all 0.3s ease-in-out;
         }
     </style>
 @endsection

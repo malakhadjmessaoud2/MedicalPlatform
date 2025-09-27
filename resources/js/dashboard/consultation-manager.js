@@ -118,7 +118,8 @@ class ConsultationManager {
 
     filterConsultationsTerminees(data) {
         return data.filter((patient) => {
-            if (patient.statut !== "confirmed") return false;
+            const isConfirmed = patient.statut === "confirmed" || patient.statut === "confirmé";
+            if (!isConfirmed) return false;
             const start = new Date(patient.date_debut);
             const fin = new Date(
                 patient.date_fin || start.getTime() + 30 * 60 * 1000
@@ -135,7 +136,8 @@ class ConsultationManager {
         const patientsCount = document.getElementById("patientsCount");
 
         const consultationsAVenir = data.filter((patient) => {
-            if (patient.statut !== "confirmed") return true;
+            const isConfirmed = patient.statut === "confirmed" || patient.statut === "confirmé";
+            if (!isConfirmed) return true;
             const start = new Date(patient.date_debut);
             const fin = new Date(
                 patient.date_fin || start.getTime() + 30 * 60 * 1000
@@ -413,6 +415,7 @@ class ConsultationManager {
         const allStatuses = {
             'pending': { value: 'pending', label: 'En attente', icon: '⏳' },
             'confirmed': { value: 'confirmed', label: 'Confirmé', icon: '✅' },
+            'payed': { value: 'payed', label: 'Payé', icon: '💳' },
             'cancelled': { value: 'cancelled', label: 'Annulé', icon: '❌' },
             'completed': { value: 'completed', label: 'Terminé', icon: '🏁' }
         };
@@ -420,9 +423,10 @@ class ConsultationManager {
         // Définir les transitions autorisées selon le statut actuel
         const transitions = {
             'pending': ['confirmed', 'cancelled'],
-            'confirmed': windowOpen ? ['cancelled', 'completed'] : ['cancelled'],
-            'cancelled': ['pending', 'confirmed'],
-            'completed': [] // Aucune transition possible depuis terminé
+            'confirmed': ['cancelled'],
+            'payed': [], // le médecin ne peut plus modifier
+            'cancelled': [],
+            'completed': []
         };
 
         const availableStatuses = transitions[currentStatus] || [];
@@ -525,13 +529,26 @@ class ConsultationManager {
         const classes = {
             confirmed: "bg-green-100 text-green-700",
             pending: "bg-yellow-100 text-yellow-700",
+            payed: "bg-blue-100 text-blue-700",
             cancelled: "bg-red-100 text-red-700",
+            completed: "bg-gray-100 text-gray-700",
         };
         return classes[statut] || "bg-gray-100 text-gray-700";
     }
 
     getConsultationStatus(patient) {
-        if (patient.statut !== "confirmed") {
+        // Statuts finaux et explicites d'abord
+        if (patient.statut === "completed") {
+            return '<span class="text-gray-600 font-medium">🏁 Consultation terminée</span>';
+        }
+        if (patient.statut === "cancelled") {
+            return '<span class="text-red-500 font-medium">❌ Rendez-vous annulé</span>';
+        }
+        if (patient.statut === "payed") {
+            return '<span class="text-blue-600 font-medium">💳 Payé - en attente de complétion</span>';
+        }
+        const isConfirmed = patient.statut === "confirmed" || patient.statut === "confirmé";
+        if (!isConfirmed) {
             return '<span class="text-red-500 font-medium">❌ Rendez-vous non confirmé</span>';
         }
         const start = new Date(patient.date_debut);
@@ -552,7 +569,10 @@ class ConsultationManager {
     }
 
     getConsultationButtonTitle(patient) {
-        if (patient.statut !== "confirmé") return "Rendez-vous non confirmé";
+        if (patient.statut === "completed") return "Consultation terminée";
+        if (patient.statut === "cancelled") return "Rendez-vous annulé";
+        const isConfirmed = patient.statut === "confirmed" || patient.statut === "confirmé";
+        if (!isConfirmed) return "Rendez-vous non confirmé";
         if (patient.consultation_terminee) return "Consultation terminée";
         if (patient.consultation_active) return "Rejoindre la consultation";
         return "Consultation active 5 min avant le début";

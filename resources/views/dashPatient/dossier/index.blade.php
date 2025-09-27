@@ -128,10 +128,11 @@
                                                             @endfor
                                                         </div>
                                                         <span class="text-sm text-gray-500">({{ $doc->nbrAvis ?? 0 }} avis)</span>
+                                                        <span class="patient-note text-sm text-gray-700 ml-2"></span>
                                                         <button class="btnNoterMedecin ml-2 text-xs bg-[#b9ff66] text-black px-2 py-1 rounded hover:bg-[#a8eb5f] transition-colors"
                                                                 data-medecin-id="{{ $doc->id }}"
                                                                 data-medecin-name="Dr. {{ $doc->prenom }} {{ $doc->nom }}">
-                                                            Noter
+                                                            Donner mon avis
                                                         </button>
                                                     </div>
                                                 </div>
@@ -258,10 +259,6 @@
                             </div>
                         </div>
 
-                        <div class="mb-6">
-                            <label for="avisText" class="block text-sm font-medium text-gray-700 mb-2">Avis (optionnel)</label>
-                            <textarea id="avisText" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#b9ff66] focus:border-transparent" placeholder="Partagez votre expérience avec ce médecin..."></textarea>
-                        </div>
 
                         <div class="flex justify-end space-x-3">
                             <button id="cancelNotation" class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
@@ -382,15 +379,16 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                     `;
 
-                    // Liste des rendez-vous avec consultations détaillées
+                    // Liste des rendez-vous avec consultations simplifiées
                     rendezVousAvecConsultations.forEach((item, index) => {
                         const rv = item.rendez_vous;
                         const consultations = item.consultations;
-                        const hasOrdonnance = consultations.some(c => c.ordonnance);
+                        const consultation = consultations.length > 0 ? consultations[0] : null; // Prendre la première consultation
 
                         // Status badge
                         const statusClass = rv.statut === 'confirmed' || rv.statut === 'confirmé' ? 'bg-green-100 text-green-800' :
                                           rv.statut === 'completed' || rv.statut === 'terminé' ? 'bg-blue-100 text-blue-800' :
+                                          rv.statut === 'payed' ? 'bg-purple-100 text-purple-800' :
                                           'bg-gray-100 text-gray-800';
 
                         htmlContent += `
@@ -399,8 +397,8 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <div class="bg-gradient-to-r from-gray-50 to-blue-50 px-6 py-4 border-b border-gray-100">
                                     <div class="flex items-center justify-between">
                                         <div class="flex items-center gap-4">
-                                            <div class="w-10 h-10 bg-[#b9ff66] rounded-full flex items-center justify-center">
-                                                <svg class="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <div class="w-12 h-12 bg-[#b9ff66] rounded-full flex items-center justify-center">
+                                                <svg class="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                                                 </svg>
                                             </div>
@@ -413,240 +411,173 @@ document.addEventListener('DOMContentLoaded', function() {
                                             <span class="inline-flex px-3 py-1 text-xs font-semibold rounded-full ${statusClass}">
                                                 ${rv.type}
                                             </span>
-                                            <button class="btnToggleDetails inline-flex items-center px-3 py-2 text-xs font-semibold rounded-lg bg-[#b9ff66] text-black hover:bg-[#a8eb5f] transition-colors duration-200" data-target="rv-details-${index}">
-                                                <span>Afficher détails</span>
-                                            </button>
                                         </div>
                                     </div>
                                 </div>
 
-                                <!-- Contenu du rendez-vous -->
+                                <!-- Contenu de la consultation -->
                                 <div class="p-6">
-                                    <div id="rv-details-${index}" class="hidden">
-                                    ${consultations.length > 0 ? `
+                                    ${consultation ? `
                                         <div class="space-y-6">
-                                            ${consultations.map((consultation, cIndex) => {
-                                                const dateOnly = consultation.date_formatted ? consultation.date_formatted.split(' à ')[0] : '—';
+                                            <!-- En-tête de la consultation -->
+                                            <div class="flex items-center justify-between mb-6">
+                                                <div class="flex items-center gap-3">
+                                                    <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                                        </svg>
+                                                    </div>
+                                                    <div>
+                                                        <h4 class="text-lg font-semibold text-gray-900">Consultation médicale</h4>
+                                                        <p class="text-sm text-gray-600">${consultation.date_formatted || 'Date non spécifiée'}</p>
+                                                    </div>
+                                                </div>
+                                                ${consultation.ordonnance && consultation.ordonnance.file ? `
+                                                    <div class="flex gap-2">
+                                                        <button class="btnVoirOrdonnance inline-flex items-center px-4 py-2 bg-[#b9ff66] text-black text-sm font-semibold rounded-lg hover:bg-[#a8eb5f] transition-colors duration-200" data-ordonnance='${JSON.stringify(consultation.ordonnance)}'>
+                                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                                            </svg>
+                                                            Voir ordonnance
+                                                        </button>
+                                                        <button class="btnTelechargerOrdonnance inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors duration-200" data-ordonnance='${JSON.stringify(consultation.ordonnance)}'>
+                                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                                            </svg>
+                                                            Télécharger
+                                                        </button>
+                                                    </div>
+                                                ` : ''}
+                                            </div>
 
-                                                return `
-                                                    <div class="bg-gray-50 rounded-xl p-6 border border-gray-100">
-                                                        <div class="flex items-center justify-between mb-4">
-                                                            <h4 class="text-lg font-semibold text-gray-900">Consultation du ${dateOnly}</h4>
-                                                            <div class="flex items-center gap-2">
-                                                                <span class="inline-flex px-3 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                                                                    Consultation médicale
-                                                                </span>
-                                                                ${consultation.ordonnance && consultation.ordonnance.file ? `
-                                                                    <div class="flex gap-2">
-                                                                        <button class="btnVoirOrdonnance inline-flex items-center px-3 py-2 bg-[#b9ff66] text-black text-xs font-semibold rounded-lg hover:bg-[#a8eb5f] transition-colors duration-200" data-ordonnance='${JSON.stringify(consultation.ordonnance)}'>
-                                                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                                                            </svg>
-                                                                            Voir ordonnance
-                                                                        </button>
-                                                                        <button class="btnTelechargerOrdonnance inline-flex items-center px-3 py-2 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition-colors duration-200" data-ordonnance='${JSON.stringify(consultation.ordonnance)}'>
-                                                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                                                                            </svg>
-                                                                            Télécharger
-                                                                        </button>
-                                                                    </div>
-                                                                ` : ''}
-                                                            </div>
+                                            <!-- Informations principales -->
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <!-- Motif et symptômes -->
+                                                <div class="space-y-4">
+                                                    <div class="bg-blue-50 rounded-xl p-4 border border-blue-100">
+                                                        <h5 class="text-sm font-semibold text-blue-800 mb-2 flex items-center gap-2">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                                            </svg>
+                                                            Motif de consultation
+                                                        </h5>
+                                                        <p class="text-sm text-blue-700">${consultation.motif || 'Non spécifié'}</p>
+                                                    </div>
+
+                                                    <div class="bg-green-50 rounded-xl p-4 border border-green-100">
+                                                        <h5 class="text-sm font-semibold text-green-800 mb-2 flex items-center gap-2">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                                            </svg>
+                                                            Symptômes
+                                                        </h5>
+                                                        <p class="text-sm text-green-700">${consultation.symptomes || 'Non spécifiés'}</p>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Signes vitaux -->
+                                                <div class="space-y-4">
+                                                    <div class="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                                                        <h5 class="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                                            </svg>
+                                                            Signes vitaux
+                                                        </h5>
+                                                        <div class="grid grid-cols-2 gap-3">
+                                                            ${consultation.tension_arterielle ? `
+                                                                <div class="text-center p-2 bg-white rounded-lg border">
+                                                                    <div class="text-xs text-gray-600 font-medium">Tension</div>
+                                                                    <div class="text-sm font-bold text-gray-800">${consultation.tension_arterielle}</div>
+                                                                </div>
+                                                            ` : ''}
+                                                            ${consultation.temperature ? `
+                                                                <div class="text-center p-2 bg-white rounded-lg border">
+                                                                    <div class="text-xs text-gray-600 font-medium">Température</div>
+                                                                    <div class="text-sm font-bold text-gray-800">${consultation.temperature}°C</div>
+                                                                </div>
+                                                            ` : ''}
+                                                            ${consultation.frequence_cardiaque ? `
+                                                                <div class="text-center p-2 bg-white rounded-lg border">
+                                                                    <div class="text-xs text-gray-600 font-medium">Fréquence cardiaque</div>
+                                                                    <div class="text-sm font-bold text-gray-800">${consultation.frequence_cardiaque}</div>
+                                                                </div>
+                                                            ` : ''}
+                                                            ${consultation.saturation_o2 ? `
+                                                                <div class="text-center p-2 bg-white rounded-lg border">
+                                                                    <div class="text-xs text-gray-600 font-medium">Saturation O₂</div>
+                                                                    <div class="text-sm font-bold text-gray-800">${consultation.saturation_o2}%</div>
+                                                                </div>
+                                                            ` : ''}
                                                         </div>
+                                                    </div>
+                                                </div>
+                                            </div>
 
-                                                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                                            <!-- Informations principales -->
-                                                            <div class="space-y-4">
-                                                                <div>
-                                                                    <h5 class="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                                                        </svg>
-                                                                        Motif de consultation
-                                                                    </h5>
-                                                                    <p class="text-sm text-gray-600 bg-white p-3 rounded-lg border">${consultation.motif || 'Non spécifié'}</p>
-                                                                </div>
-
-                                                                <div>
-                                                                    <h5 class="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                                                        </svg>
-                                                                        Symptômes
-                                                                    </h5>
-                                                                    <p class="text-sm text-gray-600 bg-white p-3 rounded-lg border">${consultation.symptomes || 'Non spécifiés'}</p>
-                                                                </div>
-
-                                                                ${consultation.traitement_actuel ? `
-                                                                    <div>
-                                                                        <h5 class="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                                                            </svg>
-                                                                            Traitement actuel
-                                                                        </h5>
-                                                                        <p class="text-sm text-gray-600 bg-white p-3 rounded-lg border">${consultation.traitement_actuel}</p>
-                                                                    </div>
-                                                                ` : ''}
-
-                                                                ${consultation.medicaments_prescrits ? `
-                                                                    <div>
-                                                                        <h5 class="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                                                            </svg>
-                                                                            Médicaments prescrits
-                                                                        </h5>
-                                                                        <p class="text-sm text-gray-600 bg-white p-3 rounded-lg border">${consultation.medicaments_prescrits}</p>
-                                                                    </div>
-                                                                ` : ''}
+                                            <!-- Traitement et prescriptions -->
+                                            ${consultation.medicaments_prescrits || consultation.traitement_actuel ? `
+                                                <div class="bg-yellow-50 rounded-xl p-4 border border-yellow-100">
+                                                    <h5 class="text-sm font-semibold text-yellow-800 mb-3 flex items-center gap-2">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                                        </svg>
+                                                        Traitement et prescriptions
+                                                    </h5>
+                                                    <div class="space-y-3">
+                                                        ${consultation.medicaments_prescrits ? `
+                                                            <div>
+                                                                <h6 class="text-xs font-semibold text-yellow-700 mb-1">Médicaments prescrits</h6>
+                                                                <p class="text-sm text-yellow-800">${consultation.medicaments_prescrits}</p>
                                                             </div>
-
-                                                            <!-- Signes vitaux et mesures -->
-                                                            <div class="space-y-4">
-                                                                <div>
-                                                                    <h5 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                                                        </svg>
-                                                                        Signes vitaux
-                                                                    </h5>
-                                                                    <div class="grid grid-cols-2 gap-3">
-                                                                        ${consultation.tension_arterielle ? `
-                                                                            <div class="text-center p-3 bg-blue-50 rounded-lg border">
-                                                                                <div class="text-xs text-blue-600 font-medium">Tension</div>
-                                                                                <div class="text-sm font-bold text-blue-800">${consultation.tension_arterielle}</div>
-                                                                            </div>
-                                                                        ` : ''}
-                                                                        ${consultation.frequence_cardiaque ? `
-                                                                            <div class="text-center p-3 bg-green-50 rounded-lg border">
-                                                                                <div class="text-xs text-green-600 font-medium">Fréquence cardiaque</div>
-                                                                                <div class="text-sm font-bold text-green-800">${consultation.frequence_cardiaque}</div>
-                                                                            </div>
-                                                                        ` : ''}
-                                                                        ${consultation.temperature ? `
-                                                                            <div class="text-center p-3 bg-orange-50 rounded-lg border">
-                                                                                <div class="text-xs text-orange-600 font-medium">Température</div>
-                                                                                <div class="text-sm font-bold text-orange-800">${consultation.temperature}°C</div>
-                                                                            </div>
-                                                                        ` : ''}
-                                                                        ${consultation.saturation_o2 ? `
-                                                                            <div class="text-center p-3 bg-purple-50 rounded-lg border">
-                                                                                <div class="text-xs text-purple-600 font-medium">Saturation O₂</div>
-                                                                                <div class="text-sm font-bold text-purple-800">${consultation.saturation_o2}%</div>
-                                                                            </div>
-                                                                        ` : ''}
-                                                                    </div>
-                                                                </div>
-
-                                                                <div>
-                                                                    <h5 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                                                        </svg>
-                                                                        Mesures anthropométriques
-                                                                    </h5>
-                                                                    <div class="grid grid-cols-3 gap-3">
-                                                                        ${consultation.poids ? `
-                                                                            <div class="text-center p-3 bg-indigo-50 rounded-lg border">
-                                                                                <div class="text-xs text-indigo-600 font-medium">Poids</div>
-                                                                                <div class="text-sm font-bold text-indigo-800">${consultation.poids} kg</div>
-                                                                            </div>
-                                                                        ` : ''}
-                                                                        ${consultation.taille ? `
-                                                                            <div class="text-center p-3 bg-pink-50 rounded-lg border">
-                                                                                <div class="text-xs text-pink-600 font-medium">Taille</div>
-                                                                                <div class="text-sm font-bold text-pink-800">${consultation.taille} cm</div>
-                                                                            </div>
-                                                                        ` : ''}
-                                                                        ${consultation.imc ? `
-                                                                            <div class="text-center p-3 bg-yellow-50 rounded-lg border">
-                                                                                <div class="text-xs text-yellow-600 font-medium">IMC</div>
-                                                                                <div class="text-sm font-bold text-yellow-800">${consultation.imc}</div>
-                                                                            </div>
-                                                                        ` : ''}
-                                                                    </div>
-                                                                </div>
-
-                                                                ${consultation.propositions_suivi ? `
-                                                                    <div>
-                                                                        <h5 class="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                                                            </svg>
-                                                                            Propositions de suivi
-                                                                        </h5>
-                                                                        <p class="text-sm text-gray-600 bg-white p-3 rounded-lg border">${consultation.propositions_suivi}</p>
-                                                                    </div>
-                                                                ` : ''}
-
-                                                                ${consultation.instructions_particulieres ? `
-                                                                    <div>
-                                                                        <h5 class="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                                                            </svg>
-                                                                            Instructions particulières
-                                                                        </h5>
-                                                                        <p class="text-sm text-gray-600 bg-white p-3 rounded-lg border">${consultation.instructions_particulieres}</p>
-                                                                    </div>
-                                                                ` : ''}
-                                                            </div>
-                                                        </div>
-
-                                                        ${consultation.evolution_symptomes || consultation.effets_secondaires || consultation.examens_controle || consultation.orientation_patient ? `
-                                                            <div class="mt-6 pt-6 border-t border-gray-200">
-                                                                <h5 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                                                    </svg>
-                                                                    Informations complémentaires
-                                                                </h5>
-                                                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                                    ${consultation.evolution_symptomes ? `
-                                                                        <div>
-                                                                            <h6 class="text-xs font-semibold text-gray-600 mb-1">Évolution des symptômes</h6>
-                                                                            <p class="text-sm text-gray-600 bg-white p-3 rounded-lg border">${consultation.evolution_symptomes}</p>
-                                                                        </div>
-                                                                    ` : ''}
-                                                                    ${consultation.effets_secondaires ? `
-                                                                        <div>
-                                                                            <h6 class="text-xs font-semibold text-gray-600 mb-1">Effets secondaires</h6>
-                                                                            <p class="text-sm text-gray-600 bg-white p-3 rounded-lg border">${consultation.effets_secondaires}</p>
-                                                                        </div>
-                                                                    ` : ''}
-                                                                    ${consultation.examens_controle ? `
-                                                                        <div>
-                                                                            <h6 class="text-xs font-semibold text-gray-600 mb-1">Examens de contrôle</h6>
-                                                                            <p class="text-sm text-gray-600 bg-white p-3 rounded-lg border">${consultation.examens_controle}</p>
-                                                                        </div>
-                                                                    ` : ''}
-                                                                    ${consultation.orientation_patient ? `
-                                                                        <div>
-                                                                            <h6 class="text-xs font-semibold text-gray-600 mb-1">Orientation</h6>
-                                                                            <p class="text-sm text-gray-600 bg-white p-3 rounded-lg border">${consultation.orientation_patient}</p>
-                                                                        </div>
-                                                                    ` : ''}
-                                                                </div>
+                                                        ` : ''}
+                                                        ${consultation.traitement_actuel ? `
+                                                            <div>
+                                                                <h6 class="text-xs font-semibold text-yellow-700 mb-1">Traitement actuel</h6>
+                                                                <p class="text-sm text-yellow-800">${consultation.traitement_actuel}</p>
                                                             </div>
                                                         ` : ''}
                                                     </div>
-                                                `;
-                                            }).join('')}
+                                                </div>
+                                            ` : ''}
+
+                                            <!-- Suivi et instructions -->
+                                            ${consultation.propositions_suivi || consultation.instructions_particulieres ? `
+                                                <div class="bg-purple-50 rounded-xl p-4 border border-purple-100">
+                                                    <h5 class="text-sm font-semibold text-purple-800 mb-3 flex items-center gap-2">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                                        </svg>
+                                                        Suivi et instructions
+                                                    </h5>
+                                                    <div class="space-y-3">
+                                                        ${consultation.propositions_suivi ? `
+                                                            <div>
+                                                                <h6 class="text-xs font-semibold text-purple-700 mb-1">Propositions de suivi</h6>
+                                                                <p class="text-sm text-purple-800">${consultation.propositions_suivi}</p>
+                                                            </div>
+                                                        ` : ''}
+                                                        ${consultation.instructions_particulieres ? `
+                                                            <div>
+                                                                <h6 class="text-xs font-semibold text-purple-700 mb-1">Instructions particulières</h6>
+                                                                <p class="text-sm text-purple-800">${consultation.instructions_particulieres}</p>
+                                                            </div>
+                                                        ` : ''}
+                                                    </div>
+                                                </div>
+                                            ` : ''}
                                         </div>
                                     ` : `
-                                        <div class="text-center py-8">
-                                            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                                <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <div class="text-center py-12">
+                                            <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                                                <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                                                 </svg>
                                             </div>
-                                            <h4 class="text-lg font-medium text-gray-900 mb-2">Aucune consultation effectuée</h4>
-                                            <p class="text-gray-600">Ce rendez-vous n'a pas encore donné lieu à une consultation médicale.</p>
+                                            <h4 class="text-xl font-medium text-gray-900 mb-3">Aucune consultation effectuée</h4>
+                                            <p class="text-gray-600 max-w-md mx-auto">Ce rendez-vous n'a pas encore donné lieu à une consultation médicale. La consultation sera disponible après votre rendez-vous.</p>
                                         </div>
                                     `}
-                                    </div>
                                 </div>
                             </div>
                         `;
@@ -786,20 +717,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         });
                     });
 
-                    // Toggle des détails des rendez-vous
-                    document.querySelectorAll('.btnToggleDetails').forEach(btn => {
-                        btn.addEventListener('click', () => {
-                            const targetId = btn.getAttribute('data-target');
-                            const details = document.getElementById(targetId);
-                            if (!details) return;
-                            const isHidden = details.classList.contains('hidden');
-                            details.classList.toggle('hidden');
-                            const label = btn.querySelector('span');
-                            if (label) {
-                                label.textContent = isHidden ? 'Fermer détails' : 'Afficher détails';
-                            }
-                        });
-                    });
+                    // Les détails sont maintenant toujours visibles, plus besoin de toggle
 
                 } else {
                     container.innerHTML = `
@@ -916,14 +834,37 @@ document.addEventListener('DOMContentLoaded', function() {
     let selectedRating = 0;
     let currentMedecinId = null;
 
-    // Ouvrir le modal de notation
+    // Ouvrir le modal de notation (créer ou modifier)
     document.addEventListener('click', function(e) {
         if (e.target.classList.contains('btnNoterMedecin')) {
             currentMedecinId = e.target.getAttribute('data-medecin-id');
             const medecinName = e.target.getAttribute('data-medecin-name');
-
             document.getElementById('medecinNomNotation').textContent = medecinName;
+
+            // Préremplir la note si le patient a déjà voté (localStorage)
+            const storageKey = `rating_medecin_${currentMedecinId}`;
+            const stored = localStorage.getItem(storageKey);
+            let existingNote = stored ? parseInt(stored) : null;
+
             openNotationModal();
+
+            if (existingNote && existingNote >= 1 && existingNote <= 5) {
+                // Simuler un clic pour allumer les étoiles jusqu'à existingNote
+                const stars = document.querySelectorAll('.star-btn');
+                stars.forEach((star, index) => {
+                    if (index < existingNote) {
+                        star.classList.remove('text-gray-300');
+                        star.classList.add('text-yellow-400');
+                    } else {
+                        star.classList.remove('text-yellow-400');
+                        star.classList.add('text-gray-300');
+                    }
+                });
+                selectedRating = existingNote;
+                const ratingTexts = ['', 'Très mauvais', 'Mauvais', 'Moyen', 'Bon', 'Excellent'];
+                document.getElementById('ratingText').textContent = ratingTexts[existingNote];
+                document.getElementById('submitNotation').disabled = false;
+            }
         }
     });
 
@@ -978,7 +919,11 @@ document.addEventListener('DOMContentLoaded', function() {
             body: JSON.stringify({
                 medecin_id: currentMedecinId,
                 note: selectedRating,
-                avis: avis
+                avis: avis,
+                previous_note: (function(){
+                    const v = localStorage.getItem(`rating_medecin_${currentMedecinId}`);
+                    return v ? parseInt(v) : null;
+                })()
             })
         })
         .then(response => response.json())
@@ -987,8 +932,25 @@ document.addEventListener('DOMContentLoaded', function() {
                 alert('Médecin noté avec succès !');
                 closeNotationModal();
 
-                // Mettre à jour l'affichage en temps réel
+                // Mettre à jour l'affichage en temps réel du score et des avis
                 updateMedecinScore(currentMedecinId, data.nouveau_score, data.nouveau_nbr_avis);
+
+                // Mettre à jour la note du patient et le libellé du bouton
+                const tr = document.querySelector(`tr[data-medecin-id="${currentMedecinId}"]`);
+                if (tr) {
+                    const noteSpan = tr.querySelector('.patient-note');
+                    if (noteSpan) {
+                        const n = parseInt(data.note_patient);
+                        noteSpan.textContent = `Votre note : ${'★'.repeat(n)}${'☆'.repeat(5-n)} (${n}/5)`;
+                    }
+                    const btn = tr.querySelector('.btnNoterMedecin');
+                    if (btn) {
+                        btn.textContent = 'Modifier mon avis';
+                    }
+                }
+
+                // Persister la note côté client pour indiquer que le patient a déjà voté
+                localStorage.setItem(`rating_medecin_${currentMedecinId}`, String(data.note_patient));
             } else {
                 alert(data.message || 'Erreur lors de la notation');
             }
