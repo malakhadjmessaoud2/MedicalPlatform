@@ -305,112 +305,245 @@
 
                         <!-- Liste des ordonnances -->
                         <div class="space-y-4">
-                            <!-- Ordonnance -->
-                            <div class="bg-white p-6 rounded-[20px] shadow-sm">
-                                <div class="flex flex-col sm:flex-row justify-between items-start gap-4">
-                                    <div>
-                                        <div class="flex items-center gap-2 mb-2">
-                                            <h3 class="font-bold text-lg">Ordonnance #ORD-001</h3>
-                                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
-                                                En cours
-                                            </span>
-                                        </div>
-                                        <p class="text-gray-500">Prescrite le 15 Mars 2024</p>
-                                        <p class="text-gray-600 mt-1">Dr. Alami Mohammed</p>
-                                    </div>
-                                    <div class="flex gap-2">
-                                        <button
-                                            class="px-4 py-2 bg-[#b9ff66] hover:bg-[#a8eb5f] rounded-lg flex items-center gap-2">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                            </svg>
-                                            Télécharger PDF
-                                        </button>
-                                        <button
-                                            class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg flex items-center gap-2">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                            </svg>
-                                            Voir détails
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <!-- Liste des médicaments -->
-                                <div class="mt-6 border-t pt-4">
-                                    <h4 class="font-medium text-gray-700 mb-3">Médicaments prescrits</h4>
-                                    <div class="space-y-3">
-                                        <div class="flex items-start gap-4 bg-gray-50 p-3 rounded-lg">
-                                            <div class="flex-1">
-                                                <p class="font-medium">Doliprane 1000mg</p>
-                                                <p class="text-sm text-gray-600">1 comprimé 3 fois par jour pendant 5 jours
-                                                </p>
+                            @if($ordonnances && $ordonnances->count() > 0)
+                                @foreach($ordonnances as $ordonnance)
+                                    <div class="bg-white p-6 rounded-[20px] shadow-sm ordonnance-card">
+                                        <div class="flex flex-col sm:flex-row justify-between items-start gap-4">
+                                            <div>
+                                                <div class="flex items-center gap-2 mb-2">
+                                                    <h3 class="font-bold text-lg">Ordonnance #ORD-{{ str_pad($ordonnance->id, 3, '0', STR_PAD_LEFT) }}</h3>
+                                                    <span class="px-2 py-1 {{ $ordonnance->file ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800' }} rounded-full text-sm">
+                                                        {{ $ordonnance->file ? 'Disponible' : 'En cours' }}
+                                                    </span>
+                                                </div>
+                                                <p class="text-gray-500">Prescrite le {{ $ordonnance->created_at ? $ordonnance->created_at->format('d F Y') : 'Date non spécifiée' }}</p>
+                                                <p class="text-gray-600 mt-1">{{ $ordonnance->consultation && $ordonnance->consultation->rendezVous && $ordonnance->consultation->rendezVous->medecin ? 'Dr. ' . $ordonnance->consultation->rendezVous->medecin->prenom . ' ' . $ordonnance->consultation->rendezVous->medecin->nom : 'Médecin non spécifié' }}</p>
                                             </div>
-                                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm">
-                                                Antalgique
-                                            </span>
-                                        </div>
-                                        <div class="flex items-start gap-4 bg-gray-50 p-3 rounded-lg">
-                                            <div class="flex-1">
-                                                <p class="font-medium">Amoxicilline 500mg</p>
-                                                <p class="text-sm text-gray-600">1 gélule matin et soir pendant 7 jours</p>
+                                            <div class="flex items-center gap-2">
+                                                <div class="flex items-center gap-1 text-sm text-gray-500">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                    </svg>
+                                                    <span>Créée le {{ $ordonnance->created_at ? $ordonnance->created_at->format('d/m/Y à H:i') : 'Date inconnue' }}</span>
+                                                </div>
                                             </div>
-                                            <span class="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-sm">
-                                                Antibiotique
-                                            </span>
                                         </div>
-                                    </div>
-                                </div>
-                            </div>
 
-                            <!-- Autre ordonnance (exemple) -->
-                            <div class="bg-white p-6 rounded-[20px] shadow-sm">
-                                <div class="flex flex-col sm:flex-row justify-between items-start gap-4">
-                                    <div>
-                                        <div class="flex items-center gap-2 mb-2">
-                                            <h3 class="font-bold text-lg">Ordonnance #ORD-002</h3>
-                                            <span class="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-sm">
-                                                Terminée
-                                            </span>
+                                        <!-- Contenu détaillé de l'ordonnance -->
+                                        <div class="mt-6 border-t pt-4">
+                                            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 ordonnance-grid">
+
+                                                <!-- Médicaments -->
+                                                <div class="lg:col-span-2">
+                                                    <div class="flex items-center gap-2 mb-3">
+                                                        <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center section-icon">
+                                                            <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+                                                            </svg>
+                                                        </div>
+                                                        <h4 class="font-semibold text-gray-800">Médicaments prescrits</h4>
+                                                    </div>
+
+                                                    @if($ordonnance->medicaments && !empty($ordonnance->medicaments))
+                                                        <div class="space-y-3">
+                                                            @php
+                                                                // Gérer différents formats de données
+                                                                $medicaments = [];
+
+                                                                if (is_string($ordonnance->medicaments)) {
+                                                                    // Essayer de décoder le JSON
+                                                                    $decoded = json_decode($ordonnance->medicaments, true);
+                                                                    if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                                                                        // JSON valide
+                                                                        $medicaments = $decoded;
+                                                                    } else {
+                                                                        // Si ce n'est pas du JSON valide, traiter comme du texte simple
+                                                                        $medicaments = [['nom' => $ordonnance->medicaments, 'posologie' => 'Non spécifiée']];
+                                                                    }
+                                                                } elseif (is_array($ordonnance->medicaments)) {
+                                                                    $medicaments = $ordonnance->medicaments;
+                                                                }
+
+                                                                // S'assurer que $medicaments est un tableau
+                                                                if (!is_array($medicaments)) {
+                                                                    $medicaments = [['nom' => 'Médicament', 'posologie' => 'Non spécifiée']];
+                                                                }
+                                                            @endphp
+
+                                                            @if(count($medicaments) > 0)
+                                                                @foreach($medicaments as $index => $medicament)
+                                                                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl border border-blue-100 hover:shadow-md transition-all duration-200 medicament-item">
+                                                                        <div class="flex items-start justify-between">
+                                                                            <div class="flex-1">
+                                                                                <div class="flex items-center gap-2 mb-2">
+                                                                                    <span class="w-6 h-6 bg-blue-600 text-white text-xs font-bold rounded-full flex items-center justify-center">{{ $index + 1 }}</span>
+                                                                                    <p class="font-semibold text-gray-800">
+                                                                                        @if(is_array($medicament))
+                                                                                            {{ $medicament['nom'] ?? ($medicament['name'] ?? 'Médicament non spécifié') }}
+                                                                                        @else
+                                                                                            {{ $medicament }}
+                                                                                        @endif
+                                                                                    </p>
+                                                                                </div>
+                                                                                @if(is_array($medicament))
+                                                                                    <p class="text-sm text-gray-700 mb-1">{{ $medicament['posologie'] ?? ($medicament['dosage'] ?? 'Posologie non spécifiée') }}</p>
+                                                                                    @if(isset($medicament['duree']) || isset($medicament['duration']))
+                                                                                        <p class="text-xs text-blue-600 font-medium">Durée: {{ $medicament['duree'] ?? $medicament['duration'] }}</p>
+                                                                                    @endif
+                                                                                @else
+                                                                                    <p class="text-sm text-gray-700 mb-1">Posologie non spécifiée</p>
+                                                                                @endif
+                                                                            </div>
+                                                                            @if(is_array($medicament) && isset($medicament['type']))
+                                                                                <span class="px-3 py-1 {{ $medicament['type'] === 'Antibiotique' ? 'bg-purple-100 text-purple-800 border border-purple-200' : ($medicament['type'] === 'Antalgique' ? 'bg-green-100 text-green-800 border border-green-200' : 'bg-orange-100 text-orange-800 border border-orange-200') }} rounded-full text-xs font-medium">
+                                                                                    {{ $medicament['type'] }}
+                                                                                </span>
+                                                                            @endif
+                                                                        </div>
+                                                                    </div>
+                                                                @endforeach
+                                                            @else
+                                                                <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                                                                    <p class="text-gray-700">{{ $ordonnance->medicaments }}</p>
+                                                                </div>
+                                                            @endif
+                                                        </div>
+                                                    @else
+                                                        <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 text-center empty-state">
+                                                            <svg class="w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+                                                            </svg>
+                                                            <p class="text-gray-500 text-sm">Aucun médicament prescrit</p>
+                                                        </div>
+                                                    @endif
+                                                </div>
+
+                                                <!-- Notes et Fichier -->
+                                                <div class="space-y-6">
+
+                                                    <!-- Notes -->
+                                                    <div>
+                                                        <div class="flex items-center gap-2 mb-3">
+                                                            <div class="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center section-icon">
+                                                                <svg class="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                                                </svg>
+                                                            </div>
+                                                            <h4 class="font-semibold text-gray-800">Notes du médecin</h4>
+                                                        </div>
+
+                                                        @if($ordonnance->notes)
+                                                            <div class="bg-gradient-to-r from-yellow-50 to-amber-50 p-4 rounded-xl border border-yellow-200">
+                                                                <p class="text-gray-700 text-sm leading-relaxed">{{ $ordonnance->notes }}</p>
+                                                            </div>
+                                                        @else
+                                                            <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 text-center empty-state">
+                                                                <svg class="w-6 h-6 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                                                </svg>
+                                                                <p class="text-gray-500 text-sm">Aucune note</p>
+                                                            </div>
+                                                        @endif
+                                                    </div>
+
+                                                    <!-- Fichier PDF -->
+                                                    <div>
+                                                        <div class="flex items-center gap-2 mb-3">
+                                                            <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center section-icon">
+                                                                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                                                </svg>
+                                                            </div>
+                                                            <h4 class="font-semibold text-gray-800">Document PDF</h4>
+                                                        </div>
+
+                                                        @if($ordonnance->file && !empty($ordonnance->file))
+                                                            <div class="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-xl border border-green-200">
+                                                                <div class="flex items-center gap-3 mb-3">
+                                                                    <div class="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
+                                                                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                                                                        </svg>
+                                                                    </div>
+                                                                    <div>
+                                                                        <p class="font-medium text-gray-800">Ordonnance PDF</p>
+                                                                        <p class="text-xs text-gray-500">{{ pathinfo($ordonnance->file, PATHINFO_EXTENSION) }} • {{ date('d/m/Y', strtotime($ordonnance->created_at)) }}</p>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="flex gap-2">
+                                                                    <button onclick="openOrdonnanceModal('{{ $ordonnance->file }}', '{{ $ordonnance->id }}')"
+                                                                        class="flex-1 px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 flex items-center justify-center gap-2 action-button">
+                                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                                                        </svg>
+                                                                        Voir
+                                                                    </button>
+                                                                    <a href="{{ route('medecin.ordonnances.download') }}?file={{ urlencode($ordonnance->file) }}"
+                                                                        class="flex-1 px-3 py-2 bg-white hover:bg-gray-50 text-green-600 border border-green-600 text-sm font-medium rounded-lg transition-colors duration-200 flex items-center justify-center gap-2 action-button">
+                                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                                                        </svg>
+                                                                        Télécharger
+                                                                    </a>
+                                                                </div>
+                                                            </div>
+                                                        @else
+                                                            <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 text-center empty-state">
+                                                                <svg class="w-6 h-6 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                                                </svg>
+                                                                <p class="text-gray-500 text-sm">PDF en cours de génération</p>
+                                                            </div>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <p class="text-gray-500">Prescrite le 1 Mars 2024</p>
-                                        <p class="text-gray-600 mt-1">Dr. Alami Mohammed</p>
                                     </div>
-                                    <!-- Mêmes actions que précédemment -->
+                                @endforeach
+                            @else
+                                <div class="bg-white p-6 rounded-[20px] shadow-sm text-center">
+                                    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                        </svg>
+                                    </div>
+                                    <h3 class="text-lg font-medium text-gray-900 mb-2">Aucune ordonnance</h3>
+                                    <p class="text-gray-600">Ce patient n'a pas encore d'ordonnances prescrites.</p>
                                 </div>
-                            </div>
+                            @endif
                         </div>
 
                         <!-- Pagination -->
-                        <div class="flex justify-between items-center bg-white p-4 rounded-[20px] shadow-sm">
-                            <span class="text-sm text-gray-500">Affichage de 1 à 2 sur 8 ordonnances</span>
-                            <div class="flex gap-2">
-                                <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100"
-                                    disabled>
-                                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M15 19l-7-7 7-7" />
-                                    </svg>
-                                </button>
-                                <button
-                                    class="w-8 h-8 flex items-center justify-center rounded-full bg-[#b9ff66]">1</button>
-                                <button
-                                    class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100">2</button>
-                                <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M9 5l7 7-7 7" />
-                                    </svg>
-                                </button>
+                        @if($ordonnances && $ordonnances->count() > 0)
+                            <div class="flex justify-between items-center bg-white p-4 rounded-[20px] shadow-sm">
+                                <span class="text-sm text-gray-500">Affichage de {{ $ordonnances->count() }} ordonnance{{ $ordonnances->count() > 1 ? 's' : '' }}</span>
+                                <div class="flex gap-2">
+                                    @if($ordonnances->count() > 5)
+                                        <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100"
+                                            disabled>
+                                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M15 19l-7-7 7-7" />
+                                            </svg>
+                                        </button>
+                                        <button
+                                            class="w-8 h-8 flex items-center justify-center rounded-full bg-[#b9ff66]">1</button>
+                                        <button
+                                            class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100">2</button>
+                                        <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M9 5l7 7-7 7" />
+                                            </svg>
+                                        </button>
+                                    @endif
+                                </div>
                             </div>
-                        </div>
+                        @endif
                     </div>
 
                     <!-- Onglet Analyses -->
@@ -1227,6 +1360,107 @@
         </div>
     </div>
 
+    <!-- Modal d'affichage des ordonnances -->
+    <div id="ordonnanceModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-[20px] w-full max-w-6xl mx-4 max-h-[95vh] overflow-hidden">
+            <!-- En-tête de la modal -->
+            <div class="flex justify-between items-center p-6 border-b border-gray-200 bg-gradient-to-r from-green-50 to-emerald-50">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-800">Ordonnance #<span id="ordonnanceModalId">-</span></h2>
+                        <p class="text-sm text-gray-600">Visualisation du document</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="downloadCurrentOrdonnance()"
+                        class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg flex items-center gap-2 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                        </svg>
+                        Télécharger
+                    </button>
+                    <button onclick="closeOrdonnanceModal()"
+                        class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Contenu de la modal -->
+            <div class="p-6">
+                <!-- Zone de chargement -->
+                <div id="ordonnanceLoading" class="flex items-center justify-center py-12">
+                    <div class="text-center">
+                        <div class="w-12 h-12 border-4 border-green-200 border-t-green-600 rounded-full animate-spin mx-auto mb-4"></div>
+                        <p class="text-gray-600">Chargement de l'ordonnance...</p>
+                    </div>
+                </div>
+
+                <!-- Zone d'erreur -->
+                <div id="ordonnanceError" class="hidden text-center py-12">
+                    <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">Erreur de chargement</h3>
+                    <p class="text-gray-600 mb-4">Impossible de charger l'ordonnance. Vérifiez que le fichier existe et que vous avez les permissions nécessaires.</p>
+                    <button onclick="retryLoadOrdonnance()"
+                        class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors">
+                        Réessayer
+                    </button>
+                </div>
+
+                <!-- Conteneur du fichier -->
+                <div id="ordonnanceContent" class="hidden">
+                    <!-- Pour les PDF -->
+                    <div id="pdfViewer" class="hidden">
+                        <iframe id="pdfFrame"
+                            class="w-full h-[600px] border border-gray-300 rounded-lg"
+                            frameborder="0">
+                        </iframe>
+                    </div>
+
+                    <!-- Pour les images -->
+                    <div id="imageViewer" class="hidden">
+                        <div class="text-center">
+                            <img id="imageFrame"
+                                class="max-w-full max-h-[600px] mx-auto border border-gray-300 rounded-lg shadow-lg"
+                                alt="Ordonnance">
+                        </div>
+                    </div>
+
+                    <!-- Pour les autres types de fichiers -->
+                    <div id="fileViewer" class="hidden">
+                        <div class="text-center py-12">
+                            <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                            </div>
+                            <h3 class="text-lg font-medium text-gray-900 mb-2">Fichier non visualisable</h3>
+                            <p class="text-gray-600 mb-4">Ce type de fichier ne peut pas être affiché dans le navigateur.</p>
+                            <a id="downloadLink" href="#"
+                                class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                </svg>
+                                Télécharger le fichier
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- JavaScript pour la modal -->
     <script>
         function openConsultationModal() {
@@ -1463,13 +1697,150 @@
                 });
         }
 
+
+        // Variables globales pour la modal d'ordonnance
+        let currentOrdonnanceFile = null;
+        let currentOrdonnanceId = null;
+
+        // Fonctions pour la modal d'ordonnance
+        function openOrdonnanceModal(filePath, ordonnanceId) {
+            currentOrdonnanceFile = filePath;
+            currentOrdonnanceId = ordonnanceId;
+
+            // Mettre à jour l'ID dans l'en-tête
+            document.getElementById('ordonnanceModalId').textContent = ordonnanceId;
+
+            // Afficher la modal
+            const modal = document.getElementById('ordonnanceModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+
+            // Charger le fichier
+            loadOrdonnanceFile(filePath);
+        }
+
+        function closeOrdonnanceModal() {
+            const modal = document.getElementById('ordonnanceModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.body.style.overflow = 'auto';
+
+            // Réinitialiser les variables
+            currentOrdonnanceFile = null;
+            currentOrdonnanceId = null;
+        }
+
+        function loadOrdonnanceFile(filePath) {
+            // Afficher le loader
+            showOrdonnanceLoading();
+
+            // Déterminer le type de fichier
+            const fileExtension = filePath.split('.').pop().toLowerCase();
+
+            // Construire l'URL de visualisation
+            const viewUrl = `{{ route('medecin.ordonnances.view') }}?file=${encodeURIComponent(filePath)}`;
+            const downloadUrl = `{{ route('medecin.ordonnances.download') }}?file=${encodeURIComponent(filePath)}`;
+
+            // Mettre à jour le lien de téléchargement
+            document.getElementById('downloadLink').href = downloadUrl;
+
+            // Gérer selon le type de fichier
+            if (fileExtension === 'pdf') {
+                loadPDFFile(viewUrl);
+            } else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(fileExtension)) {
+                loadImageFile(viewUrl);
+            } else {
+                showFileViewer(downloadUrl);
+            }
+        }
+
+        function showOrdonnanceLoading() {
+            document.getElementById('ordonnanceLoading').classList.remove('hidden');
+            document.getElementById('ordonnanceError').classList.add('hidden');
+            document.getElementById('ordonnanceContent').classList.add('hidden');
+        }
+
+        function showOrdonnanceError() {
+            document.getElementById('ordonnanceLoading').classList.add('hidden');
+            document.getElementById('ordonnanceError').classList.remove('hidden');
+            document.getElementById('ordonnanceContent').classList.add('hidden');
+        }
+
+        function showOrdonnanceContent() {
+            document.getElementById('ordonnanceLoading').classList.add('hidden');
+            document.getElementById('ordonnanceError').classList.add('hidden');
+            document.getElementById('ordonnanceContent').classList.remove('hidden');
+        }
+
+        function loadPDFFile(url) {
+            const iframe = document.getElementById('pdfFrame');
+            iframe.src = url;
+
+            iframe.onload = function() {
+                showOrdonnanceContent();
+                document.getElementById('pdfViewer').classList.remove('hidden');
+                document.getElementById('imageViewer').classList.add('hidden');
+                document.getElementById('fileViewer').classList.add('hidden');
+            };
+
+            iframe.onerror = function() {
+                showOrdonnanceError();
+            };
+        }
+
+        function loadImageFile(url) {
+            const img = document.getElementById('imageFrame');
+            img.src = url;
+
+            img.onload = function() {
+                showOrdonnanceContent();
+                document.getElementById('imageViewer').classList.remove('hidden');
+                document.getElementById('pdfViewer').classList.add('hidden');
+                document.getElementById('fileViewer').classList.add('hidden');
+            };
+
+            img.onerror = function() {
+                showOrdonnanceError();
+            };
+        }
+
+        function showFileViewer(downloadUrl) {
+            showOrdonnanceContent();
+            document.getElementById('fileViewer').classList.remove('hidden');
+            document.getElementById('pdfViewer').classList.add('hidden');
+            document.getElementById('imageViewer').classList.add('hidden');
+        }
+
+        function downloadCurrentOrdonnance() {
+            if (currentOrdonnanceFile) {
+                const downloadUrl = `{{ route('medecin.ordonnances.download') }}?file=${encodeURIComponent(currentOrdonnanceFile)}`;
+                window.open(downloadUrl, '_blank');
+            }
+        }
+
+        function retryLoadOrdonnance() {
+            if (currentOrdonnanceFile) {
+                loadOrdonnanceFile(currentOrdonnanceFile);
+            }
+        }
+
         // Fermeture du modal en cliquant en dehors
         document.addEventListener('DOMContentLoaded', function() {
-            const modal = document.getElementById('editDossierModal');
-            if (modal) {
-                modal.addEventListener('click', function(e) {
+            const editModal = document.getElementById('editDossierModal');
+            if (editModal) {
+                editModal.addEventListener('click', function(e) {
                     if (e.target === this) {
                         closeEditModal();
+                    }
+                });
+            }
+
+            const ordonnanceModal = document.getElementById('ordonnanceModal');
+            if (ordonnanceModal) {
+                ordonnanceModal.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        closeOrdonnanceModal();
                     }
                 });
             }
@@ -1819,6 +2190,12 @@
                         </svg>
                         Modifier
                     </a>
+                    <!-- Génération IA Ambulatoire -->
+                    <a href="/medecin/ambulatory-ai/consultations/${c.id}/generation"
+                       class="px-2 py-1.5 text-[#1f2937] bg-[#e8ffd0] hover:bg-[#d9ffad] rounded-lg text-sm flex items-center gap-1">
+                        <i class="fas fa-robot mr-2 text-green-500"></i>🏥 IA Ambulatoire
+                    </a>
+                    <!-- Fin Génération IA Ambulatoire -->
                 </div>
             </div>
             <div id="${idBase}" class="hidden space-y-4 mt-4 border-t pt-4">
@@ -2299,6 +2676,189 @@
             transform: translateX(100%);
             opacity: 0;
             transition: all 0.3s ease-in-out;
+        }
+
+        /* Styles pour l'affichage ergonomique des ordonnances */
+        .ordonnance-card {
+            transition: all 0.3s ease;
+        }
+
+        .ordonnance-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .medicament-item {
+            transition: all 0.2s ease;
+        }
+
+        .medicament-item:hover {
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+        }
+
+        .notes-section {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        }
+
+        .pdf-section {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+        }
+
+        .medicaments-section {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+        }
+
+        /* Animation pour les icônes */
+        .section-icon {
+            transition: all 0.3s ease;
+        }
+
+        .section-icon:hover {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        /* Styles pour les boutons d'action */
+        .action-button {
+            transition: all 0.2s ease;
+        }
+
+        .action-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Responsive design pour les ordonnances */
+        @media (max-width: 1024px) {
+            .ordonnance-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Animation d'apparition */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .ordonnance-card {
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        /* Styles pour les états vides */
+        .empty-state {
+            transition: all 0.3s ease;
+        }
+
+        .empty-state:hover {
+            background-color: #f9fafb;
+        }
+
+        /* Styles pour la modal d'ordonnance */
+        #ordonnanceModal {
+            backdrop-filter: blur(4px);
+        }
+
+        #ordonnanceModal .bg-white {
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        /* Animation d'entrée pour la modal */
+        #ordonnanceModal {
+            animation: modalFadeIn 0.3s ease-out;
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* Styles pour l'iframe PDF */
+        #pdfFrame {
+            transition: all 0.3s ease;
+        }
+
+        #pdfFrame:hover {
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Styles pour l'image */
+        #imageFrame {
+            transition: all 0.3s ease;
+            cursor: zoom-in;
+        }
+
+        #imageFrame:hover {
+            transform: scale(1.02);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Animation du loader */
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Responsive pour la modal */
+        @media (max-width: 768px) {
+            #ordonnanceModal .max-w-6xl {
+                max-width: 95vw;
+                margin: 0.5rem;
+            }
+
+            #pdfFrame {
+                height: 400px;
+            }
+
+            #imageFrame {
+                max-height: 400px;
+            }
+        }
+
+        /* Styles pour les boutons d'action */
+        .action-button {
+            transition: all 0.2s ease;
+        }
+
+        .action-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Animation pour les zones de contenu */
+        #ordonnanceContent {
+            animation: contentFadeIn 0.5s ease-out;
+        }
+
+        @keyframes contentFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
     </style>
 @endsection

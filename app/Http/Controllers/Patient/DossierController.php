@@ -50,10 +50,9 @@ class DossierController extends Controller
                 ->pluck('medecin_id');
 
             // Fallback: s'il n'y a pas (encore) de consultations liées à un rendez-vous,
-            // afficher les médecins avec lesquels le patient a au moins un rendez-vous confirmé
+            // afficher les médecins avec lesquels le patient a au moins un rendez-vous (quel que soit le statut)
             if ($medecinIds->isEmpty()) {
                 $medecinIds = RendezVous::where('patient_id', $patientId)
-                    ->whereIn('statut', ['confirmed', 'confirmé', 'completed', 'terminé'])
                     ->distinct()
                     ->pluck('medecin_id');
                 Log::info('DossierController@index fallback medecinIds from rendezvous only', ['count' => $medecinIds->count(), 'ids' => $medecinIds->values()->all()]);
@@ -93,10 +92,9 @@ class DossierController extends Controller
             ]);
 
             if ($request->ajax()) {
-                // Récupérer tous les rendez-vous avec ce médecin
+                // Récupérer tous les rendez-vous avec ce médecin (quel que soit le statut)
                 $rendezVous = RendezVous::where('patient_id', $patientId)
                     ->where('medecin_id', (int) $selectedMedecinId)
-                    ->whereIn('statut', ['confirmed', 'confirmé', 'completed', 'terminé'])
                     ->orderBy('date_debut', 'desc')
                     ->get();
 
@@ -132,7 +130,7 @@ class DossierController extends Controller
                             return [
                                 'id' => $c->id,
                                 'date' => optional($c->date)->format('Y-m-d H:i:s'),
-                                'date_formatted' => optional($c->date)->format('d/m/Y à H:i'),
+                                'date_formatted' => optional($c->date)->format('d/m/Y'),
                                 'type' => $c->type,
                                 'motif' => $c->motif,
                                 'symptomes' => $c->symptomes,
@@ -196,10 +194,9 @@ class DossierController extends Controller
                 return response()->json(['error' => 'Patient non trouvé'], 404);
             }
 
-            // Récupérer tous les rendez-vous avec ce médecin
+            // Récupérer tous les rendez-vous avec ce médecin (quel que soit le statut)
             $rendezVous = RendezVous::where('patient_id', $patientId)
                 ->where('medecin_id', (int) $medecinId)
-                ->whereIn('statut', ['confirmed', 'confirmé', 'completed', 'terminé'])
                 ->orderBy('date_debut', 'desc')
                 ->get();
 
@@ -263,7 +260,7 @@ class DossierController extends Controller
 
                             return [
                                 'date' => $c->date ? $c->date->format('Y-m-d H:i:s') : null,
-                                'date_formatted' => $c->date ? $c->date->format('d/m/Y à H:i') : null,
+                                'date_formatted' => $c->date ? $c->date->format('d/m/Y') : null,
                                 'motif' => $c->motif,
                                 'symptomes' => $c->symptomes,
                                 'tension_arterielle' => $c->tension_arterielle,
@@ -575,10 +572,9 @@ class DossierController extends Controller
                 ], 404);
             }
 
-            // Vérifier que le patient a eu au moins un rendez-vous avec ce médecin
+            // Vérifier que le patient a eu au moins un rendez-vous avec ce médecin (quel que soit le statut)
             $hasRendezVous = RendezVous::where('patient_id', $patientId)
                 ->where('medecin_id', $medecinId)
-                ->whereIn('statut', ['confirmed', 'confirmé', 'completed', 'terminé'])
                 ->exists();
 
             if (!$hasRendezVous) {

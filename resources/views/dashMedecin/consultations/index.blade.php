@@ -226,12 +226,19 @@
                                                 <circle cx="19" cy="12" r="2"/>
                                             </svg>
                                         </button>
-                                        <div x-show="open" @click.away="open = false" x-transition class="absolute right-4 mt-2 w-40 bg-white border border-gray-100 rounded-xl shadow-lg py-1 z-20">
-                                            <a href="{{ route('medecin.consultations.edit', $consultation) }}" class="block w-full text-left px-3 py-2 text-sm hover:bg-gray-50" aria-label="Modifier">Modifier</a>
+                                        <div x-show="open" @click.away="open = false" x-transition class="absolute right-4 mt-2 w-48 bg-white border border-gray-100 rounded-xl shadow-lg py-1 z-20">
+                                            <a href="{{ route('medecin.consultations.edit', $consultation) }}" class="block w-full text-left px-3 py-2 text-sm hover:bg-gray-50" aria-label="Modifier">
+                                                <i class="fas fa-edit mr-2 text-blue-500"></i>Modifier
+                                            </a>
+                                            <a href="{{ route('medecin.ai.generation.interface', $consultation) }}" class="block w-full text-left px-3 py-2 text-sm hover:bg-green-50" aria-label="Génération IA">
+                                                <i class="fas fa-robot mr-2 text-green-500"></i>🤖 Génération IA
+                                            </a>
                                             <form method="POST" action="{{ route('medecin.consultations.destroy', $consultation) }}" class="inline" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette consultation ?')">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50" aria-label="Supprimer">Supprimer</button>
+                                                <button type="submit" class="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50" aria-label="Supprimer">
+                                                    <i class="fas fa-trash mr-2"></i>Supprimer
+                                                </button>
                                             </form>
                                         </div>
                                     </div>

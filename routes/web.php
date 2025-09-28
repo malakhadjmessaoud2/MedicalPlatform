@@ -6,6 +6,8 @@ use App\Http\Controllers\Medecin\RendezVousController as MedecinRendezVousContro
 
 use App\Http\Controllers\Medecin\ConsultationController;
 use App\Http\Controllers\Medecin\TimelineController;
+use App\Http\Controllers\Medecin\FreeAIConsultationController;
+use App\Http\Controllers\Medecin\AmbulatoryAIController;
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
@@ -100,6 +102,11 @@ Route::middleware(['auth', 'role:medecin'])->prefix('medecin')->name('medecin.')
     Route::get('/dossiers/{dossier}', [PatientController::class, 'showDossierMedicalJson'])->name('dossier.show');
     Route::get('/dossier', [PatientController::class, 'showDossierMedical'])->name('dossiermedical');
     Route::post('/dossier-medical/update', [PatientController::class, 'updateDossierMedical'])->name('dossier.update');
+
+    // Routes pour les ordonnances
+    Route::get('/ordonnances/view', [PatientController::class, 'viewOrdonnance'])->name('ordonnances.view');
+    Route::get('/ordonnances/download', [PatientController::class, 'downloadOrdonnance'])->name('ordonnances.download');
+
     // Agenda & Rendez-vous
     Route::controller(MedecinRendezVousController::class)->group(function () {
         Route::get('/agenda', 'index')->name('agenda');
@@ -112,6 +119,41 @@ Route::middleware(['auth', 'role:medecin'])->prefix('medecin')->name('medecin.')
     // Ordonnance embedded in consultation
     Route::post('/consultations/{consultation}/ordonnance', [ConsultationController::class, 'upsertOrdonnance'])->name('consultations.ordonnance.upsert');
     Route::delete('/consultations/{consultation}/ordonnance', [ConsultationController::class, 'deleteOrdonnance'])->name('consultations.ordonnance.delete');
+
+    // Routes IA GRATUITES pour la génération de comptes-rendus
+    Route::prefix('ai')->name('ai.')->group(function () {
+        Route::get('/consultations/{consultation}/generation', function($consultationId) {
+            $consultation = \App\Models\Consultation::with(['rendezVous.patient', 'rendezVous.medecin'])
+                ->whereHas('rendezVous', function($query) {
+                    $query->where('medecin_id', Auth::id());
+                })
+                ->findOrFail($consultationId);
+            return view('medecin.consultations.ai-generation-simple', compact('consultation'));
+        })->name('generation.interface');
+
+        Route::post('/consultations/{consultation}/generate-compte-rendu', [FreeAIConsultationController::class, 'generateCompteRenduGratuit'])->name('generate.compte.rendu');
+        Route::post('/consultations/{consultation}/generate-resume', [FreeAIConsultationController::class, 'generateResumeGratuit'])->name('generate.resume');
+        Route::post('/consultations/{consultation}/generate-lettre-sortie', [FreeAIConsultationController::class, 'generateLettreSortieGratuit'])->name('generate.lettre.sortie');
+        Route::get('/consultations/{consultation}/compte-rendu', [FreeAIConsultationController::class, 'showCompteRenduGratuit'])->name('show.compte.rendu');
+        Route::get('/consultations/{consultation}/pdf', [FreeAIConsultationController::class, 'generatePDFCompteRendu'])->name('generate.pdf');
+    });
+
+    // Routes IA MÉDECINE AMBULATOIRE
+    Route::prefix('ambulatory-ai')->name('ambulatory-ai.')->group(function () {
+        Route::get('/consultations/{consultation}/generation', [AmbulatoryAIController::class, 'showAmbulatoryInterface'])->name('generation.interface');
+
+        // Route pour récupérer les données existantes
+        Route::get('/consultations/{consultation}/existing-data', [AmbulatoryAIController::class, 'getExistingData'])->name('get.existing.data');
+
+        Route::post('/consultations/{consultation}/teleconsultation-report', [AmbulatoryAIController::class, 'generateTeleconsultationReport'])->name('generate.teleconsultation');
+        Route::post('/consultations/{consultation}/recommendations', [AmbulatoryAIController::class, 'generateWrittenRecommendations'])->name('generate.recommendations');
+        Route::post('/consultations/{consultation}/summary', [AmbulatoryAIController::class, 'generateOnlineSummary'])->name('generate.summary');
+        Route::post('/consultations/{consultation}/follow-up', [AmbulatoryAIController::class, 'generateFollowUpPlan'])->name('generate.followup');
+        Route::post('/consultations/{consultation}/complete-document', [AmbulatoryAIController::class, 'generateCompleteDocument'])->name('generate.complete');
+
+        Route::get('/consultations/{consultation}/pdf', [AmbulatoryAIController::class, 'generatePDFDocument'])->name('generate.pdf');
+    });
+
     // Redirection vers consultation depuis un rendez-vous
     Route::get('/rendez-vous/{rendezVous}/consultation', [ConsultationController::class, 'redirectToConsultationFromRendezVous'])->name('rendezvous.to.consultation');
     // Route pour récupérer les rendez-vous du jour

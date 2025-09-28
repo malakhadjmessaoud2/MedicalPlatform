@@ -165,7 +165,96 @@ class PatientController extends Controller
             ->orderBy('date_debut')
             ->get();
 
-        return view('dashMedecin.gestionPatient.dossierMedical', compact('patient', 'dossier', 'rendezVousDuJour'));
+        // Récupérer les ordonnances du patient
+        $ordonnances = \App\Models\Ordonnance::with(['consultation.rendezVous.medecin'])
+            ->whereHas('consultation.rendezVous', function($query) use ($patientId, $user) {
+                $query->where('patient_id', $patientId)
+                      ->where('medecin_id', $user->id);
+            })
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+
+        return view('dashMedecin.gestionPatient.dossierMedical', compact('patient', 'dossier', 'rendezVousDuJour', 'ordonnances'));
+    }
+
+    /**
+     * Visualise une ordonnance dans le navigateur
+     */
+    public function viewOrdonnance(Request $request)
+    {
+        try {
+            $filePath = $request->get('file');
+            $medecinId = Auth::id();
+
+            if (!$filePath) {
+                return response()->json(['error' => 'Chemin du fichier requis'], 400);
+            }
+
+            // Vérifier que le médecin a accès à cette ordonnance
+            $ordonnance = \App\Models\Ordonnance::where('file', $filePath)
+                ->whereHas('consultation.rendezVous', function($query) use ($medecinId) {
+                    $query->where('medecin_id', $medecinId);
+                })
+                ->first();
+
+            if (!$ordonnance) {
+                return response()->json(['error' => 'Ordonnance non trouvée ou accès non autorisé'], 404);
+            }
+
+            $fullPath = storage_path('app/public/' . $filePath);
+
+            if (!file_exists($fullPath)) {
+                return response()->json(['error' => 'Fichier non trouvé'], 404);
+            }
+
+            $mimeType = mime_content_type($fullPath);
+            $fileContent = file_get_contents($fullPath);
+
+            return response($fileContent)
+                ->header('Content-Type', $mimeType)
+                ->header('Content-Disposition', 'inline; filename="' . basename($filePath) . '"');
+
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Erreur lors de la visualisation du fichier'], 500);
+        }
+    }
+
+    /**
+     * Télécharge une ordonnance
+     */
+    public function downloadOrdonnance(Request $request)
+    {
+        try {
+            $filePath = $request->get('file');
+            $medecinId = Auth::id();
+
+            if (!$filePath) {
+                return response()->json(['error' => 'Chemin du fichier requis'], 400);
+            }
+
+            // Vérifier que le médecin a accès à cette ordonnance
+            $ordonnance = \App\Models\Ordonnance::where('file', $filePath)
+                ->whereHas('consultation.rendezVous', function($query) use ($medecinId) {
+                    $query->where('medecin_id', $medecinId);
+                })
+                ->first();
+
+            if (!$ordonnance) {
+                return response()->json(['error' => 'Ordonnance non trouvée ou accès non autorisé'], 404);
+            }
+
+            $fullPath = storage_path('app/public/' . $filePath);
+
+            if (!file_exists($fullPath)) {
+                return response()->json(['error' => 'Fichier non trouvé'], 404);
+            }
+
+            return response()->download($fullPath, basename($filePath));
+
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Erreur lors du téléchargement du fichier'], 500);
+        }
     }
 
     /**

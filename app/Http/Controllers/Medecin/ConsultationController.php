@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Ordonnance;
+use App\Services\MedicalAIService;
 
 class ConsultationController extends Controller
 {
@@ -729,5 +730,317 @@ class ConsultationController extends Controller
             'patient_id' => $rendezVous->patient_id,
             'rendez_vous_id' => $rendezVous->id,
         ]);
+    }
+
+    /**
+     * Visualise une ordonnance dans le navigateur
+     */
+    public function viewOrdonnance(Request $request)
+    {
+        try {
+            $filePath = $request->get('file');
+            $medecinId = Auth::id();
+
+            if (!$filePath) {
+                return response()->json(['error' => 'Chemin du fichier requis'], 400);
+            }
+
+            // Vérifier que le médecin a accès à cette ordonnance
+            $ordonnance = Ordonnance::where('file', $filePath)
+                ->whereHas('consultation.rendezVous', function($query) use ($medecinId) {
+                    $query->where('medecin_id', $medecinId);
+                })
+                ->first();
+
+            if (!$ordonnance) {
+                return response()->json(['error' => 'Accès non autorisé'], 403);
+            }
+
+            // Construire le chemin complet du fichier
+            $fullPath = storage_path('app/public/' . $filePath);
+
+            // Vérifier que le fichier existe
+            if (!file_exists($fullPath)) {
+                return response()->json(['error' => 'Fichier non trouvé'], 404);
+            }
+
+            // Déterminer le type MIME du fichier
+            $mimeType = mime_content_type($fullPath);
+            if (!$mimeType) {
+                $mimeType = 'application/octet-stream';
+            }
+
+            // Retourner le fichier pour visualisation
+            return response()->file($fullPath, [
+                'Content-Type' => $mimeType,
+                'Content-Disposition' => 'inline'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Erreur lors de la visualisation',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Télécharge une ordonnance dans son format original
+     */
+    public function downloadOrdonnance(Request $request)
+    {
+        try {
+            $filePath = $request->get('file');
+            $medecinId = Auth::id();
+
+            if (!$filePath) {
+                return response()->json(['error' => 'Chemin du fichier requis'], 400);
+            }
+
+            // Vérifier que le médecin a accès à cette ordonnance
+            $ordonnance = Ordonnance::where('file', $filePath)
+                ->whereHas('consultation.rendezVous', function($query) use ($medecinId) {
+                    $query->where('medecin_id', $medecinId);
+                })
+                ->first();
+
+            if (!$ordonnance) {
+                return response()->json(['error' => 'Accès non autorisé'], 403);
+            }
+
+            // Construire le chemin complet du fichier
+            $fullPath = storage_path('app/public/' . $filePath);
+
+            // Vérifier que le fichier existe
+            if (!file_exists($fullPath)) {
+                return response()->json(['error' => 'Fichier non trouvé'], 404);
+            }
+
+            // Déterminer le type MIME du fichier
+            $mimeType = mime_content_type($fullPath);
+            if (!$mimeType) {
+                $mimeType = 'application/octet-stream';
+            }
+
+            // Déterminer l'extension du fichier
+            $extension = pathinfo($filePath, PATHINFO_EXTENSION);
+
+            // Déterminer le nom du fichier de téléchargement
+            $fileName = 'ordonnance_' . $ordonnance->id . '_' . date('Y-m-d') . '.' . $extension;
+
+            // Retourner le fichier pour téléchargement
+            return response()->download($fullPath, $fileName, [
+                'Content-Type' => $mimeType,
+                'Content-Disposition' => 'attachment; filename="' . $fileName . '"'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Erreur lors du téléchargement',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Génère automatiquement un compte-rendu de consultation avec IA
+     */
+    public function generateCompteRendu(Request $request, $consultationId)
+    {
+        try {
+            $consultation = Consultation::with(['rendezVous.patient', 'rendezVous.medecin'])
+                ->whereHas('rendezVous', function($query) {
+                    $query->where('medecin_id', Auth::id());
+                })
+                ->findOrFail($consultationId);
+
+            $aiService = new MedicalAIService();
+
+            // Préparer les données pour l'IA
+            $consultationData = [
+                'type' => $consultation->type,
+                'date' => $consultation->date,
+                'motif' => $consultation->motif,
+                'symptomes' => $consultation->symptomes,
+                'tension_arterielle' => $consultation->tension_arterielle,
+                'temperature' => $consultation->temperature,
+                'examen_physique' => $consultation->examen_physique,
+                'diagnostic_presume' => $consultation->diagnostic_presume,
+                'medicaments_prescrits' => $consultation->medicaments_prescrits,
+                'propositions_suivi' => $consultation->propositions_suivi,
+                'gravite' => $consultation->gravite,
+                'patient_name' => $consultation->rendezVous->patient->prenom . ' ' . $consultation->rendezVous->patient->nom,
+                'medecin_name' => $consultation->rendezVous->medecin->prenom . ' ' . $consultation->rendezVous->medecin->nom
+            ];
+
+            // Générer le compte-rendu avec IA
+            $result = $aiService->generateCompteRendu($consultationData);
+
+            if ($result['success']) {
+                // Sauvegarder le compte-rendu généré
+                $consultation->update([
+                    'compte_rendu_ia' => $result['compte_rendu'],
+                    'resume_ia' => $result['resume'],
+                    'recommandations_ia' => $result['recommandations'],
+                    'compte_rendu_generated_at' => now()
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Compte-rendu généré avec succès',
+                    'data' => $result
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => $result['error']
+                ], 500);
+            }
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la génération du compte-rendu: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Génère un résumé court de consultation
+     */
+    public function generateResume(Request $request, $consultationId)
+    {
+        try {
+            $consultation = Consultation::with(['rendezVous.patient'])
+                ->whereHas('rendezVous', function($query) {
+                    $query->where('medecin_id', Auth::id());
+                })
+                ->findOrFail($consultationId);
+
+            $aiService = new MedicalAIService();
+
+            $consultationData = [
+                'type' => $consultation->type,
+                'motif' => $consultation->motif,
+                'symptomes' => $consultation->symptomes,
+                'diagnostic_presume' => $consultation->diagnostic_presume,
+                'medicaments_prescrits' => $consultation->medicaments_prescrits
+            ];
+
+            $result = $aiService->generateResume($consultationData);
+
+            if ($result['success']) {
+                $consultation->update([
+                    'resume_ia' => $result['resume'],
+                    'resume_generated_at' => now()
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Résumé généré avec succès',
+                    'resume' => $result['resume']
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => $result['error']
+                ], 500);
+            }
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la génération du résumé: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Génère une lettre de sortie
+     */
+    public function generateLettreSortie(Request $request, $consultationId)
+    {
+        try {
+            $consultation = Consultation::with(['rendezVous.patient', 'rendezVous.medecin'])
+                ->whereHas('rendezVous', function($query) {
+                    $query->where('medecin_id', Auth::id());
+                })
+                ->findOrFail($consultationId);
+
+            $aiService = new MedicalAIService();
+
+            $consultationData = [
+                'date' => $consultation->date,
+                'motif' => $consultation->motif,
+                'diagnostic_presume' => $consultation->diagnostic_presume,
+                'medicaments_prescrits' => $consultation->medicaments_prescrits,
+                'propositions_suivi' => $consultation->propositions_suivi,
+                'patient_name' => $consultation->rendezVous->patient->prenom . ' ' . $consultation->rendezVous->patient->nom,
+                'medecin_name' => $consultation->rendezVous->medecin->prenom . ' ' . $consultation->rendezVous->medecin->nom
+            ];
+
+            $result = $aiService->generateLettreSortie($consultationData);
+
+            if ($result['success']) {
+                $consultation->update([
+                    'lettre_sortie_ia' => $result['lettre_sortie'],
+                    'lettre_sortie_generated_at' => now()
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Lettre de sortie générée avec succès',
+                    'lettre_sortie' => $result['lettre_sortie']
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => $result['error']
+                ], 500);
+            }
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la génération de la lettre de sortie: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Affiche le compte-rendu généré par IA
+     */
+    public function showCompteRendu($consultationId)
+    {
+        try {
+            $consultation = Consultation::with(['rendezVous.patient', 'rendezVous.medecin'])
+                ->whereHas('rendezVous', function($query) {
+                    $query->where('medecin_id', Auth::id());
+                })
+                ->findOrFail($consultationId);
+
+            if (!$consultation->compte_rendu_ia) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Aucun compte-rendu généré pour cette consultation'
+                ], 404);
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'compte_rendu' => $consultation->compte_rendu_ia,
+                    'resume' => $consultation->resume_ia,
+                    'recommandations' => $consultation->recommandations_ia,
+                    'generated_at' => $consultation->compte_rendu_generated_at
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération du compte-rendu: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }
