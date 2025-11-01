@@ -32,29 +32,6 @@
             </div>
         </div>
 
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center">
-                <div class="p-3 rounded-full bg-yellow-100 text-yellow-600">
-                    <i class="fas fa-calendar-alt text-2xl"></i>
-                </div>
-                <div class="ml-4">
-                    <p class="text-sm font-medium text-gray-600">Rendez-vous aujourd'hui</p>
-                    <p class="text-2xl font-semibold text-gray-900">{{ $stats['rendez_vous_aujourd_hui'] }}</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center">
-                <div class="p-3 rounded-full bg-purple-100 text-purple-600">
-                    <i class="fas fa-euro-sign text-2xl"></i>
-                </div>
-                <div class="ml-4">
-                    <p class="text-sm font-medium text-gray-600">Revenus du mois</p>
-                    <p class="text-2xl font-semibold text-gray-900">{{ number_format($stats['revenus_mois'], 2) }} TND</p>
-                </div>
-            </div>
-        </div>
     </div>
 
     <!-- Répartition des rendez-vous aujourd'hui (sans JS) -->

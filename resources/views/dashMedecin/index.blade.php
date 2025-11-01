@@ -105,31 +105,31 @@
                 <!-- Filtres de consultations -->
                 <div class="mb-6">
                     <div class="flex flex-wrap gap-2 lg:gap-3 mb-4">
-                        <button onclick="filtrerConsultations('aujourdhui')"
+                        <button onclick="if(window.consultationManager){window.consultationManager.applyFilter('aujourdhui');}else{filtrerConsultations('aujourdhui')}"
                                 class="filtre-btn active px-4 py-2 rounded-full text-sm font-medium transition-all bg-[#b9ff66] text-gray-800 hover:bg-[#a8eb5f]">
                             Aujourd'hui
                         </button>
-                        <button onclick="filtrerConsultations('demain')"
+                        <button onclick="if(window.consultationManager){window.consultationManager.applyFilter('demain');}else{filtrerConsultations('demain')}"
                                 class="filtre-btn px-4 py-2 rounded-full text-sm font-medium transition-all bg-gray-100 text-gray-600 hover:bg-gray-200">
                             Demain
                         </button>
-                        <button onclick="filtrerConsultations('semaine')"
+                        <button onclick="if(window.consultationManager){window.consultationManager.applyFilter('semaine');}else{filtrerConsultations('semaine')}"
                                 class="filtre-btn px-4 py-2 rounded-full text-sm font-medium transition-all bg-gray-100 text-gray-600 hover:bg-gray-200">
                             Cette semaine
                         </button>
-                        <button onclick="filtrerConsultations('semaine_prochaine')"
+                        <button onclick="if(window.consultationManager){window.consultationManager.applyFilter('semaine_prochaine');}else{filtrerConsultations('semaine_prochaine')}"
                                 class="filtre-btn px-4 py-2 rounded-full text-sm font-medium transition-all bg-gray-100 text-gray-600 hover:bg-gray-200">
                             Semaine prochaine
                         </button>
-                        <button onclick="filtrerConsultations('mois')"
+                        <button onclick="if(window.consultationManager){window.consultationManager.applyFilter('mois');}else{filtrerConsultations('mois')}"
                                 class="filtre-btn px-4 py-2 rounded-full text-sm font-medium transition-all bg-gray-100 text-gray-600 hover:bg-gray-200">
                             Ce mois
                         </button>
-                        <button onclick="filtrerConsultations('date')"
+                        <button onclick="if(window.consultationManager){document.getElementById('dateSelector').classList.remove('hidden');}else{filtrerConsultations('date')}"
                                 class="filtre-btn px-4 py-2 rounded-full text-sm font-medium transition-all bg-gray-100 text-gray-600 hover:bg-gray-200">
                             Par date
                         </button>
-                        <button onclick="filtrerConsultations('periode')"
+                        <button onclick="if(window.consultationManager){document.getElementById('periodeSelector').classList.remove('hidden');}else{filtrerConsultations('periode')}"
                                 class="filtre-btn px-4 py-2 rounded-full text-sm font-medium transition-all bg-gray-100 text-gray-600 hover:bg-gray-200">
                             Période
                         </button>
@@ -143,7 +143,7 @@
                                 <input type="date" id="dateInput" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#b9ff66] focus:border-transparent">
                             </div>
                             <div class="flex items-end">
-                                <button onclick="appliquerFiltreDate()"
+                                <button onclick="if(window.consultationManager){window.consultationManager.applyFilter('date', document.getElementById('dateInput').value);}else{appliquerFiltreDate()}"
                                         class="px-4 py-2 bg-[#b9ff66] text-gray-800 rounded-lg hover:bg-[#a8eb5f] transition-all">
                                     Appliquer
                                 </button>
@@ -160,7 +160,7 @@
                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#b9ff66] focus:border-transparent">
                             </div>
                             <div class="flex items-end">
-                                <button onclick="appliquerFiltrePeriode()"
+                                <button onclick="if(window.consultationManager){window.consultationManager.applyFilter('periode', document.getElementById('periodeInput').value);}else{appliquerFiltrePeriode()}"
                                         class="px-4 py-2 bg-[#b9ff66] text-gray-800 rounded-lg hover:bg-[#a8eb5f] transition-all">
                                     Appliquer
                                 </button>
@@ -686,29 +686,33 @@ let dateActuelle = null;
 
 // Initialisation des modules
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialiser les gestionnaires
+    // Source de vérité unique: si ConsultationManager est présent, on l'utilise exclusivement
+    let usingManager = false;
     if (window.ConsultationManager) {
         window.consultationManager = new window.ConsultationManager();
+        usingManager = true;
     }
     if (window.DossierManager) {
         window.dossierManager = new window.DossierManager();
     }
 
-    // Charger les consultations par défaut (aujourd'hui)
-    chargerConsultationsFiltrees('aujourdhui');
+    if (!usingManager) {
+        // Fallback legacy: utiliser le flux inline uniquement si le manager n'est pas disponible
+        chargerConsultationsFiltrees('aujourdhui');
 
-    // Vérifier et mettre à jour les statuts toutes les 30 secondes
-    setInterval(() => {
-        chargerConsultationsFiltrees(filtreActuel, dateActuelle);
-    }, 30000);
-
-    // Vérifier périodiquement les statuts (toutes les 5 minutes)
-    setInterval(() => {
-        console.log('[AUTO-UPDATE] Vérification périodique des statuts...');
-        if (filtreActuel) {
+        // Vérifier et mettre à jour les statuts toutes les 30 secondes
+        setInterval(() => {
             chargerConsultationsFiltrees(filtreActuel, dateActuelle);
-        }
-    }, 5 * 60 * 1000); // 5 minutes
+        }, 30000);
+
+        // Vérification périodique des statuts (toutes les 5 minutes)
+        setInterval(() => {
+            console.log('[AUTO-UPDATE] Vérification périodique des statuts...');
+            if (filtreActuel) {
+                chargerConsultationsFiltrees(filtreActuel, dateActuelle);
+            }
+        }, 5 * 60 * 1000); // 5 minutes
+    }
 });
 
 // Fonction pour filtrer les consultations
@@ -1641,6 +1645,8 @@ async function confirmStatusChange() {
             // Masquer le modal avec un petit délai pour que l'utilisateur voie le succès
             setTimeout(() => {
                 hideStatusChangeModal();
+                // Informer les autres composants (ConsultationManager) de se rafraîchir
+                try { window.dispatchEvent(new Event('rendezvous:status-updated')); } catch (e) {}
             }, 500);
 
         } else {

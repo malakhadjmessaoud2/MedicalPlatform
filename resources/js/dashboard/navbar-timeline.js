@@ -42,12 +42,63 @@ function updateTimeline(data) {
     const currentDate = document.getElementById('current-date');
     if (currentDate) currentDate.textContent = data.current_date;
 
+    // Debug overview
+    try {
+        console.groupCollapsed('[TIMELINE] Payload received');
+        console.log('current_date:', data.current_date, 'current_hour:', data.current_hour);
+        console.log('timeline slots:', (data.timeline || []).length, data.timeline);
+        console.log('example item shape:', (data.timeline || [])[0]?.rendez_vous?.[0]);
+        console.groupEnd();
+    } catch (e) { /* noop */ }
+
     let timelineHTML = '';
+    const excludedStatuses = ['pending', 'cancelled', 'rejected'];
+    const priorityOrder = { 'payed': 0, 'confirmed': 1, 'confirmé': 1, 'completed': 2 };
     for (let hour = 8; hour <= 17; hour++) {
         const timeSlot = data.timeline.find(slot => slot.hour === hour);
         const isCurrentHour = hour === data.current_hour;
         const isPast = hour < data.current_hour;
-        const rdv = timeSlot ? timeSlot.rendez_vous[0] : null;
+        const rdv = timeSlot ? (() => {
+            const raw = (timeSlot.rendez_vous || []);
+            // Debug: list all items in slot
+            try {
+                console.groupCollapsed(`[TIMELINE] Hour ${hour}: raw items`);
+                console.table(raw.map(r => ({
+                    id: r.id,
+                    patient: r.patient_name,
+                    statut: (r.statut || r.status || r.state || '').toString(),
+                    start: r.start_time,
+                    end: r.end_time,
+                    has_link: !!r.lien_en_ligne
+                })));
+                console.groupEnd();
+            } catch (e) { /* noop */ }
+
+            const list = raw.filter(r => {
+                const st = (r.statut || r.status || r.state || '').toLowerCase();
+                const keep = !excludedStatuses.includes(st);
+                if (!keep) {
+                    try { console.log(`[TIMELINE] Hour ${hour}: exclude id=${r.id} statut=${st}`); } catch (e) {}
+                }
+                return keep;
+            });
+            list.sort((a, b) => {
+                const sa = (a.statut || a.status || a.state || '').toLowerCase();
+                const sb = (b.statut || b.status || b.state || '').toLowerCase();
+                return (priorityOrder[sa] ?? 99) - (priorityOrder[sb] ?? 99);
+            });
+
+            const chosen = list[0] || null;
+            try {
+                if (chosen) {
+                    console.log(`[TIMELINE] Hour ${hour}: chosen id=${chosen.id}, statut=${(chosen.statut||chosen.status||chosen.state||'').toString()}`);
+                } else {
+                    console.log(`[TIMELINE] Hour ${hour}: no rendez-vous selected (empty after filter)`);
+                }
+            } catch (e) {}
+
+            return chosen;
+        })() : null;
         timelineHTML += `
             <div class="timeline-slot ${isCurrentHour ? 'current' : isPast ? 'past' : 'future'}" data-hour="${hour}">
                 ${rdv ? `
@@ -71,6 +122,7 @@ function updateTimeline(data) {
                             <span class="slot-name">${rdv.patient_name}</span>
                             <span class="slot-time">${rdv.start_time}</span>
                         </div>
+                        <div class="hidden" data-statut="${(rdv.statut || rdv.status || rdv.state || '').toString()}"></div>
                         ${rdv.has_consultation_link ? (
                             isConsultationLinkActive(rdv.start_time, rdv.end_time) ?
                             `<div class="meet-icon-container active" title="Cliquer pour ouvrir la téléconsultation">

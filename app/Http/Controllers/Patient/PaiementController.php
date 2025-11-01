@@ -25,9 +25,9 @@ class PaiementController extends Controller
             'last_name'   => $user->prenom,
             'email'       => $user->email,
             'phone'       => $user->tel,
-            'return_url'  => "https://7af41469bacc.ngrok-free.app/payment/success",
-            'cancel_url'  => "https://7af41469bacc.ngrok-free.app/payment/cancel/{$rendezVous->id}",
-            'webhook_url' => "https://7af41469bacc.ngrok-free.app/webhook/paymee",
+            'return_url'  => "https://2980d62ac769.ngrok-free.app/payment/success",
+            'cancel_url'  => "https://2980d62ac769.ngrok-free.app/payment/cancel/{$rendezVous->id}",
+            'webhook_url' => "https://2980d62ac769.ngrok-free.app/webhook/paymee",
         ];
 
         Log::info('Création du paiement Paymee', $paymentData);
@@ -115,7 +115,17 @@ class PaiementController extends Controller
                 Log::warning("Paiement reçu mais statut actuel invalide pour payer", ['rdv_id' => $rendezvous->id, 'statut' => $rendezvous->statut]);
                 return redirect()->back()->with('error', "Le rendez-vous n'est pas dans un état payable.");
             }
+            $old = $rendezvous->statut;
             $rendezvous->transitionTo('payed');
+            // Notifier le médecin du paiement
+            try {
+                $medecin = $rendezvous->medecin;
+                if ($medecin) {
+                    $medecin->notify(new \App\Notifications\RendezVousStatusChangedNotification($rendezvous, $old, 'payed'));
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Notification paiement médecin échouée', ['error' => $e->getMessage()]);
+            }
 
             Log::info("Paiement enregistré avec succès pour rendez-vous #{$rendezvous->id}");
 
@@ -148,9 +158,19 @@ class PaiementController extends Controller
     {
         $rendezvous = RendezVous::with('patient')->findOrFail($rendezvousId);
         // Patient peut annuler si pending ou confirmed
-        if (in_array($rendezvous->statut, ['pending','confirmed'], true)) {
-            $rendezvous->transitionTo('cancelled');
-        }
+            if (in_array($rendezvous->statut, ['pending','confirmed'], true)) {
+                $old = $rendezvous->statut;
+                $rendezvous->transitionTo('cancelled');
+                // Notifier le médecin de l'annulation
+                try {
+                    $medecin = $rendezvous->medecin;
+                    if ($medecin) {
+                        $medecin->notify(new \App\Notifications\RendezVousStatusChangedNotification($rendezvous, $old, 'cancelled'));
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning('Notification annulation médecin échouée', ['error' => $e->getMessage()]);
+                }
+            }
 
         Log::warning("Paiement annulé manuellement pour rendez-vous #{$rendezvous->id}");
 

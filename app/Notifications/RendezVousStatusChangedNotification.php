@@ -33,7 +33,7 @@ class RendezVousStatusChangedNotification extends Notification implements Should
      */
     public function via(object $notifiable): array
     {
-        return ['database'];
+        return ['database', 'broadcast'];
     }
 
     /**

@@ -48,17 +48,17 @@
                 </div>
                 <span class="text-sm font-medium mt-2 step-title">Patient</span>
             </div>
-            <!-- Line 3-4 -->
+            {{-- <!-- Line 3-4 -->
             <div class="flex-1 h-1 bg-gray-200 mx-4 step-line">
                 <div class="h-full bg-[#b9ff66] step-progress" id="progress-3-4" style="width: 0%;"></div>
-            </div>
-            <!-- Step 4 -->
+            </div> --}}
+            {{-- <!-- Step 4 -->
             <div class="flex flex-col items-center step" data-step="4" onclick="goToStep(4)">
                 <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-semibold step-circle cursor-pointer">
                     4
                 </div>
                 <span class="text-sm font-medium mt-2 step-title">Documents médicaux</span>
-            </div>
+            </div> --}}
         </div>
     </div>
 
@@ -222,7 +222,7 @@
                 </div>
             </div>
         </div>
-
+{{--
         <!-- Step 4: Documents médicaux -->
         <div id="step4" class="hidden space-y-6">
             <h2 class="text-2xl font-bold">Documents médicaux (optionnel)</h2>
@@ -262,7 +262,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div> --}}
 
         <!-- Résumé du rendez-vous -->
         <div id="appointment-summary" class="mt-6 p-4 bg-gray-50 rounded-xl hidden">

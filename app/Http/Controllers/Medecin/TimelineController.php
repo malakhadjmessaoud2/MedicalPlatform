@@ -31,13 +31,25 @@ class TimelineController extends Controller
             $today = Carbon::today();
             $now = Carbon::now();
 
-        // Récupérer tous les rendez-vous du jour du médecin
+        // Récupérer tous les rendez-vous du jour du médecin (inclure payed)
+        // Exclure uniquement: pending, cancelled, rejected
         $rendezVous = RendezVous::with(['patient'])
             ->where('medecin_id', $user->id)
             ->whereDate('date_debut', $today)
-            ->where('statut', '!=', 'payed')
+            ->whereNotIn('statut', ['pending', 'cancelled', 'rejected'])
             ->orderBy('date_debut')
             ->get();
+
+        // Debug server-side: lister brièvement les RDV retenus
+        Log::info('[TIMELINE API] RDV retenus (hors pending/cancelled/rejected):', [
+            'count' => $rendezVous->count(),
+            'items' => $rendezVous->map(fn($r) => [
+                'id' => $r->id,
+                'statut' => $r->statut,
+                'date_debut' => (string) $r->date_debut,
+                'date_fin' => (string) $r->date_fin,
+            ])->toArray(),
+        ]);
 
         // Créer un timeline de 8h à 17h
         $timeline = [];

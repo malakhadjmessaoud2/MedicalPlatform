@@ -15,6 +15,45 @@ document.addEventListener('DOMContentLoaded', () => {
     // Charger les notifications persistantes au chargement de la page
     loadPersistentNotifications();
 
+    // Abonnement temps réel au canal privé des notifications utilisateur
+    const currentUserId = document.querySelector('meta[name="user-id"]')?.getAttribute('content');
+    if (window.Echo && currentUserId) {
+        try {
+            window.Echo.private(`App.Models.User.${currentUserId}`)
+                .notification((notification) => {
+                    // Adapter aux formats de nos notifications en base
+                    const data = notification?.data || notification;
+
+                    // Construire l'élément UI cohérent avec les persistantes
+                    const colorClass = getNotificationColor(data.color);
+                    const iconPath = getNotificationIcon(data.type, data.icon);
+                    const now = new Date();
+
+                    const html = `
+                        <div class="flex items-start gap-3" data-runtime>
+                            <div class="shrink-0 w-8 h-8 rounded-full ${colorClass} flex items-center justify-center">
+                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="${iconPath}" />
+                                </svg>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-start justify-between gap-2">
+                                    <p class="text-sm text-gray-900">${data.title || 'Notification'}</p>
+                                    <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                </div>
+                                <p class="text-xs text-gray-600 mt-0.5">${data.message || ''}</p>
+                                <p class="text-[11px] text-gray-400 mt-1">À l'instant</p>
+                            </div>
+                        </div>`;
+
+                    addNotification(html);
+                    updateUnreadCount();
+                });
+        } catch (err) {
+            console.error('Abonnement notifications privées échoué:', err);
+        }
+    }
+
     const renderNotification = ({
         title = '',
         subtitle = '',
@@ -188,7 +227,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Toggle dropdown on click, close on outside click or Escape
     if (button && dropdown) {
-        button.addEventListener('click', (e) => {
+        let isMarkingAll = false;
+
+        button.addEventListener('click', async (e) => {
             e.stopPropagation();
             e.preventDefault();
 
@@ -196,9 +237,34 @@ document.addEventListener('DOMContentLoaded', () => {
             const isHidden = dropdown.classList.contains('hidden');
             if (isHidden) {
                 dropdown.classList.remove('hidden');
-                // clear badge when opening
-                if (badge) {
-                    badge.classList.add('hidden');
+                // Auto-mark all visible notifications as read on open (Facebook-like behavior)
+                if (!isMarkingAll) {
+                    isMarkingAll = true;
+                    try {
+                        const resp = await fetch('/notifications/mark-all-as-read', {
+                            method: 'PATCH',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                            }
+                        });
+                        if (resp.ok) {
+                            // Update UI: dim all items and remove unread dots
+                            const items = Array.from(list.children);
+                            items.forEach((el) => {
+                                el.classList.add('opacity-60');
+                                const unreadIndicator = el.querySelector('.w-2.h-2.bg-blue-500');
+                                if (unreadIndicator) unreadIndicator.remove();
+                            });
+                            if (badge) badge.classList.add('hidden');
+                        }
+                    } catch (_) {
+                        // silent fail to avoid breaking UX
+                    } finally {
+                        isMarkingAll = false;
+                        // Ensure server truth for badge
+                        updateUnreadCount();
+                    }
                 }
             } else {
                 dropdown.classList.add('hidden');
@@ -308,8 +374,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     <p class="text-xs text-gray-400">${time}</p>
                 `);
 
-                // Recharger les notifications persistantes pour avoir la dernière
-                loadPersistentNotifications();
+                // Keep badge accurate
+                updateUnreadCount();
             });
         } catch (err) {
             // fail silently to avoid breaking UI
@@ -350,8 +416,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     iconBg: 'bg-green-100 text-green-700'
                 }));
 
-                // Recharger les notifications persistantes pour avoir la dernière
-                loadPersistentNotifications();
+                // Keep badge accurate
+                updateUnreadCount();
             })
             .listen('.RendezVousModifie', (e) => {
                 const action = e?.action;
@@ -477,8 +543,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     iconBg: 'bg-yellow-100 text-yellow-700'
                 }));
 
-                // Recharger les notifications persistantes pour avoir la dernière
-                loadPersistentNotifications();
+                // Keep badge accurate
+                updateUnreadCount();
             });
         } catch (err) {
             console.error('Patient notifications listener error:', err);

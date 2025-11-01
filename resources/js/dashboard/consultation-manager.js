@@ -8,6 +8,8 @@ class ConsultationManager {
             ?.getAttribute("content");
         this.cache = new Map();
         this.cacheTimeout = 30000; // 30 secondes
+        this.currentFilter = 'aujourdhui';
+        this.currentDate = null;
         this.init();
     }
 
@@ -15,6 +17,15 @@ class ConsultationManager {
         this.setupEventListeners();
         this.loadInitialData();
         this.startAutoRefresh();
+        // Écouter les mises à jour faites via le modal global
+        window.addEventListener('rendezvous:status-updated', () => {
+            try {
+                this.clearCache();
+                this.loadInitialData();
+            } catch (e) {
+                console.warn('[ConsultationManager] refresh after modal failed', e);
+            }
+        });
     }
 
     setupEventListeners() {
@@ -90,6 +101,36 @@ class ConsultationManager {
         }
     }
 
+    // Charger les consultations selon un filtre (aujourdhui, demain, semaine, semaine_prochaine, mois, date, periode)
+    async applyFilter(filtre = 'aujourdhui', date = null) {
+        this.currentFilter = filtre;
+        this.currentDate = date;
+
+        try {
+            const params = new URLSearchParams({ filtre });
+            if (date) params.append('date', date);
+
+            const response = await fetch(`/medecin/consultations-filtrees?${params.toString()}`, {
+                method: 'GET',
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                credentials: 'same-origin'
+            });
+            if (!response.ok) throw new Error(`Erreur HTTP ${response.status}`);
+
+            const data = await response.json();
+
+            // Utiliser le même rendu que pour le jour
+            this.renderPatientsList(data);
+            const terminees = this.filterConsultationsTerminees(data);
+            this.renderConsultationsTerminees(terminees);
+            return data;
+        } catch (error) {
+            console.error('[ConsultationManager] Erreur applyFilter:', error);
+            this.showError("Impossible de charger les consultations filtrées");
+            throw error;
+        }
+    }
+
     async loadConsultationsTerminees() {
         const cacheKey = "consultations-terminees";
         const cached = this.getCachedData(cacheKey);
@@ -118,16 +159,20 @@ class ConsultationManager {
 
     filterConsultationsTerminees(data) {
         return data.filter((patient) => {
-            const isConfirmed = patient.statut === "confirmed" || patient.statut === "confirmé";
-            if (!isConfirmed) return false;
+            const statut = (patient.statut || '').toLowerCase();
+            if (statut === 'cancelled') return false;
+
             const start = new Date(patient.date_debut);
-            const fin = new Date(
-                patient.date_fin || start.getTime() + 30 * 60 * 1000
-            );
+            const fin = new Date(patient.date_fin || start.getTime() + 30 * 60 * 1000);
             const maintenant = new Date();
             const aujourdhui = new Date();
             aujourdhui.setHours(0, 0, 0, 0);
-            return maintenant > fin && fin.toDateString() === aujourdhui.toDateString();
+
+            // Afficher si marqué completed OU si l'heure de fin est dépassée, et uniquement pour aujourd'hui
+            const isCompleted = statut === 'completed';
+            const timePassed = maintenant > fin;
+            const isToday = fin.toDateString() === aujourdhui.toDateString();
+            return isToday && (isCompleted || timePassed);
         });
     }
 
@@ -136,13 +181,14 @@ class ConsultationManager {
         const patientsCount = document.getElementById("patientsCount");
 
         const consultationsAVenir = data.filter((patient) => {
-            const isConfirmed = patient.statut === "confirmed" || patient.statut === "confirmé";
-            if (!isConfirmed) return true;
+            const statut = (patient.statut || '').toLowerCase();
+            // Exclure les terminées et annulées de "à venir"
+            if (statut === 'completed' || statut === 'cancelled') return false;
+
             const start = new Date(patient.date_debut);
-            const fin = new Date(
-                patient.date_fin || start.getTime() + 30 * 60 * 1000
-            );
+            const fin = new Date(patient.date_fin || start.getTime() + 30 * 60 * 1000);
             const maintenant = new Date();
+            // Garder seulement les consultations dont la fin n'est pas encore passée
             return maintenant <= fin;
         });
 
@@ -180,6 +226,18 @@ class ConsultationManager {
         card.querySelector(
             ".patient-time"
         ).textContent = `${patient.heure} - ${patient.heure_fin}`;
+        // Afficher la date lisible sous l'horaire
+        try {
+            const dateStart = new Date(patient.date_debut);
+            const dateStr = `${String(dateStart.getDate()).padStart(2,'0')}/${String(dateStart.getMonth()+1).padStart(2,'0')}/${dateStart.getFullYear()}`;
+            const timeEl = card.querySelector('.patient-time');
+            if (timeEl && timeEl.parentElement) {
+                const dateEl = document.createElement('div');
+                dateEl.className = 'patient-date text-sm text-gray-600 flex items-center gap-2 mt-1';
+                dateEl.innerHTML = `<svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><span class="font-semibold">${dateStr}</span>`;
+                timeEl.parentElement.insertBefore(dateEl, timeEl.nextSibling);
+            }
+        } catch(e) {}
         card.querySelector(".patient-type").textContent =
             patient.type.charAt(0).toUpperCase() + patient.type.slice(1);
 
@@ -211,8 +269,14 @@ class ConsultationManager {
         statusSelect.dataset.rendezVousId = patient.id;
         statusSelect.dataset.currentStatus = patient.statut;
 
-        // Définir les statuts disponibles selon l'état actuel
-        const availableStatuses = this.getAvailableStatuses(patient.statut, patient.date_debut, patient.date_fin);
+        // Définir les statuts disponibles (autoriser toutes transitions pour le médecin)
+        const availableStatuses = [
+            { value: 'pending', label: 'En attente', icon: '⏳' },
+            { value: 'confirmed', label: 'Confirmé', icon: '✅' },
+            { value: 'payed', label: 'Payé', icon: '💳' },
+            { value: 'cancelled', label: 'Annulé', icon: '❌' },
+            { value: 'completed', label: 'Terminé', icon: '🏁' },
+        ];
 
         // Option par défaut avec style amélioré
         const defaultOption = document.createElement('option');
@@ -239,12 +303,25 @@ class ConsultationManager {
 
         // Event listener pour le changement de statut
         statusSelect.addEventListener('change', (e) => {
-            if (e.target.value && e.target.value !== patient.statut) {
-                this.changeStatus(patient.id, e.target.value);
-                // Remettre la sélection par défaut
-                setTimeout(() => {
-                    e.target.value = '';
-                }, 100);
+            const newStatus = e.target.value;
+            if (newStatus && newStatus !== patient.statut) {
+                // Si le modal global est dispo, l'utiliser
+                if (typeof window.showStatusChangeModal === 'function') {
+                    const consultationData = {
+                        prenom: patient.prenom,
+                        nom: patient.nom,
+                        photo: patient.photo,
+                        heure: patient.heure,
+                        heure_fin: patient.heure_fin,
+                        statut: patient.statut,
+                    };
+                    window.showStatusChangeModal(patient.id, newStatus, e.target, consultationData);
+                } else {
+                    // Fallback sans modal
+                    this.changeStatus(patient.id, newStatus);
+                }
+                // Remettre l'affichage du select sur le header
+                setTimeout(() => { e.target.value = ''; }, 100);
             }
         });
 
@@ -254,12 +331,7 @@ class ConsultationManager {
             '[data-action="open-consultation"]'
         );
         consultationButton.dataset.lienMeet = patient.lien_meet;
-        consultationButton.dataset.consultationActive =
-            patient.consultation_active;
-        consultationButton.dataset.rendezVousId = patient.id;
-        consultationButton.dataset.statut = patient.statut;
-
-        // Classes CSS pour le bouton de consultation
+        // Déterminer la fenêtre d'activation (5 min avant le début jusqu'à la fin)
         const start = new Date(patient.date_debut);
         const fin = new Date(
             patient.date_fin || start.getTime() + 30 * 60 * 1000
@@ -268,12 +340,42 @@ class ConsultationManager {
         const windowOpen =
             maintenant >= new Date(start.getTime() - 5 * 60 * 1000) &&
             maintenant <= fin;
-        const isActive = patient.statut === "confirmed" && windowOpen;
+
+        // Statuts autorisés pour activer le bouton (confirmé/confirmé/payed)
+        const statutLower = (patient.statut || '').toLowerCase();
+        const isAllowedStatus =
+            statutLower === 'confirmed' ||
+            statutLower === 'confirmé' ||
+            statutLower === 'payed';
+
+        // Actif si statut autorisé et dans la fenêtre
+        const isActive = isAllowedStatus && windowOpen;
+
+        // Exposer l'état actif sur le dataset pour les handlers globaux
+        consultationButton.dataset.consultationActive = isActive;
+        consultationButton.dataset.rendezVousId = patient.id;
+        consultationButton.dataset.statut = patient.statut;
+
+        // Classes CSS pour le bouton de consultation
         consultationButton.className = `consultation-link p-2 rounded-full transition-all ${isActive
             ? "bg-green-500 hover:bg-green-600 text-white"
             : "bg-gray-300 text-gray-500 cursor-not-allowed"
             }`;
         consultationButton.title = this.getConsultationButtonTitle(patient);
+
+        // Bouton "Voir le rendez-vous" → redirection vers le dossier médical du patient
+        try {
+            const viewButton = card.querySelector('[data-action="view-dossier"]');
+            const patientId = patient.patient_id || patient.id_patient || (patient.patient && patient.patient.id);
+            if (viewButton && patientId) {
+                viewButton.addEventListener('click', (ev) => {
+                    ev.preventDefault();
+                    // Utiliser la même logique/URL que le bouton existant: /medecin/dossier?patient_id=ID
+                    const baseUrl = (window.ROUTES && window.ROUTES.dossier) || '/medecin/dossier';
+                    window.location.href = `${baseUrl}?patient_id=${patientId}`;
+                });
+            }
+        } catch(e) { /* ignore binding error */ }
 
         return card;
     }
@@ -335,6 +437,7 @@ class ConsultationManager {
         // Définir les messages de confirmation selon le statut cible
         const confirmMessages = {
             'confirmed': 'Confirmer le rendez-vous ?',
+            'payed': 'Marquer le rendez-vous comme payé ?',
             'cancelled': 'Annuler le rendez-vous ?',
             'pending': 'Remettre le rendez-vous en attente ?',
             'completed': 'Terminer la consultation ?'
@@ -342,6 +445,7 @@ class ConsultationManager {
 
         const successMessages = {
             'confirmed': 'Rendez-vous confirmé avec succès',
+            'payed': 'Rendez-vous marqué comme payé',
             'cancelled': 'Rendez-vous annulé avec succès',
             'pending': 'Rendez-vous remis en attente avec succès',
             'completed': 'Consultation terminée avec succès'
@@ -445,9 +549,9 @@ class ConsultationManager {
     }
 
     async openConsultation(lienMeet, consultationActive, rendezVousId, statut) {
-        if (statut !== "confirmed") {
+        if (statut !== "payed") {
             alert(
-                "La consultation ne peut pas commencer car le rendez-vous n'est pas confirmé."
+                "La consultation ne peut pas commencer car le rendez-vous n'est pas payé."
             );
             return;
         }

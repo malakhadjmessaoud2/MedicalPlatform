@@ -59,34 +59,50 @@
                         </svg>
                     </button>
 
-                    <!-- Ordonnances -->
-                    <button onclick="showSection('ordonnances')"
-                        class="w-full bg-gray-100 text-gray-700 rounded-full px-4 py-3 flex items-center justify-between hover:bg-gray-200 transition-all"
-                        id="btn-ordonnances">
-                        <span class="font-medium">Ordonnances</span>
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                        </svg>
-                    </button>
+
                 </div>
 
                 <!-- Statistics Card -->
                 <div class="bg-white p-6 rounded-[20px] shadow-sm">
                     <h2 class="text-xl font-bold mb-4">Statistiques</h2>
-                    <div class="space-y-4">
-                        @php $stats = $stats ?? ['total_patients' => 0, 'consultations_mois' => 0, 'nouveaux_patients' => 0]; @endphp
+                    @php
+                        // Valeurs par défaut pour éviter les erreurs si une clé manque
+                        $stats = $stats ?? [];
+                        $s = array_merge([
+                            'total_patients' => 0,
+                            'nouveaux_patients' => 0,
+                            'consultations_mois' => 0,
+                            'consultations_aujourdhui' => 0,
+                            'consultations_semaine' => 0,
+                            'rendezvous_payed' => 0,
+                            'rendezvous_pending' => 0,
+                        ], $stats);
+                    @endphp
+
+                    <div class="grid grid-cols-1 gap-3">
                         <div class="flex justify-between items-center">
                             <span class="text-gray-600">Total patients</span>
-                            <span class="text-2xl font-bold">{{ $stats['total_patients'] }}</span>
+                            <span class="text-2xl font-bold">{{ $s['total_patients'] }}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Nouveaux patients (30j)</span>
+                            <span class="text-lg font-semibold text-green-600">+{{ $s['nouveaux_patients'] }}</span>
+                        </div>
+                        <hr class="my-1">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Consultations aujourd'hui</span>
+                            <span class="text-lg font-semibold">{{ $s['consultations_aujourdhui'] }}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Consultations (semaine)</span>
+                            <span class="text-lg font-semibold">{{ $s['consultations_semaine'] }}</span>
                         </div>
                         <div class="flex justify-between items-center">
                             <span class="text-gray-600">Consultations (mois)</span>
-                            <span class="text-xl font-semibold">{{ $stats['consultations_mois'] }}</span>
+                            <span class="text-lg font-semibold">{{ $s['consultations_mois'] }}</span>
                         </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-gray-600">Nouveaux patients</span>
-                            <span class="text-lg font-semibold text-green-500">+{{ $stats['nouveaux_patients'] }}</span>
-                        </div>
+                        <hr class="my-1">
+
                     </div>
                 </div>
             </div>
@@ -264,58 +280,7 @@
                     </div>
                 </div>
 
-                <!-- Ordonnances Section -->
-                <div id="section-ordonnances" class="bg-white rounded-[20px] p-6 shadow-sm hidden">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-xl font-bold">Liste des Ordonnances</h2>
-                        <button onclick="openNewOrdonnanceModal()"
-                            class="bg-[#b9ff66] hover:bg-[#a8eb5f] text-black rounded-full px-4 py-2 flex items-center gap-2">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 4v16m8-8H4" />
-                            </svg>
-                            Nouvelle Ordonnance
-                        </button>
-                    </div>
-
-                    <div class="overflow-x-auto">
-                        <table class="w-full">
-                            <thead class="bg-gray-50 rounded-lg">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-sm font-medium text-gray-500">Patient</th>
-                                    <th class="px-6 py-3 text-left text-sm font-medium text-gray-500">Date</th>
-                                    <th class="px-6 py-3 text-left text-sm font-medium text-gray-500">Médicaments</th>
-                                    <th class="px-6 py-3 text-left text-sm font-medium text-gray-500">Statut</th>
-                                    <th class="px-6 py-3 text-left text-sm font-medium text-gray-500">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-200">
-                                <tr class="hover:bg-gray-50">
-                                    <td class="px-6 py-4">
-                                        <div class="flex items-center gap-3">
-                                            <img src="https://randomuser.me/api/portraits/women/68.jpg"
-                                                class="w-8 h-8 rounded-full">
-                                            <div class="font-medium">Marie Dupont</div>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4">15/03/2024</td>
-                                    <td class="px-6 py-4">Paracétamol, Ibuprofène</td>
-                                    <td class="px-6 py-4">
-                                        <span
-                                            class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm">Active</span>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <div class="flex items-center gap-3">
-                                            <button onclick="openViewOrdonnanceModal()"
-                                                class="text-blue-600 hover:text-blue-800">Voir</button>
-                                            <button class="text-green-600 hover:text-green-800">Imprimer</button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                <!-- Ordonnances Section supprimée -->
             </div>
         </div>
     </div>
@@ -717,27 +682,31 @@
 
     <script>
         function showSection(section) {
-            // Cache toutes les sections
-            document.getElementById('section-dossiers').classList.add('hidden');
-            document.getElementById('section-consultations').classList.add('hidden');
-            document.getElementById('section-ordonnances').classList.add('hidden');
+            // Cache les sections existantes uniquement si elles sont présentes
+            var secDossiers = document.getElementById('section-dossiers');
+            var secConsult = document.getElementById('section-consultations');
+            if (secDossiers) secDossiers.classList.add('hidden');
+            if (secConsult) secConsult.classList.add('hidden');
 
-            // Réinitialise tous les boutons
-            document.getElementById('btn-dossiers').classList.remove('bg-[#b9ff66]');
-            document.getElementById('btn-consultations').classList.remove('bg-[#b9ff66]');
-            document.getElementById('btn-ordonnances').classList.remove('bg-[#b9ff66]');
-
-            document.getElementById('btn-dossiers').classList.add('bg-gray-100');
-            document.getElementById('btn-consultations').classList.add('bg-gray-100');
-            document.getElementById('btn-ordonnances').classList.add('bg-gray-100');
+            // Réinitialise les boutons s'ils existent
+            var btnD = document.getElementById('btn-dossiers');
+            var btnC = document.getElementById('btn-consultations');
+            if (btnD) { btnD.classList.remove('bg-[#b9ff66]'); btnD.classList.add('bg-gray-100'); }
+            if (btnC) { btnC.classList.remove('bg-[#b9ff66]'); btnC.classList.add('bg-gray-100'); }
 
             // Affiche la section sélectionnée
-            document.getElementById(`section-${section}`).classList.remove('hidden');
+            var target = document.getElementById(`section-${section}`);
+            if (target) target.classList.remove('hidden');
 
             // Active le bouton sélectionné
-            document.getElementById(`btn-${section}`).classList.remove('bg-gray-100');
-            document.getElementById(`btn-${section}`).classList.add('bg-[#b9ff66]');
+            var btnTarget = document.getElementById(`btn-${section}`);
+            if (btnTarget) { btnTarget.classList.remove('bg-gray-100'); btnTarget.classList.add('bg-[#b9ff66]'); }
         }
+
+        // Définir une section par défaut au chargement pour assurer un état cohérent
+        document.addEventListener('DOMContentLoaded', function () {
+            showSection('dossiers');
+        });
 
         function openNewOrdonnanceModal() {
             document.getElementById('newOrdonnanceModal').classList.remove('hidden');

@@ -923,10 +923,21 @@ class RendezVousController extends Controller
             if (!in_array($rendezVous->statut, ['pending','confirmed'], true)) {
                 return redirect()->back()->with('error', 'Ce rendez-vous ne peut plus être annulé.');
             }
+            $old = $rendezVous->statut;
             $rendezVous->transitionTo('cancelled');
 
             // Notifier le médecin de l'annulation
             broadcast(new RendezVousModifie($rendezVous, 'updated'))->toOthers();
+
+            // Notifier le médecin via système de notifications persistantes
+            try {
+                $medecin = $rendezVous->medecin;
+                if ($medecin) {
+                    $medecin->notify(new \App\Notifications\RendezVousStatusChangedNotification($rendezVous, $old, 'cancelled'));
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Notification annulation médecin échouée', ['error' => $e->getMessage()]);
+            }
 
             return redirect()->route('patient.rendez-vous.index')
                 ->with('success', 'Le rendez-vous a été annulé avec succès');

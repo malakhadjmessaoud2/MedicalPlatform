@@ -68,11 +68,11 @@
         </h2>
 
         @php
-            // Filtrer les prochains rendez-vous (jusqu'à la date de début)
+            // Filtrer les prochains rendez-vous CONFIRMÉS (jusqu'à la date de début)
             $prochainsRendezVousFiltres = $prochainsRendezVous->filter(function($rdv) {
                 $heureDebut = \Carbon\Carbon::parse($rdv->date_debut);
                 $maintenant = \Carbon\Carbon::now();
-                return $maintenant <= $heureDebut;
+                return $rdv->statut === 'confirmed' && $maintenant <= $heureDebut;
             });
         @endphp
 
@@ -191,10 +191,13 @@
             \Log::info('Nombre total de prochains rendez-vous: ' . $prochainsRendezVous->count());
 
             // Filtrer les consultations qui doivent être affichées dans "Consultations en ligne"
-            // Afficher les rendez-vous payés jusqu'à la date de fin pour accéder au lien en ligne
+            // Afficher:
+            // 1) les rendez-vous PAYÉS jusqu'à la date de fin (accès au lien en ligne),
+            // 2) ET les rendez-vous CONFIRMÉS de ce jour (même si non payés), jusqu'à leur fin
             $consultationsEnLigne = $prochainsRendezVous->filter(function($rdv) {
                 $heureFin = \Carbon\Carbon::parse($rdv->date_fin ?? $rdv->date_debut->addMinutes(30));
                 $maintenant = \Carbon\Carbon::now();
+                $aujourdhui = \Carbon\Carbon::today();
 
                 // DEBUG: Afficher les détails de chaque rendez-vous
                 echo "<!-- DEBUG RDV ID: " . $rdv->id . " | Statut: '" . $rdv->statut . "' | Date fin: " . $heureFin->format('Y-m-d H:i:s') . " | Maintenant: " . $maintenant->format('Y-m-d H:i:s') . " | Lien: " . ($rdv->lien_en_ligne ? 'OUI' : 'NON') . " -->";
@@ -203,17 +206,20 @@
                 \Log::info("RDV ID: {$rdv->id} | Statut: '{$rdv->statut}' | Date fin: {$heureFin->format('Y-m-d H:i:s')} | Maintenant: {$maintenant->format('Y-m-d H:i:s')} | Lien: " . ($rdv->lien_en_ligne ? 'OUI' : 'NON'));
 
                 // Afficher si:
-                // 1. Le statut est 'payed' (paiement effectué)
-                // 2. On est encore dans la période du rendez-vous (jusqu'à la fin)
-                $condition1 = $rdv->statut === 'payed';
-                $condition2 = $maintenant <= $heureFin;
+                // A. Statut 'payed' ET on est encore dans la période (jusqu'à la fin)
+                $isPayedAndActive = ($rdv->statut === 'payed') && ($maintenant <= $heureFin);
 
-                echo "<!-- DEBUG FILTER RDV ID: " . $rdv->id . " | Condition1 (payed): " . ($condition1 ? 'TRUE' : 'FALSE') . " | Condition2 (date): " . ($condition2 ? 'TRUE' : 'FALSE') . " | RESULT: " . (($condition1 && $condition2) ? 'INCLUDED' : 'EXCLUDED') . " -->";
+                // B. Statut 'confirmed' ET rendez-vous de ce jour ET pas encore fini
+                $isConfirmedToday = ($rdv->statut === 'confirmed')
+                    && \Carbon\Carbon::parse($rdv->date_debut)->isSameDay($aujourdhui)
+                    && ($maintenant <= $heureFin);
+
+                echo "<!-- DEBUG FILTER RDV ID: " . $rdv->id . " | PayedActive: " . ($isPayedAndActive ? 'TRUE' : 'FALSE') . " | ConfirmedToday: " . ($isConfirmedToday ? 'TRUE' : 'FALSE') . " | RESULT: " . (($isPayedAndActive || $isConfirmedToday) ? 'INCLUDED' : 'EXCLUDED') . " -->";
 
                 // Log du résultat du filtre
-                \Log::info("FILTER RDV ID: {$rdv->id} | Condition1 (payed): " . ($condition1 ? 'TRUE' : 'FALSE') . " | Condition2 (date): " . ($condition2 ? 'TRUE' : 'FALSE') . " | RESULT: " . (($condition1 && $condition2) ? 'INCLUDED' : 'EXCLUDED'));
+                \Log::info("FILTER RDV ID: {$rdv->id} | PayedActive: " . ($isPayedAndActive ? 'TRUE' : 'FALSE') . " | ConfirmedToday: " . ($isConfirmedToday ? 'TRUE' : 'FALSE') . " | RESULT: " . (($isPayedAndActive || $isConfirmedToday) ? 'INCLUDED' : 'EXCLUDED'));
 
-                return $condition1 && $condition2;
+                return $isPayedAndActive || $isConfirmedToday;
             });
 
             echo "<!-- DEBUG: Nombre de consultations en ligne après filtre: " . $consultationsEnLigne->count() . " -->";
