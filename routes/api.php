@@ -67,3 +67,8 @@ Route::middleware(['web', 'auth', 'role:patient'])->prefix('patient')->group(fun
         ->name('api.patient.medecin.creneaux-disponibles');
 });
 
+// Route API ChatDoctor (accessible sans authentification spécifique, mais peut être protégée)
+use App\Http\Controllers\ChatDoctorController;
+
+Route::post('/chatdoctor', [ChatDoctorController::class, 'chat'])->name('api.chatdoctor');
+

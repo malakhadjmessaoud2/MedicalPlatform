@@ -28,6 +28,7 @@
     </div>
 
     @livewireScripts
+    @stack('scripts')
 {{--
 
 

@@ -51,14 +51,17 @@ return [
 
     'google' => [
         'api_key' => env('GOOGLE_API_KEY'),
-        'model' => env('GOOGLE_MODEL', 'gemini-pro'),
+        'model' => env('GOOGLE_MODEL', 'gemini-1.5-flash'), // gemini-1.5-flash (gratuit) ou gemini-1.5-pro
     ],
 
-    // Services IA GRATUITS pour la génération de comptes-rendus
+    // Services IA GRATUITS pour la génération de comptes-rendus et chatbot médical
     'huggingface' => [
         'api_key' => env('HUGGINGFACE_API_KEY'),
-        'model' => env('HUGGINGFACE_MODEL', 'microsoft/DialoGPT-medium'),
+        'token' => env('HUGGINGFACE_API_TOKEN'), // Token pour ChatDoctor (guide spécifique)
+        'model' => env('HUGGINGFACE_MODEL', 'mistralai/Mistral-7B-Instruct-v0.2'), // Modèle Mistral par défaut
         'api_url' => 'https://api-inference.huggingface.co/models/',
+        'router_url' => 'https://router.huggingface.co/v1', // API OpenAI-compatible (Router)
+        'use_router' => env('HUGGINGFACE_USE_ROUTER', true), // Utiliser le Router par défaut (recommandé)
     ],
 
     'ollama' => [

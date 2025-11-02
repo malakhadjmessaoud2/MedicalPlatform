@@ -19,6 +19,7 @@ use App\Http\Controllers\Medecin\DashboardController as MedecinDashboardControll
 use App\Http\Controllers\Patient\DashboardController as PatientDashboardController;
 use App\Http\Controllers\Patient\DossierController;
 use App\Http\Controllers\Patient\PaiementController;
+use App\Http\Controllers\Patient\ChatBotController;
 use App\Http\Controllers\Admin\GestionMedecinController;
 use App\Http\Controllers\NotificationController;
 
@@ -202,6 +203,61 @@ Route::middleware(['auth', 'role:patient'])->prefix('patient')->name('patient.')
 
     // Dons médicaux
     Route::get('/dons', [PatientDashboardController::class, 'dons'])->name('dons');
+
+    // Chatbot médical
+    Route::get('/chatbot', [ChatBotController::class, 'index'])->name('chatbot');
+    Route::post('/chatbot/message', [ChatBotController::class, 'sendMessage'])->name('chatbot.message');
+    Route::post('/chatbot/reset', [ChatBotController::class, 'resetConversation'])->name('chatbot.reset');
+    Route::get('/chatbot/history', [ChatBotController::class, 'getHistory'])->name('chatbot.history');
+    Route::get('/chatbot/history/{conversation}', [ChatBotController::class, 'getHistory'])->name('chatbot.history.show');
+
+    // Route simple pour test Mistral via Router API (OpenAI-compatible)
+    // Note: Cette route est différente de /chatbot/message (utilisée par ChatBotController)
+    Route::post('/chatbot-simple', function (Illuminate\Http\Request $request) {
+        $message = $request->input('message', 'Bonjour, qui es-tu ?');
+
+        $model = env('HUGGINGFACE_MODEL', 'mistralai/Mistral-7B-Instruct-v0.2');
+        $modelWithProvider = $model . ':featherless-ai';
+
+        // Utiliser l'API Router (OpenAI-compatible) - RECOMMANDÉ
+        $response = \Illuminate\Support\Facades\Http::withHeaders([
+            'Authorization' => 'Bearer ' . env('HUGGINGFACE_API_KEY'),
+            'Content-Type' => 'application/json',
+        ])->timeout(90)->post('https://router.huggingface.co/v1/chat/completions', [
+            'model' => $modelWithProvider,
+            'messages' => [
+                [
+                    'role' => 'user',
+                    'content' => trim($message)
+                ]
+            ],
+            'max_tokens' => 512,
+            'temperature' => 0.7,
+            'top_p' => 0.95
+        ]);
+
+        if ($response->failed()) {
+            return response()->json([
+                'error' => 'Erreur API Hugging Face Router',
+                'details' => $response->json(),
+                'status' => $response->status()
+            ], 500);
+        }
+
+        $data = $response->json();
+
+        // Extraire le message depuis le format OpenAI
+        $generatedText = null;
+        if (isset($data['choices'][0]['message']['content'])) {
+            $generatedText = $data['choices'][0]['message']['content'];
+        }
+
+        return response()->json([
+            'success' => true,
+            'generated_text' => $generatedText,
+            'original_response' => $data
+        ]);
+    })->name('chatbot.simple');
 
     // Routes API patient (JSON) - sous le même middleware auth
     // Médecins par spécialité
