@@ -8,6 +8,20 @@
  * - Réinitialisation de conversation
  */
 
+// Protection contre les erreurs d'extensions de navigateur
+if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.lastError) {
+    // Supprimer les erreurs d'extensions qui ne concernent pas notre code
+    try {
+        const lastError = chrome.runtime.lastError;
+        if (lastError && lastError.message && lastError.message.includes('message channel closed')) {
+            // Ignorer silencieusement ces erreurs d'extensions
+            chrome.runtime.lastError = null;
+        }
+    } catch (e) {
+        // Ignorer
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Éléments du DOM
     const chatForm = document.getElementById('chatForm');
@@ -68,7 +82,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 headers: {
                     'X-CSRF-TOKEN': config.csrfToken
                 }
+            }).catch(error => {
+                // Ignorer les erreurs d'extensions de navigateur
+                if (error.message && error.message.includes('message channel')) {
+                    console.debug('Erreur d\'extension de navigateur ignorée:', error);
+                    return null;
+                }
+                throw error;
             });
+
+            if (!response) return;
 
             const data = await response.json();
 
@@ -90,7 +113,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 scrollToBottom();
             }
         } catch (error) {
-            console.error('Erreur chargement historique:', error);
+            // Ignorer les erreurs d'extensions de navigateur
+            if (error.message && !error.message.includes('message channel')) {
+                console.error('Erreur chargement historique:', error);
+            }
         }
     }
 
@@ -130,7 +156,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     message: message,
                     conversation_id: conversationId
                 })
+            }).catch(error => {
+                // Ignorer les erreurs d'extensions de navigateur
+                if (error.message && error.message.includes('message channel')) {
+                    console.debug('Erreur d\'extension de navigateur ignorée:', error);
+                    return null;
+                }
+                throw error;
             });
+
+            if (!response) {
+                throw new Error('Erreur de connexion (extension de navigateur peut avoir interféré)');
+            }
 
             // Vérifier le Content-Type avant de parser
             const contentType = response.headers.get('content-type');
@@ -166,6 +203,15 @@ document.addEventListener('DOMContentLoaded', function() {
             addBotMessage(data.message, botTime);
 
         } catch (error) {
+            // Ignorer les erreurs d'extensions de navigateur qui ne concernent pas notre code
+            if (error.message && error.message.includes('message channel')) {
+                console.debug('Erreur d\'extension de navigateur ignorée:', error);
+                // Ne pas afficher d'erreur à l'utilisateur pour ces erreurs
+                setFormDisabled(false);
+                messageInput.focus();
+                return;
+            }
+
             console.error('Erreur:', error);
 
             // Message d'erreur plus informatif
@@ -189,18 +235,41 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     /**
+     * Détecte la langue d'un message pour appliquer le bon style
+     */
+    function detectLanguage(message) {
+        // Détecter l'arabe (caractères Unicode arabes)
+        if (/[\u0600-\u06FF]/.test(message)) {
+            return 'ar';
+        }
+        // Détecter l'anglais (mots-clés courants)
+        const englishKeywords = ['hello', 'hi', 'pain', 'headache', 'fever', 'doctor', 'health'];
+        const messageLower = message.toLowerCase();
+        const englishCount = englishKeywords.filter(keyword => messageLower.includes(keyword)).length;
+
+        if (englishCount > 0) {
+            return 'en';
+        }
+        // Par défaut, français
+        return 'fr';
+    }
+
+    /**
      * Ajoute un message utilisateur à l'interface (bulle bleue)
      */
     function addUserMessage(message, time) {
         const messageDiv = document.createElement('div');
+        const detectedLang = detectLanguage(message);
+        const isRTL = detectedLang === 'ar';
+
         messageDiv.className = 'flex items-start gap-2 justify-end message-bubble';
 
         messageDiv.innerHTML = `
             <div class="max-w-[75%] md:max-w-[60%]">
-                <div class="user-bubble px-4 py-2.5 shadow-sm">
-                    <p class="text-sm text-white leading-relaxed whitespace-pre-wrap">${escapeHtml(message)}</p>
+                <div class="user-bubble px-4 py-2.5 shadow-sm" style="direction: ${isRTL ? 'rtl' : 'ltr'}; text-align: ${isRTL ? 'right' : 'left'}">
+                    <p class="text-sm text-white leading-relaxed whitespace-pre-wrap" style="direction: ${isRTL ? 'rtl' : 'ltr'}">${escapeHtml(message)}</p>
                 </div>
-                <p class="text-xs text-gray-500 mt-1 mr-2 text-right">${time}</p>
+                <p class="text-xs text-gray-500 mt-1 mr-2 text-right" style="direction: ${isRTL ? 'rtl' : 'ltr'}">${time}</p>
             </div>
         `;
 
@@ -213,6 +282,9 @@ document.addEventListener('DOMContentLoaded', function() {
      */
     function addBotMessage(message, time, isError = false) {
         const messageDiv = document.createElement('div');
+        const detectedLang = detectLanguage(message);
+        const isRTL = detectedLang === 'ar';
+
         messageDiv.className = 'flex items-start gap-2 justify-start message-bubble';
 
         // Formater le message
@@ -225,10 +297,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 </svg>
             </div>
             <div class="max-w-[75%] md:max-w-[60%]">
-                <div class="bot-bubble px-4 py-2.5 shadow-sm ${isError ? 'border-l-4 border-red-400' : ''}">
+                <div class="bot-bubble px-4 py-2.5 shadow-sm ${isError ? 'border-l-4 border-red-400' : ''}" style="direction: ${isRTL ? 'rtl' : 'ltr'}; text-align: ${isRTL ? 'right' : 'left'}">
                     ${formattedMessage}
                 </div>
-                <p class="text-xs text-gray-500 mt-1 ml-2">${time}</p>
+                <p class="text-xs text-gray-500 mt-1 ml-2" style="direction: ${isRTL ? 'rtl' : 'ltr'}">${time}</p>
             </div>
         `;
 

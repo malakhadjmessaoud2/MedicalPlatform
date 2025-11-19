@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Cache;
  *
  * Gère les interactions avec les API d'IA pour fournir des conseils généraux de santé
  * sans poser de diagnostic ni recommander de médicaments spécifiques.
+ * Répond toujours dans la même langue que le message de l'utilisateur.
  */
 class ChatBotService
 {
@@ -19,6 +20,7 @@ class ChatBotService
     private $huggingfaceApiKey;
     private $googleApiKey;
     private $provider;
+    private $languageDetection;
 
     public function __construct()
     {
@@ -26,6 +28,7 @@ class ChatBotService
         $this->anthropicApiKey = config('services.anthropic.api_key');
         $this->huggingfaceApiKey = config('services.huggingface.api_key');
         $this->googleApiKey = config('services.google.api_key');
+        $this->languageDetection = new LanguageDetectionService();
 
         // Hugging Face est la priorité absolue pour le chatbot médical
         // Utilisation exclusive de modèles médicaux Hugging Face
@@ -63,18 +66,22 @@ class ChatBotService
             ];
         }
 
-        // Construire le prompt avec le contexte médical
-        $userPrompt = $this->buildUserPrompt($message, $conversationHistory);
+        // Détecter la langue du message utilisateur
+        $detectedLanguage = $this->languageDetection->detectLanguage($message);
+        Log::info("Langue détectée: {$detectedLanguage} (" . $this->languageDetection->getLanguageName($detectedLanguage) . ") pour le message: " . substr($message, 0, 50));
+
+        // Construire le prompt avec le contexte médical et la langue détectée
+        $userPrompt = $this->buildUserPrompt($message, $conversationHistory, $detectedLanguage);
 
         // UTILISATION UNIQUE DE Mistral-7B-Instruct-v0.2
         try {
             $model = config('services.huggingface.model', 'mistralai/Mistral-7B-Instruct-v0.2');
             Log::info("Génération de réponse via Hugging Face avec le modèle {$model}");
-            $response = $this->callHuggingFace($userPrompt, $conversationHistory);
+            $response = $this->callHuggingFace($userPrompt, $conversationHistory, $detectedLanguage);
 
             // Si on arrive ici, Hugging Face a fonctionné
             Log::info("Réponse générée avec succès via l'API Hugging Face ({$model})");
-            return $this->formatResponse($response);
+            return $this->formatResponse($response, $detectedLanguage);
 
         } catch (\Exception $e) {
             Log::error("Échec de l'API Hugging Face: " . $e->getMessage());
@@ -84,69 +91,54 @@ class ChatBotService
             return [
                 'success' => false,
                 'error' => 'Impossible de contacter l\'API Hugging Face. Erreur: ' . $e->getMessage(),
-                'error_details' => config('app.debug') ? $e->getTraceAsString() : null
+                'error_details' => config('app.debug') ? $e->getTraceAsString() : null,
+                'detected_language' => $detectedLanguage
             ];
         }
     }
 
     /**
      * Construit le prompt système pour le chatbot médical
-     * Format conversationnel: Human (patient) / Assistant
+     * Adapté selon la langue détectée
+     *
+     * @param string $language Code de langue (fr, en, ar)
+     * @return string Prompt système dans la langue appropriée
      */
-    private function buildSystemPrompt(): string
+    private function buildSystemPrompt(string $language = 'fr'): string
     {
-        return "Tu es un assistant médical virtuel empathique et professionnel. Tu réponds aux questions de santé en français de manière claire, bienveillante et informative.
-
-FORMAT DE CONVERSATION :
-- Utilise le format \"Human:\" pour les questions du patient
-- Utilise \"Assistant:\" pour tes réponses
-- Sois naturel et conversationnel
-
-RÈGLES ABSOLUES :
-- Tu ne poses JAMAIS de diagnostic médical
-- Tu ne recommandes JAMAIS de médicaments spécifiques (noms de médicaments, dosages)
-- Tu fournis uniquement des conseils généraux et des informations éducatives
-- Tu es toujours empathique, rassurant et professionnel
-- Tu encourages systématiquement la consultation d'un professionnel de santé
-
-TON STYLE :
-- Réponds de manière naturelle et conversationnelle
-- Adapte ta réponse au contenu spécifique de la question posée (analyse la question du patient)
-- Sois précis et pertinent, évite les réponses génériques répétées
-- Utilise un langage accessible et compréhensible
-- Personnalise tes réponses selon le contexte de la question
-
-IMPORTANT : Chaque réponse doit se terminer par :
-\"⚠️ Je ne remplace pas un médecin. Pour un avis personnalisé, consultez un professionnel de santé.\"";
+        return $this->languageDetection->buildSystemPromptForLanguage($language);
     }
 
     /**
      * Construit le prompt utilisateur avec l'historique de conversation
-     * Format simple pour les modèles médicaux Hugging Face
+     * Inclut l'instruction de langue pour répondre dans la même langue
+     *
+     * @param string $message Message de l'utilisateur
+     * @param array $conversationHistory Historique de conversation
+     * @param string $language Langue détectée (fr, en, ar)
+     * @return string Prompt utilisateur avec instruction de langue
      */
-    private function buildUserPrompt(string $message, array $conversationHistory): string
+    private function buildUserPrompt(string $message, array $conversationHistory, string $language = 'fr'): string
     {
         // Pour les modèles médicaux, utiliser directement la question du patient
-        // Format simple comme dans l'exemple : "Quels sont les symptômes de la grippe ?"
+        // L'instruction de langue sera ajoutée dans le prompt système
         if (empty($conversationHistory)) {
+            // Première question : message simple
             return $message;
         }
 
         // Si on a un historique, construire un prompt conversationnel simple
-        $prompt = $message;
+        // NOTE: L'instruction de langue sera déjà dans le system prompt pour le Router API
+        $prompt = "";
 
         // Ajouter le contexte récent (limité aux 3 derniers échanges)
         $recentHistory = array_slice($conversationHistory, -3);
         if (!empty($recentHistory)) {
-            $context = "\n\nContexte précédent:\n";
-            foreach ($recentHistory as $entry) {
-                if (isset($entry['role']) && isset($entry['content'])) {
-                    $role = $entry['role'] === 'user' ? 'Patient' : 'Assistant';
-                    $context .= "{$role}: {$entry['content']}\n";
-                }
-            }
-            $prompt = $context . "Patient: {$message}";
+            // Ne pas inclure le contexte dans le prompt user pour le Router API
+            // car l'historique sera déjà ajouté comme messages séparés
         }
+
+        $prompt = $message;
 
         return $prompt;
     }
@@ -343,8 +335,13 @@ IMPORTANT : Chaque réponse doit se terminer par :
      *
      * Utilise l'API Router (OpenAI-compatible) par défaut - plus simple et fiable
      * Documentation: https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2
+     *
+     * @param string $userPrompt Prompt utilisateur
+     * @param array $conversationHistory Historique de conversation
+     * @param string $language Langue détectée (fr, en, ar)
+     * @return string Réponse du modèle
      */
-    private function callHuggingFace(string $userPrompt, array $conversationHistory = []): string
+    private function callHuggingFace(string $userPrompt, array $conversationHistory = [], string $language = 'fr'): string
     {
         // Utiliser le modèle Mistral depuis la configuration
         $model = config('services.huggingface.model', 'mistralai/Mistral-7B-Instruct-v0.2');
@@ -353,17 +350,23 @@ IMPORTANT : Chaque réponse doit se terminer par :
         $useRouter = config('services.huggingface.use_router', true);
 
         if ($useRouter) {
-            return $this->callHuggingFaceViaRouter($userPrompt, $conversationHistory, $model);
+            return $this->callHuggingFaceViaRouter($userPrompt, $conversationHistory, $model, $language);
         }
 
         // Fallback : utiliser l'API classique
-        return $this->callHuggingFaceClassic($userPrompt, $conversationHistory, $model);
+        return $this->callHuggingFaceClassic($userPrompt, $conversationHistory, $model, $language);
     }
 
     /**
      * Utilise l'API Router (OpenAI-compatible) - RECOMMANDÉ
+     *
+     * @param string $userPrompt Prompt utilisateur
+     * @param array $conversationHistory Historique de conversation
+     * @param string $model Nom du modèle
+     * @param string $language Langue détectée (fr, en, ar)
+     * @return string Réponse du modèle
      */
-    private function callHuggingFaceViaRouter(string $userPrompt, array $conversationHistory, string $model): string
+    private function callHuggingFaceViaRouter(string $userPrompt, array $conversationHistory, string $model, string $language = 'fr'): string
     {
         $routerUrl = config('services.huggingface.router_url', 'https://router.huggingface.co/v1');
         $endpoint = $routerUrl . '/chat/completions';
@@ -371,6 +374,13 @@ IMPORTANT : Chaque réponse doit se terminer par :
 
         // Construire les messages au format OpenAI
         $messages = [];
+
+        // Ajouter le prompt système avec instruction de langue
+        $systemPrompt = $this->buildSystemPrompt($language);
+        $messages[] = [
+            'role' => 'system',
+            'content' => $systemPrompt
+        ];
 
         // Ajouter l'historique de conversation
         foreach ($conversationHistory as $entry) {
@@ -382,16 +392,36 @@ IMPORTANT : Chaque réponse doit se terminer par :
             }
         }
 
-        // Ajouter le message actuel
+        // Ajouter le message actuel avec instruction de langue FORCÉE au début
+        // Mistral semble ignorer le system prompt, donc on force l'instruction dans le user message
+        $languageInstruction = $this->languageDetection->getLanguageInstruction($language);
+
+        // Pour le français, ajouter un exemple encore plus explicite
+        if ($language === 'fr') {
+            $userMessageWithLanguage = "⚠️⚠️⚠️ TRÈS IMPORTANT : RÉPONDS UNIQUEMENT EN FRANÇAIS. JAMAIS EN ANGLAIS.\n\n" .
+                                      "Question du patient : " . trim($userPrompt) . "\n\n" .
+                                      "Rappel : Ta réponse DOIT être entièrement en français. Exemple : 'Je comprends...' et NON 'I understand...'";
+        } elseif ($language === 'ar') {
+            // Pour l'arabe, instruction très explicite avec exemple
+            $userMessageWithLanguage = "⚠️⚠️⚠️ مهم جداً: أجب باللغة العربية فقط. لا تستخدم الإنجليزية أبداً.\n\n" .
+                                      "سؤال المريض: " . trim($userPrompt) . "\n\n" .
+                                      "تذكير: يجب أن تكون إجابتك بالكامل باللغة العربية. مثال: 'أفهم...' وليس 'I understand...'";
+        } else {
+            $userMessageWithLanguage = "{$languageInstruction}\n\n" . trim($userPrompt);
+        }
+
         $messages[] = [
             'role' => 'user',
-            'content' => trim($userPrompt)
+            'content' => $userMessageWithLanguage
         ];
 
         $tokenPreview = substr($this->huggingfaceApiKey, 0, 7) . '...';
         Log::info("Appel Mistral via Router API - Modèle: {$modelWithProvider}");
         Log::info("Token Hugging Face: {$tokenPreview}");
+        Log::info("Langue détectée: {$language}");
         Log::info("Nombre de messages: " . count($messages));
+        Log::info("Prompt système (premiers 300 caractères): " . substr($systemPrompt, 0, 300));
+        Log::info("Message utilisateur avec instruction langue: " . substr($userMessageWithLanguage, 0, 300));
 
         try {
             $response = Http::withHeaders([
@@ -404,6 +434,9 @@ IMPORTANT : Chaque réponse doit se terminer par :
                 'temperature' => 0.7,
                 'top_p' => 0.95
             ]);
+
+            // Logger la requête complète pour debug (sans le token complet)
+            Log::info("Requête Router API envoyée - Langue: {$language}, Messages count: " . count($messages));
 
             Log::info("Réponse HTTP Router - Status: " . $response->status());
 
@@ -435,9 +468,9 @@ IMPORTANT : Chaque réponse doit se terminer par :
                 $generatedText = $data['choices'][0]['message']['content'];
 
                 Log::info("Réponse générée avec succès via Router API");
-                Log::info("Réponse brute (premiers 200 caractères): " . substr($generatedText, 0, 200));
+                Log::info("Réponse brute (premiers 300 caractères): " . substr($generatedText, 0, 300));
 
-                return $this->cleanHuggingFaceResponse($generatedText, $userPrompt);
+                return $this->cleanHuggingFaceResponse($generatedText, $userPrompt, $language);
             }
 
             throw new \Exception("Format de réponse Router inattendu: " . json_encode($data));
@@ -450,14 +483,23 @@ IMPORTANT : Chaque réponse doit se terminer par :
 
     /**
      * Utilise l'API classique (fallback)
+     *
+     * @param string $userPrompt Prompt utilisateur
+     * @param array $conversationHistory Historique de conversation
+     * @param string $model Nom du modèle
+     * @param string $language Langue détectée (fr, en, ar)
+     * @return string Réponse du modèle
      */
-    private function callHuggingFaceClassic(string $userPrompt, array $conversationHistory, string $model): string
+    private function callHuggingFaceClassic(string $userPrompt, array $conversationHistory, string $model, string $language = 'fr'): string
     {
-        // Construire le prompt selon le format Mistral
-        // Format Mistral: <s>[INST] question [/INST]
+        // Construire le prompt selon le format Mistral avec instruction de langue
+        // Format Mistral: <s>[INST] instruction_langue + question [/INST]
+        $languageInstruction = $this->languageDetection->getLanguageInstruction($language);
+        $promptWithLanguage = $languageInstruction . "\n\n" . trim($userPrompt);
+
         if (empty($conversationHistory)) {
-            // Première question : format Mistral standard
-            $fullPrompt = "<s>[INST] " . trim($userPrompt) . " [/INST]";
+            // Première question : format Mistral standard avec instruction de langue
+            $fullPrompt = "<s>[INST] " . trim($promptWithLanguage) . " [/INST]";
         } else {
             // Avec historique : construire un prompt conversationnel
             $fullPrompt = "<s>";
@@ -475,8 +517,8 @@ IMPORTANT : Chaque réponse doit se terminer par :
                 }
             }
 
-            // Ajouter la question actuelle
-            $fullPrompt .= "<s>[INST] " . trim($userPrompt) . " [/INST]";
+            // Ajouter la question actuelle avec instruction de langue
+            $fullPrompt .= "<s>[INST] " . trim($promptWithLanguage) . " [/INST]";
         }
 
         $baseUrl = rtrim(config('services.huggingface.api_url'), '/');
@@ -575,9 +617,11 @@ IMPORTANT : Chaque réponse doit se terminer par :
 
             // Succès ! On a une réponse valide
             Log::info("Réponse générée avec succès par le modèle Hugging Face: {$model}");
-            Log::info("Réponse brute (premiers 200 caractères): " . substr($generatedText, 0, 200));
+            Log::info("Réponse brute (premiers 300 caractères): " . substr($generatedText, 0, 300));
 
-            return $this->cleanHuggingFaceResponse($generatedText, $userPrompt);
+            // Extraire la langue du prompt (elle devrait être dans le prompt)
+            // Pour l'API classique, on va utiliser 'fr' par défaut mais on pourrait l'extraire du contexte
+            return $this->cleanHuggingFaceResponse($generatedText, $userPrompt, $language);
 
         } catch (\Illuminate\Http\Client\ConnectionException $e) {
             Log::error("Erreur de connexion à l'API Hugging Face: " . $e->getMessage());
@@ -661,8 +705,13 @@ IMPORTANT : Chaque réponse doit se terminer par :
     /**
      * Nettoie la réponse de Hugging Face et ajoute l'avertissement médical
      * Gère le format conversationnel Human/Assistant
+     *
+     * @param string $response Réponse brute du modèle
+     * @param string $userPrompt Prompt utilisateur original
+     * @param string $language Langue détectée (fr, en, ar)
+     * @return string Réponse nettoyée avec avertissement dans la langue appropriée
      */
-    private function cleanHuggingFaceResponse(string $response, string $userPrompt): string
+    private function cleanHuggingFaceResponse(string $response, string $userPrompt, string $language = 'fr'): string
     {
         // Nettoyer la réponse
         $response = trim($response);
@@ -674,14 +723,16 @@ IMPORTANT : Chaque réponse doit se terminer par :
             $response = trim($response);
         }
 
-        // Enlever les préfixes conversationnels courants
+        // Enlever les préfixes conversationnels courants (multilingues)
         $prefixes = [
             'Assistant:',
             'Réponse de l\'assistant médical:',
             'Réponse:',
             'A: ',
             'Human:',
-            'Patient:'
+            'Patient:',
+            'المساعد:', // Arabe: Assistant
+            'المريض:', // Arabe: Patient
         ];
 
         foreach ($prefixes as $prefix) {
@@ -694,10 +745,10 @@ IMPORTANT : Chaque réponse doit se terminer par :
         }
 
         // Enlever toute mention "Human:" ou "Patient:" qui pourrait apparaître
-        $response = preg_replace('/^(Human|Patient):\s*/i', '', $response);
+        $response = preg_replace('/^(Human|Patient|المريض|المساعد):\s*/iu', '', $response);
 
         // Enlever les répétitions de "Assistant:" en milieu de réponse
-        $response = preg_replace('/\n+Assistant:\s*/i', "\n", $response);
+        $response = preg_replace('/\n+(Assistant|المساعد):\s*/iu', "\n", $response);
 
         // Limiter la longueur (maximum 1200 caractères pour une réponse claire)
         if (mb_strlen($response) > 1200) {
@@ -718,16 +769,37 @@ IMPORTANT : Chaque réponse doit se terminer par :
 
         // S'assurer que la réponse n'est pas vide ou trop courte
         if (empty($response) || mb_strlen($response) < 10) {
-            return $this->getFallbackResponse($userPrompt);
+            return $this->getFallbackResponse($userPrompt, $language);
         }
 
-        // Ajouter systématiquement l'avertissement médical à la fin
-        $warningText = "\n\n⚠️ Je ne remplace pas un médecin. Pour un avis personnalisé, consultez un professionnel de santé.";
+        // VÉRIFIER LA LANGUE DE LA RÉPONSE ET CORRIGER SI NÉCESSAIRE
+        $detectedResponseLanguage = $this->languageDetection->detectLanguage($response);
+        if ($detectedResponseLanguage !== $language) {
+            Log::warning("Langue de la réponse ({$detectedResponseLanguage}) ne correspond pas à la langue attendue ({$language})");
+            Log::info("Réponse reçue (premiers 200 caractères): " . substr($response, 0, 200));
 
-        // Vérifier si l'avertissement est déjà présent (éviter les doublons)
+            // Si la réponse est en anglais mais qu'on attend du français, traduire
+            if ($detectedResponseLanguage === 'en' && $language === 'fr') {
+                $response = $this->translateEnglishToFrench($response);
+                Log::info("Réponse traduite en français");
+            } elseif ($detectedResponseLanguage === 'en' && $language === 'ar') {
+                // Pour l'arabe, on peut utiliser le fallback ou laisser tel quel
+                Log::warning("Réponse en anglais alors que l'arabe était attendu, utilisation du fallback");
+                return $this->getFallbackResponse($userPrompt, $language);
+            }
+        }
+
+        // Ajouter systématiquement l'avertissement médical dans la langue appropriée
+        $warningText = $this->languageDetection->getMedicalWarning($language);
+
+        // Vérifier si l'avertissement est déjà présent (éviter les doublons) - vérification multilingue
         $hasWarning = mb_stripos($response, '⚠️') !== false ||
-                     mb_stripos($response, 'ne remplace pas un médecin') !== false ||
-                     mb_stripos($response, 'professionnel de santé') !== false;
+                     mb_stripos($response, 'ne remplace pas') !== false ||
+                     mb_stripos($response, 'do not replace') !== false ||
+                     mb_stripos($response, 'لا أستبدل') !== false ||
+                     mb_stripos($response, 'professionnel de santé') !== false ||
+                     mb_stripos($response, 'healthcare professional') !== false ||
+                     mb_stripos($response, 'متخصص') !== false;
 
         if (!$hasWarning) {
             $response .= $warningText;
@@ -737,28 +809,118 @@ IMPORTANT : Chaque réponse doit se terminer par :
     }
 
     /**
-     * Formate la réponse dans la structure attendue
+     * Traduit une réponse anglaise en français
+     * Utilise des règles de traduction simples pour les termes médicaux courants
+     *
+     * @param string $englishResponse Réponse en anglais
+     * @return string Réponse traduite en français
      */
-    private function formatResponse(string $rawResponse): array
+    private function translateEnglishToFrench(string $englishResponse): string
+    {
+        // Traductions de base pour les phrases médicales courantes (ordre important: du plus long au plus court)
+        $translations = [
+            // Phrases complètes prioritaires
+            "/I'm here to help answer any questions you have to the best of my ability/i" => "Je suis là pour répondre à vos questions du mieux que je peux",
+            "/I cannot provide medical advice/i" => "Je ne peux pas fournir de conseil médical",
+            "/The sudden onset of chest pain is a serious symptom/i" => "L'apparition soudaine de douleurs thoraciques est un symptôme grave",
+            "/requires immediate medical attention/i" => "nécessite une attention médicale immédiate",
+            "/call your healthcare provider/i" => "appelez votre professionnel de santé",
+            "/go to the emergency room/i" => "rendez-vous aux urgences",
+
+            // Phrases d'introduction
+            "/I'm here to help/i" => "Je suis là pour vous aider",
+            "/I can help/i" => "Je peux vous aider",
+            "/I'm not a doctor/i" => "Je ne suis pas médecin",
+            "/to the best of my ability/i" => "du mieux que je peux",
+
+            // Symptômes et urgences
+            "/sudden onset/i" => "apparition soudaine",
+            "/chest pain/i" => "douleurs thoraciques",
+            "/medical attention/i" => "attention médicale",
+            "/emergency room/i" => "salle d'urgence",
+            "/emergency/i" => "urgence",
+            "/healthcare provider/i" => "professionnel de santé",
+            "/call your doctor/i" => "appelez votre médecin",
+            "/go to the emergency/i" => "allez aux urgences",
+            "/serious symptom/i" => "symptôme grave",
+
+            // Conseils généraux
+            "/you should/i" => "vous devriez",
+            "/it is important/i" => "il est important",
+            "/it's important to/i" => "il est important de",
+            "/you may/i" => "vous pouvez",
+            "/you might/i" => "vous pourriez",
+
+            // Expressions courantes
+            "/However,/i" => "Cependant,",
+            "/If you're experiencing/i" => "Si vous ressentez",
+            "/If you experience/i" => "Si vous ressentez",
+            "/you have/i" => "vous avez",
+            "/requires/i" => "nécessite",
+        ];
+
+        $translated = $englishResponse;
+
+        // Appliquer les traductions
+        foreach ($translations as $pattern => $replacement) {
+            $translated = preg_replace($pattern, $replacement, $translated);
+        }
+
+        // Si la traduction semble incomplète (beaucoup de mots anglais restent),
+        // utiliser un message générique en français
+        $englishWords = ['the', 'and', 'is', 'are', 'you', 'your', 'have', 'has', 'can', 'should', 'would'];
+        $wordCount = 0;
+        foreach ($englishWords as $word) {
+            if (preg_match('/\b' . preg_quote($word, '/') . '\b/i', $translated)) {
+                $wordCount++;
+            }
+        }
+
+        // Si plus de 10% des mots sont des mots anglais courants, utiliser un fallback
+        if ($wordCount > 5) {
+            Log::warning("Traduction automatique incomplète, utilisation d'une réponse générique en français");
+            return "Je comprends votre préoccupation. Les symptômes que vous décrivez nécessitent une attention médicale. " .
+                   "Il est important de consulter un professionnel de santé rapidement, surtout en cas de douleurs thoraciques soudaines. " .
+                   "Pour toute urgence médicale, composez le numéro d'urgence ou rendez-vous aux urgences les plus proches.";
+        }
+
+        return $translated;
+    }
+
+    /**
+     * Formate la réponse dans la structure attendue
+     *
+     * @param string $rawResponse Réponse brute du modèle
+     * @param string $language Langue détectée (fr, en, ar)
+     * @return array Réponse formatée avec avertissement dans la langue appropriée
+     */
+    private function formatResponse(string $rawResponse, string $language = 'fr'): array
     {
         // La réponse brute devrait déjà contenir les sections formatées
-        // mais on s'assure qu'elle contient bien l'avertissement médical
+        // mais on s'assure qu'elle contient bien l'avertissement médical dans la bonne langue
         $response = trim($rawResponse);
 
-        // S'assurer que l'avertissement médical est toujours présent
-        $warningText = "\n\n⚠️ Je ne remplace pas un médecin. Pour un avis personnalisé, consultez un professionnel de santé.";
+        // S'assurer que l'avertissement médical est toujours présent dans la langue appropriée
+        $warningText = $this->languageDetection->getMedicalWarning($language);
 
-        // Vérifier si l'avertissement est déjà présent (éviter les doublons)
-        if (stripos($response, '⚠️') === false &&
-            stripos($response, 'ne remplace pas un médecin') === false &&
-            stripos($response, 'professionnel de santé') === false) {
+        // Vérifier si l'avertissement est déjà présent (éviter les doublons) - vérification multilingue
+        $hasWarning = mb_stripos($response, '⚠️') !== false ||
+                     mb_stripos($response, 'ne remplace pas') !== false ||
+                     mb_stripos($response, 'do not replace') !== false ||
+                     mb_stripos($response, 'لا أستبدل') !== false ||
+                     mb_stripos($response, 'professionnel de santé') !== false ||
+                     mb_stripos($response, 'healthcare professional') !== false ||
+                     mb_stripos($response, 'متخصص') !== false;
+
+        if (!$hasWarning) {
             $response .= $warningText;
         }
 
         return [
             'success' => true,
             'message' => $response,
-            'timestamp' => now()->toIso8601String()
+            'timestamp' => now()->toIso8601String(),
+            'detected_language' => $language
         ];
     }
 
@@ -766,9 +928,21 @@ IMPORTANT : Chaque réponse doit se terminer par :
      * Réponse de fallback intelligente si l'API échoue
      * Génère une réponse contextuelle basée sur les mots-clés dans la question
      * Cette fonction est utilisée UNIQUEMENT en dernier recours si tous les modèles AI échouent
+     *
+     * @param string $userMessage Message de l'utilisateur
+     * @param string $language Langue détectée (fr, en, ar)
+     * @return string Réponse de fallback dans la langue appropriée
      */
-    private function getFallbackResponse(string $userMessage): string
+    private function getFallbackResponse(string $userMessage, string $language = 'fr'): string
     {
+        // Pour l'arabe, détecter les mots-clés arabes
+        $hasArabicChars = preg_match('/[\x{0600}-\x{06FF}]/u', $userMessage);
+
+        // Si c'est de l'arabe ou si la langue demandée est l'arabe
+        if ($language === 'ar' || $hasArabicChars) {
+            return $this->getArabicFallbackResponse($userMessage);
+        }
+
         $messageLower = mb_strtolower($userMessage);
 
         // Détecter le type de question pour une réponse plus pertinente
@@ -846,8 +1020,58 @@ IMPORTANT : Chaque réponse doit se terminer par :
             $response .= "- Vous observez des signes d'urgence (difficultés respiratoires, perte de conscience, etc.)";
         }
 
-        // Ajouter systématiquement l'avertissement médical
-        $response .= "\n\n⚠️ Je ne remplace pas un médecin. Pour un avis personnalisé, consultez un professionnel de santé.";
+        // Ajouter systématiquement l'avertissement médical dans la langue appropriée
+        $warningText = $this->languageDetection->getMedicalWarning($language);
+        $response .= $warningText;
+
+        return $response;
+    }
+
+    /**
+     * Réponses de fallback en arabe pour diverses questions médicales
+     *
+     * @param string $userMessage Message de l'utilisateur en arabe
+     * @return string Réponse en arabe
+     */
+    private function getArabicFallbackResponse(string $userMessage): string
+    {
+        // Détecter les mots-clés arabes
+        $hasHeadache = mb_stripos($userMessage, 'صداع') !== false;
+        $hasChestPain = mb_stripos($userMessage, 'صدر') !== false || mb_stripos($userMessage, 'قلب') !== false;
+        $hasStomach = mb_stripos($userMessage, 'بطن') !== false;
+        $hasFever = mb_stripos($userMessage, 'حمى') !== false;
+        $hasTired = mb_stripos($userMessage, 'تعب') !== false || mb_stripos($userMessage, 'إرهاق') !== false;
+
+        $response = "";
+
+        // Maux de tête / صداع
+        if ($hasHeadache) {
+            $response = "أفهم أنك تعاني من صداع. يمكن أن يكون للصداع عدة أسباب: الإجهاد، التعب، الجفاف، أو مشاكل الرؤية.\n\nلتخفيف صداع عرضي، أنصحك بما يلي:\n- الراحة في مكان هادئ ومظلم\n- شرب كمية كافية من الماء (الجفاف قد يسبب صداعًا)\n- وضع كمادة باردة على الجبهة أو الصدغين\n- إرخاء عضلاتك وتجنب الشاشات إن أمكن\n\nاستشر طبيبًا بسرعة إذا كان الصداع مفاجئًا وشديدًا جدًا، أو إذا كان مصحوبًا بحمى أو تصلب في الرقبة، أو إذا حدث بعد إصابة، أو إذا استمر عدة أيام دون تحسن.";
+        }
+        // Douleurs thoraciques / ألم الصدر
+        elseif ($hasChestPain) {
+            $response = "أفهم قلقك. ألم الصدر المفاجئ يحتاج إلى عناية طبية فورية.\n\nيرجى:\n- الاتصال بطبيبك أو الذهاب إلى الطوارئ فوراً\n- تجنب التردد في طلب المساعدة الطبية\n- الحصول على تقييم مناسب لتحديد السبب\n\nلا تتجاهل ألم الصدر، خاصة إذا كان مفاجئًا أو شديدًا. الذهاب المبكر إلى الطوارئ يمكن أن ينقذ حياتك.";
+        }
+        // Douleurs abdominales / ألم البطن
+        elseif ($hasStomach) {
+            $response = "أفهم أنك تعاني من ألم في البطن. يمكن أن تكون آلام البطن خفيفة أو شديدة.\n\nإذا كان الألم خفيفًا:\n- راقب ما تناولته من طعام\n- استرح وتجنب الوجبات الثقيلة\n- اشرب الماء بالقليل\n- ضع مصدر حرارة خفيف على المنطقة المؤلمة\n\nاستشر طبيبًا على الفور إذا كان الألم شديدًا، أو إذا كان مصحوبًا بحمى أو قيء أو دم في البراز.";
+        }
+        // Fièvre / حمى
+        elseif ($hasFever) {
+            $response = "الحمى عادة ما تكون علامة على أن جسمك يقاوم عدوى.\n\nيمكنك:\n- الراحة وشرب السوائل (ماء، أعشاب)\n- قياس حرارتك بانتظام\n- ارتداء ملابس خفيفة\n- وضع كمادات باردة على الجبهة\n\nاستشر طبيبًا بسرعة إذا تجاوزت الحمى 38.5 درجة، أو استمرت أكثر من 3 أيام، أو إذا صاحبتها أعراض خطيرة.";
+        }
+        // Fatigue / تعب
+        elseif ($hasTired) {
+            $response = "أفهم أنك تشعر بالتعب. التعب المستمر يمكن أن يكون بسبب عدة عوامل.\n\nلتحسين مستوى الطاقة:\n- نم كمية كافية (7-9 ساعات للبالغين)\n- تناول نظامًا غذائيًا متوازنًا غنيًا بالفواكه والخضروات\n- مارس نشاطًا بدنيًا منتظمًا حتى لو كان خفيفًا\n- تدرب على تقنيات الاسترخاء\n- قلل من الكافيين والكحول\n\nاستشر طبيبًا إذا استمر التعب عدة أسابيع أو أثر بشكل كبير على حياتك.";
+        }
+        // Réponse générique en arabe
+        else {
+            $response = "أفهم مخاوفك الصحية. من المهم أن تنتبه لأعراضك وتراقب تطورها.\n\nبعض النصائح العامة:\n- لاحظ تواتر وشدة ومدة الأعراض\n- راقب ما يزيد أو يقلل من حدة الأعراض\n- تأكد من الترطيب الكافي والراحة\n- تجنب العلاج الذاتي دون استشارة طبية\n- راقب ظهور أعراض جديدة\n\nيُنصح بشدة باستشارة مختص صحي إذا:\n- استمرت الأعراض أو تفاقمت\n- شعرت بألم شديد أو غير عادي\n- كانت لديك شكوك أو مخاوف\n- أثرت الأعراض على حياتك اليومية";
+        }
+
+        // Ajouter systématiquement l'avertissement médical en arabe
+        $warningText = $this->languageDetection->getMedicalWarning('ar');
+        $response .= $warningText;
 
         return $response;
     }

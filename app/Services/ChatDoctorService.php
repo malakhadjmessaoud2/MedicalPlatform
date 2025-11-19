@@ -10,9 +10,16 @@ use Illuminate\Support\Facades\Log;
  *
  * Utilise l'API OpenAI-compatible de Hugging Face Router (recommandé)
  * Documentation: https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2
+ * Répond toujours dans la même langue que le message de l'utilisateur.
  */
 class ChatDoctorService
 {
+    private $languageDetection;
+
+    public function __construct()
+    {
+        $this->languageDetection = new LanguageDetectionService();
+    }
     /**
      * Vérifie si on doit utiliser l'API Router (OpenAI-compatible)
      */
@@ -52,6 +59,7 @@ class ChatDoctorService
     /**
      * Envoie une question au modèle Mistral-7B-Instruct-v0.2
      * Utilise l'API Router (OpenAI-compatible) par défaut
+     * Détecte la langue et répond dans la même langue
      *
      * @param string $message Question du patient
      * @return array Réponse du modèle ou erreur
@@ -69,25 +77,38 @@ class ChatDoctorService
             ];
         }
 
+        // Détecter la langue du message
+        $detectedLanguage = $this->languageDetection->detectLanguage($message);
+        Log::info("ChatDoctor - Langue détectée: {$detectedLanguage} pour le message: " . substr($message, 0, 50));
+
         // Utiliser l'API Router par défaut (recommandé)
         if ($this->useRouter()) {
-            return $this->askViaRouter($message, $token);
+            return $this->askViaRouter($message, $token, $detectedLanguage);
         }
 
         // Fallback : utiliser l'API classique
-        return $this->askViaClassic($message, $token);
+        return $this->askViaClassic($message, $token, $detectedLanguage);
     }
 
     /**
      * Utilise l'API Router (OpenAI-compatible) - RECOMMANDÉ
      * Format standard OpenAI avec messages et roles
+     *
+     * @param string $message Question du patient
+     * @param string $token Token Hugging Face
+     * @param string $language Langue détectée (fr, en, ar)
+     * @return array Réponse du modèle
      */
-    private function askViaRouter($message, $token)
+    private function askViaRouter($message, $token, $language = 'fr')
     {
         $endpoint = $this->getRouterEndpoint();
         $modelWithProvider = $this->getModelWithProvider();
 
+        // Construire le prompt système avec instruction de langue
+        $systemPrompt = $this->languageDetection->buildSystemPromptForLanguage($language);
+
         Log::info("Appel Mistral via Router API - Modèle: {$modelWithProvider}");
+        Log::info("Langue: {$language}");
         Log::info("Message: " . substr($message, 0, 150));
 
         try {
@@ -97,6 +118,10 @@ class ChatDoctorService
             ])->timeout(90)->post($endpoint, [
                 'model' => $modelWithProvider,
                 'messages' => [
+                    [
+                        'role' => 'system',
+                        'content' => $systemPrompt
+                    ],
                     [
                         'role' => 'user',
                         'content' => trim($message)
@@ -152,11 +177,20 @@ class ChatDoctorService
 
     /**
      * Utilise l'API classique (fallback)
+     *
+     * @param string $message Question du patient
+     * @param string $token Token Hugging Face
+     * @param string $language Langue détectée (fr, en, ar)
+     * @return array Réponse du modèle
      */
-    private function askViaClassic($message, $token)
+    private function askViaClassic($message, $token, $language = 'fr')
     {
+        // Ajouter l'instruction de langue au prompt
+        $languageInstruction = $this->languageDetection->getLanguageInstruction($language);
+        $promptWithLanguage = $languageInstruction . "\n\n" . trim($message);
+
         // Formater selon le format Mistral: <s>[INST] question [/INST]
-        $formattedPrompt = "<s>[INST] " . trim($message) . " [/INST]";
+        $formattedPrompt = "<s>[INST] " . $promptWithLanguage . " [/INST]";
         $endpoint = $this->getClassicEndpoint();
 
         Log::info("Appel Mistral API classique - Modèle: " . config('services.huggingface.model'));
