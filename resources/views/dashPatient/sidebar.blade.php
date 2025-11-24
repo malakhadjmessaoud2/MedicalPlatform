@@ -2,15 +2,18 @@
      class="flex flex-col h-screen bg-[#e4e4e4] transition-all duration-300"
      :class="{ 'w-64': isOpen, 'w-16': !isOpen }">
 
-    <!-- Logo -->
-    <div class="flex justify-start pl-4 py-4">
-        <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <circle cx="12" cy="12" r="3" stroke-width="2"/>
-            <circle cx="12" cy="4" r="3" stroke-width="2"/>
-            <circle cx="20" cy="12" r="3" stroke-width="2"/>
-            <circle cx="4" cy="12" r="3" stroke-width="2"/>
-        </svg>
-    </div>
+     <a href="{{ route('welcome') }}"
+     class="flex items-center justify-center py-1 ms-16 hover:opacity-80 shrink-0"
+     title="MedicalPlatform"
+     class="shrink-0">
+
+      <div class="flex items-center justify-center w-28 h-20 shrink-0">
+          <img src="{{ asset('image/logoMedicalPlatform.png') }}"
+               alt="MedicalPlatform"
+               class="object-contain h-28 w-full drop-shadow-md shrink-0">
+      </div>
+
+  </a>
 
     <!-- Navigation Links -->
     <nav class="flex flex-col space-y-4 mt-4">

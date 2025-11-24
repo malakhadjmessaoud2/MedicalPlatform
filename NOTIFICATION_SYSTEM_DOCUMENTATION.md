@@ -1,8 +1,12 @@
 # Système de Notifications - Documentation
 
+> 📚 **Documentation Complète** : Pour une description détaillée complète, consultez [docs/NOTIFICATIONS_TEMPS_REEL_COMPLETE.md](./docs/NOTIFICATIONS_TEMPS_REEL_COMPLETE.md)
+
 ## Vue d'ensemble
 
 Le système de notifications a été implémenté pour gérer les notifications liées aux rendez-vous entre médecins et patients. Il s'intègre parfaitement avec le système WebSocket existant.
+
+**Architecture** : WebSocket (Laravel Reverb) + Notifications Persistantes (Base de données)
 
 ## Composants implémentés
 

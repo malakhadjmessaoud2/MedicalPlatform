@@ -4,22 +4,21 @@
      :class="{ 'w-64': isOpen, 'w-16': !isOpen }">
 
     <!--  Brand -->
-    <a href="{{ route('medecin.dashboard') }}" class="flex items-center pl-3 pr-2 py-4 group" title="MedicalPlatform">
-        <div class="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center ring-1 ring-black/10 shadow-sm">
-            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-            </svg>
+    <a href="{{ route('welcome') }}"
+       class="flex items-center justify-center py-4 ms-16 hover:opacity-80 shrink-0"
+       title="MedicalPlatform"
+       class="shrink-0">
+
+        <div class="flex items-center justify-center w-28 h-20 shrink-0">
+            <img src="{{ asset('image/logoMedicalPlatform.png') }}"
+                 alt="MedicalPlatform"
+                 class="object-contain h-28 w-full drop-shadow-md shrink-0">
         </div>
-        <span x-show="isOpen"
-              x-transition:enter="transition-opacity duration-300"
-              x-transition:enter-start="opacity-0"
-              x-transition:enter-end="opacity-100"
-              class="ml-3 text-base font-semibold tracking-tight bg-gradient-to-r from-[#b9ff66] to-[#a8f055] bg-clip-text text-transparent">
-            MedicalPlatform
-        </span>
+
     </a>
 
-    <!-- Navigation Links -->
+
+     <!-- Navigation Links -->
     <nav class="flex flex-col space-y-4 mt-4">
         <!-- Toggle Button -->
         <div class="pl-3">

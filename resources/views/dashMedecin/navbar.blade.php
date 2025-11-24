@@ -9,6 +9,7 @@
 
 
 <nav class="px-4 py-1.5 flex items-center justify-between">
+
     <!-- Timeline Container -->
     <div class="bg-black rounded-[30px] overflow-hidden flex items-center p-2 mx-auto max-w-5xl w-full lg:w-3/4">
         <!-- Left Section - Schedule Title & Date -->

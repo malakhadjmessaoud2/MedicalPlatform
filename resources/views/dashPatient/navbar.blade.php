@@ -1,13 +1,14 @@
 <meta name="user-id" content="{{ Auth::id() }}">
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
-<nav class="px-4 py-2  shadow-sm">
+<nav class="px-4 py-2">
     <div class="flex items-center justify-between">
-        <!-- Left Section - Date, Search, Settings -->
-        <div class="flex items-center space-x-4">
+
+        <!-- Left Section - Décalée vers la droite -->
+        <div class="flex items-center space-x-4 pl-6">
             <!-- Date du jour -->
             <div class="hidden sm:flex items-center text-gray-600 text-sm">
-                <svg class="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-20 h-5 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 0 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
@@ -36,6 +37,7 @@
                 </svg>
             </button>
         </div>
+
 
         <!-- Right Actions -->
         <div class="flex items-center space-x-4">

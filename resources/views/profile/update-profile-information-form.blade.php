@@ -1,34 +1,38 @@
 <x-form-section submit="updateProfileInformation">
-    <x-slot name="title">
-        <span class="text-xl font-semibold text-gray-800">{{ __('Profile Information') }}</span>
-    </x-slot>
+    {{-- <x-slot name="title">
+    </x-slot> --}}
 
     <x-slot name="description">
-        <span class="text-gray-600">{{ __('Update your account\'s profile information and email address.') }}</span>
     </x-slot>
 
     <x-slot name="form">
         <!-- Notifications succès/erreur -->
         <div x-data="{show:false,message:'',type:'success'}" x-on:saved.window="type='success';message='{{ __('Profil mis à jour avec succès.') }}';show=true;setTimeout(()=>show=false,3000)" class="col-span-6">
             <template x-if="show">
-                <div x-bind:class="type==='success' ? 'bg-emerald-50 text-emerald-700 ring-emerald-200' : 'bg-rose-50 text-rose-700 ring-rose-200'" class="mb-4 px-4 py-3 rounded-md ring-1 shadow-sm">
+                <div x-bind:class="type==='success' ? 'bg-emerald-50 text-emerald-700 ring-emerald-200' : 'bg-rose-50 text-rose-700 ring-rose-200'" class="mb-6 px-4 py-3 rounded-lg ring-1 shadow-sm">
                     <span x-text="message"></span>
                 </div>
             </template>
         </div>
         @if ($errors->any())
-            <div class="col-span-6 mb-4 px-4 py-3 rounded-md ring-1 ring-rose-200 bg-rose-50 text-rose-700">
+            <div class="col-span-6 mb-6 px-4 py-3 rounded-lg ring-1 ring-rose-200 bg-rose-50 text-rose-700 shadow-sm">
                 {{ __('Échec de la mise à jour. Veuillez corriger les champs indiqués en rouge.') }}
             </div>
         @endif
-        <!-- Disposition 2 colonnes: infos personnelles (gauche) / professionnelles (droite) -->
-        <div class="col-span-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Disposition centrée et responsive -->
+        <div class="col-span-6">
+            <div class="max-w-5xl mx-auto">
+                <div class="grid grid-cols-1 {{ auth()->user()?->role === 'medecin' ? 'lg:grid-cols-2' : 'lg:grid-cols-1 max-w-2xl mx-auto' }} gap-8">
             <!-- Colonne gauche: Informations personnelles -->
             <div class="space-y-6">
-                <h3 id="section-infos-personnelles" class="text-base font-semibold text-gray-900 flex items-center gap-2">
-                    <span>👤</span>
-                    <span>Informations personnelles</span>
-                </h3>
+                <div class="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-6 border border-indigo-100 shadow-sm">
+                    <h3 id="section-infos-personnelles" class="text-lg font-bold text-gray-900 flex items-center gap-3 mb-2">
+                        <span class="text-2xl">👤</span>
+                        <span>Informations personnelles</span>
+                    </h3>
+                    <p class="text-sm text-gray-600 ml-11">Gérez vos informations de base et votre photo de profil</p>
+                </div>
+
                 <!-- Photo de profil -->
                 <div x-data="{
                     photoName: null,
@@ -44,7 +48,7 @@
                 x-on:livewire-upload-error="isUploading = false; error = 'Erreur lors du téléchargement'; uploadProgress = 0; clearTimeout(window.uploadTimeout); console.log('Livewire upload error'); console.log('Error detail:', $event.detail)"
                 x-on:livewire-upload-progress="uploadProgress = $event.detail.progress; console.log('Livewire upload progress:', $event.detail.progress + '%'); console.log('Progress event detail:', $event.detail)"
                 role="group" aria-labelledby="section-infos-personnelles"
-                class="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+                class="bg-white rounded-xl border border-gray-200 p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
 
                     <div class="mb-4">
                         <x-label for="photo" value="{{ __('Photo de profil') }}" class="text-sm font-semibold text-gray-900" />
@@ -173,26 +177,28 @@
                 </div>
 
                 <!-- Nom & Prénom -->
-                <div>
-                    <x-label for="prenom" value="{{ __('Prénom') }}" />
-                    <span class="text-rose-600 ml-1" aria-hidden="true">*</span>
-                    <div class="relative mt-1">
-                        <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center">👤</span>
-                        <x-input id="prenom" type="text" class="mt-0 block w-full pl-9 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" wire:model="state.prenom" required aria-required="true" autocomplete="given-name" placeholder="Ex: Amine" />
+                <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
+                    <div>
+                        <x-label for="prenom" value="{{ __('Prénom') }}" class="text-sm font-semibold text-gray-900" />
+                        <span class="text-rose-600 ml-1" aria-hidden="true">*</span>
+                        <div class="relative mt-2">
+                            <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-gray-400">👤</span>
+                            <x-input id="prenom" type="text" class="mt-0 block w-full pl-10 pr-4 py-2.5 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200" wire:model="state.prenom" required aria-required="true" autocomplete="given-name" placeholder="Ex: Amine" />
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1.5">Votre prénom tel qu'il apparaîtra sur votre profil.</p>
+                        <x-input-error for="prenom" class="mt-2" />
                     </div>
-                    <p class="text-xs text-gray-500 mt-1">Votre prénom tel qu'il apparaîtra sur votre profil.</p>
-                    <x-input-error for="prenom" class="mt-2" />
-                </div>
 
-                <div>
-                    <x-label for="nom" value="{{ __('Nom') }}" />
-                    <span class="text-rose-600 ml-1" aria-hidden="true">*</span>
-                    <div class="relative mt-1">
-                        <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center">👤</span>
-                        <x-input id="nom" type="text" class="mt-0 block w-full pl-9 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" wire:model="state.nom" required aria-required="true" autocomplete="family-name" placeholder="Ex: Ben Ali" />
+                    <div class="mt-6">
+                        <x-label for="nom" value="{{ __('Nom') }}" class="text-sm font-semibold text-gray-900" />
+                        <span class="text-rose-600 ml-1" aria-hidden="true">*</span>
+                        <div class="relative mt-2">
+                            <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-gray-400">👤</span>
+                            <x-input id="nom" type="text" class="mt-0 block w-full pl-10 pr-4 py-2.5 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200" wire:model="state.nom" required aria-required="true" autocomplete="family-name" placeholder="Ex: Ben Ali" />
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1.5">Nom de famille.</p>
+                        <x-input-error for="nom" class="mt-2" />
                     </div>
-                    <p class="text-xs text-gray-500 mt-1">Nom de famille.</p>
-                    <x-input-error for="nom" class="mt-2" />
                 </div>
         <!-- Champ name masqué pour compat Jetstream -->
         <div class="hidden" x-data="{ prenom: @entangle('state.prenom'), nom: @entangle('state.nom') }" x-effect="$wire.set('state.name', ((prenom || '') + ' ' + (nom || '')).trim())">
@@ -200,14 +206,14 @@
         </div>
 
                 <!-- Email (HTML5 + pré-remplissage serveur) -->
-                <div>
-                    <x-label for="email" value="{{ __('Email') }}" />
+                <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
+                    <x-label for="email" value="{{ __('Email') }}" class="text-sm font-semibold text-gray-900" />
                     <span class="text-rose-600 ml-1" aria-hidden="true">*</span>
-                    <div class="relative mt-1">
-                        <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center">📧</span>
-                        <x-input id="email" type="email" class="mt-0 block w-full pl-9 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" wire:model.defer="state.email" required aria-required="true" autocomplete="username" placeholder="exemple@domaine.tn" value="{{ old('email', $this->user->email ?? Auth::user()->email) }}" pattern="^(?!\.)[^\s@]+@[^\s@]+\.[^\s@]+$" title="Email invalide (ex. nom@domaine.tld)" />
+                    <div class="relative mt-2">
+                        <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-gray-400">📧</span>
+                        <x-input id="email" type="email" class="mt-0 block w-full pl-10 pr-4 py-2.5 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200" wire:model.defer="state.email" required aria-required="true" autocomplete="username" placeholder="exemple@domaine.tn" value="{{ old('email', $this->user->email ?? Auth::user()->email) }}" pattern="^(?!\.)[^\s@]+@[^\s@]+\.[^\s@]+$" title="Email invalide (ex. nom@domaine.tld)" />
                     </div>
-                    <p class="text-xs text-gray-500 mt-1">Utilisé pour la connexion et les notifications.</p>
+                    <p class="text-xs text-gray-500 mt-1.5">Utilisé pour la connexion et les notifications.</p>
                     <x-input-error for="email" class="mt-2" />
 
                     @if (Laravel\Fortify\Features::enabled(Laravel\Fortify\Features::emailVerification()) && !$this->user->hasVerifiedEmail())
@@ -231,29 +237,37 @@
 
                 @if (auth()->user()?->role === 'patient')
                     <!-- Champs Patient -->
-                    <div>
-                        <x-label for="dateNaissance" value="{{ __('Date de naissance') }}" />
-                        <div class="relative mt-1">
-                            <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center">📅</span>
-                            <x-input id="dateNaissance" type="date" class="mt-0 block w-full pl-9" wire:model="state.dateNaissance" />
+                    <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
+                        <h4 class="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                            <span>📋</span>
+                            <span>Informations complémentaires</span>
+                        </h4>
+                        <div class="space-y-6">
+                            <div>
+                                <x-label for="dateNaissance" value="{{ __('Date de naissance') }}" class="text-sm font-semibold text-gray-900" />
+                                <div class="relative mt-2">
+                                    <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-gray-400">📅</span>
+                                    <x-input id="dateNaissance" type="date" class="mt-0 block w-full pl-10 pr-4 py-2.5 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200" wire:model="state.dateNaissance" />
+                                </div>
+                                <x-input-error for="dateNaissance" class="mt-2" />
+                            </div>
+                            <div>
+                                <x-label for="tel" value="{{ __('Téléphone') }}" class="text-sm font-semibold text-gray-900" />
+                                <div class="relative mt-2">
+                                    <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-gray-400">📞</span>
+                                    <x-input id="tel" type="text" class="mt-0 block w-full pl-10 pr-4 py-2.5 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200" wire:model="state.tel" autocomplete="tel" placeholder="Ex: +216 12 345 678" />
+                                </div>
+                                <x-input-error for="tel" class="mt-2" />
+                            </div>
+                            <div>
+                                <x-label for="adresse" value="{{ __('Adresse') }}" class="text-sm font-semibold text-gray-900" />
+                                <div class="relative mt-2">
+                                    <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-gray-400">🏠</span>
+                                    <x-input id="adresse" type="text" class="mt-0 block w-full pl-10 pr-4 py-2.5 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200" wire:model="state.adresse" autocomplete="street-address" placeholder="Rue, Ville, Code postal" />
+                                </div>
+                                <x-input-error for="adresse" class="mt-2" />
+                            </div>
                         </div>
-                        <x-input-error for="dateNaissance" class="mt-2" />
-                    </div>
-                    <div>
-                        <x-label for="tel" value="{{ __('Téléphone') }}" />
-                        <div class="relative mt-1">
-                            <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center">📞</span>
-                            <x-input id="tel" type="text" class="mt-0 block w-full pl-9" wire:model="state.tel" autocomplete="tel" placeholder="Ex: +216 12 345 678" />
-                        </div>
-                        <x-input-error for="tel" class="mt-2" />
-                    </div>
-                    <div>
-                        <x-label for="adresse" value="{{ __('Adresse') }}" />
-                        <div class="relative mt-1">
-                            <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center">🏠</span>
-                            <x-input id="adresse" type="text" class="mt-0 block w-full pl-9" wire:model="state.adresse" autocomplete="street-address" placeholder="Rue, Ville, Code postal" />
-                        </div>
-                        <x-input-error for="adresse" class="mt-2" />
                     </div>
                 @endif
             </div>
@@ -261,12 +275,15 @@
             <!-- Colonne droite: Informations professionnelles (Médecin) -->
             @if (auth()->user()?->role === 'medecin')
                 <div class="space-y-6">
-                    <h3 id="section-infos-professionnelles" class="text-base font-semibold text-gray-900 flex items-center gap-2">
-                        <span>🩺</span>
-                        <span>Informations professionnelles</span>
-                    </h3>
-                    <div>
-                        <x-label for="specialite" value="{{ __('Spécialité') }}" />
+                    <div class="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl p-6 border border-emerald-100 shadow-sm">
+                        <h3 id="section-infos-professionnelles" class="text-lg font-bold text-gray-900 flex items-center gap-3 mb-2">
+                            <span class="text-2xl">🩺</span>
+                            <span>Informations professionnelles</span>
+                        </h3>
+                        <p class="text-sm text-gray-600 ml-11">Complétez vos informations médicales et professionnelles</p>
+                    </div>
+                    <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
+                        <x-label for="specialite" value="{{ __('Spécialité') }}" class="text-sm font-semibold text-gray-900" />
                         @php
                             // Charger dynamiquement les spécialités de médecins pouvant consulter en ligne
                             $specialitesEnLigne = \App\Models\User::query()
@@ -278,86 +295,94 @@
                                 ->values()
                                 ->all();
                         @endphp
-                        <div class="relative mt-1">
-                            <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center">🩺</span>
-                            <select id="specialite" class="mt-0 block w-full pl-9 pr-10 border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500" wire:model="state.specialite" aria-required="true">
+                        <div class="relative mt-2">
+                            <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-gray-400">🩺</span>
+                            <select id="specialite" class="mt-0 block w-full pl-10 pr-10 py-2.5 border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 transition-all duration-200" wire:model="state.specialite" aria-required="true">
                                 <option value="">{{ __('Sélectionner une spécialité') }}</option>
                                 @foreach ($specialitesEnLigne as $sp)
                                     <option value="{{ $sp }}">{{ $sp }}</option>
                                 @endforeach
                             </select>
                         </div>
-                        <p class="text-xs text-gray-500 mt-1">Seules les spécialités ci-dessus acceptent la consultation en ligne.</p>
+                        <p class="text-xs text-gray-500 mt-1.5">Seules les spécialités ci-dessus acceptent la consultation en ligne.</p>
                         <x-input-error for="specialite" class="mt-2" />
                     </div>
-                    <div>
-                        <x-label for="adresse_cabinet" value="{{ __('Adresse du cabinet') }}" />
-                        <div class="relative mt-1">
-                            <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center">🏥</span>
-                            <x-input id="adresse_cabinet" type="text" class="mt-0 block w-full pl-9 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" wire:model="state.adresse_cabinet" placeholder="Saisissez votre adresse du cabinet (Rue, Ville, Code postal)" />
+                    <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
+                        <x-label for="adresse_cabinet" value="{{ __('Adresse du cabinet') }}" class="text-sm font-semibold text-gray-900" />
+                        <div class="relative mt-2">
+                            <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-gray-400">🏥</span>
+                            <x-input id="adresse_cabinet" type="text" class="mt-0 block w-full pl-10 pr-4 py-2.5 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200" wire:model="state.adresse_cabinet" placeholder="Saisissez votre adresse du cabinet (Rue, Ville, Code postal)" />
                         </div>
-                        <p class="text-xs text-gray-500 mt-1">Adresse visible par vos patients pour se rendre au cabinet.</p>
+                        <p class="text-xs text-gray-500 mt-1.5">Adresse visible par vos patients pour se rendre au cabinet.</p>
                         <x-input-error for="adresse_cabinet" class="mt-2" />
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        <div>
-                            <x-label for="experience" value="{{ __('Expérience (années)') }}" />
-                            <div class="relative mt-1">
-                                <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center">⏳</span>
-                                <x-input id="experience" type="number" min="0" class="mt-0 block w-full pl-9 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" wire:model="state.experience" placeholder="Nombre d'années" />
+                    <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div>
+                                <x-label for="experience" value="{{ __('Expérience (années)') }}" class="text-sm font-semibold text-gray-900" />
+                                <div class="relative mt-2">
+                                    <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-gray-400">⏳</span>
+                                    <x-input id="experience" type="number" min="0" class="mt-0 block w-full pl-10 pr-4 py-2.5 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200" wire:model="state.experience" placeholder="Nombre d'années" />
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1.5">Nombre total d'années d'expérience.</p>
+                                <x-input-error for="experience" class="mt-2" />
                             </div>
-                            <p class="text-xs text-gray-500 mt-1">Nombre total d'années d'expérience.</p>
-                            <x-input-error for="experience" class="mt-2" />
-                        </div>
-                        <div>
-                            <x-label for="prixConsultation" value="{{ __('Prix de consultation (DT)') }}" />
-                            <div class="relative mt-1">
-                                <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center">💵</span>
-                                <x-input id="prixConsultation" type="number" min="60" step="1" class="mt-0 block w-full pl-9 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" wire:model="state.prixConsultation" placeholder="Ex: 70" />
+                            <div>
+                                <x-label for="prixConsultation" value="{{ __('Prix de consultation (DT)') }}" class="text-sm font-semibold text-gray-900" />
+                                <div class="relative mt-2">
+                                    <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-gray-400">💵</span>
+                                    <x-input id="prixConsultation" type="number" min="60" step="1" class="mt-0 block w-full pl-10 pr-4 py-2.5 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200" wire:model="state.prixConsultation" placeholder="Ex: 70" />
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1.5">Minimum 60 DT.</p>
+                                <x-input-error for="prixConsultation" class="mt-2" />
                             </div>
-                            <p class="text-xs text-gray-500 mt-1">Minimum 60 DT.</p>
-                            <x-input-error for="prixConsultation" class="mt-2" />
                         </div>
                     </div>
-                    <div>
-                        <x-label for="formation" value="{{ __('Formation') }}" />
-                        <div class="relative mt-1">
-                            <span class="pointer-events-none absolute inset-y-0 left-3 flex items-start pt-2">🎓</span>
-                            <textarea id="formation" class="mt-0 block w-full border-gray-300 rounded-md shadow-sm pl-9 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" wire:model="state.formation" rows="3" placeholder="Ex: Faculté de Médecine de Tunis, Résidence..."></textarea>
+                    <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
+                        <x-label for="formation" value="{{ __('Formation') }}" class="text-sm font-semibold text-gray-900" />
+                        <div class="relative mt-2">
+                            <span class="pointer-events-none absolute inset-y-0 left-3 flex items-start pt-2.5 text-gray-400">🎓</span>
+                            <textarea id="formation" class="mt-0 block w-full border-gray-300 rounded-lg shadow-sm pl-10 pr-4 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200" wire:model="state.formation" rows="3" placeholder="Ex: Faculté de Médecine de Tunis, Résidence..."></textarea>
                         </div>
-                        <p class="text-xs text-gray-500 mt-1">Listez vos formations principales et résidences.</p>
+                        <p class="text-xs text-gray-500 mt-1.5">Listez vos formations principales et résidences.</p>
                         <x-input-error for="formation" class="mt-2" />
                     </div>
-                    <div x-data="{ fileName: '', error: '' }">
-                        <x-label for="DiplômeOrCNOM" value="{{ __('Diplôme ou CNOM (jpg, png, pdf)') }}" />
-                        <p class="text-xs text-gray-500 mt-1">Formats acceptés: JPG, PNG ou PDF. Taille max 2 Mo.</p>
+                    <div x-data="{ fileName: '', error: '' }" class="bg-white rounded-xl border border-gray-200 p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
+                        <x-label for="DiplômeOrCNOM" value="{{ __('Diplôme ou CNOM (jpg, png, pdf)') }}" class="text-sm font-semibold text-gray-900" />
+                        <p class="text-xs text-gray-500 mt-1.5">Formats acceptés: JPG, PNG ou PDF. Taille max 2 Mo.</p>
                         @php $diplomePath = $this->user->DiplômeOrCNOM ?? Auth::user()->DiplômeOrCNOM ?? null; @endphp
                         @if($diplomePath)
-                            <div class="mt-1 text-sm flex items-center gap-3">
-                                <a href="{{ asset('storage/' . $diplomePath) }}" target="_blank" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-gray-200 bg-white text-gray-700 shadow-sm hover:bg-gray-50 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1">
-                                    📄 <span>Voir le document</span>
+                            <div class="mt-3 text-sm flex items-center gap-3">
+                                <a href="{{ asset('storage/' . $diplomePath) }}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 shadow-sm hover:bg-gray-50 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-all duration-200">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                    <span>Voir le document</span>
                                 </a>
                             </div>
                         @else
-                            <p class="mt-1 text-sm text-gray-500">Aucun document enregistré.</p>
+                            <p class="mt-3 text-sm text-gray-500">Aucun document enregistré.</p>
                         @endif
                     </div>
-                    <div x-data="{ options: ['Français','Arabe','Anglais','Italien','Allemand'], custom:'', selected: (() => { const initial = @js(old('langues', $this->user->langues ?? '')) || ''; return initial.split(',').map(s=>s.trim()).filter(Boolean); })(), add(){ if(this.custom && !this.selected.includes(this.custom)) { this.selected.push(this.custom); this.custom=''; } }, toggle(lang){ const i=this.selected.indexOf(lang); if(i>-1){this.selected.splice(i,1)} else {this.selected.push(lang)} } }" x-init="$watch('selected', v => $wire.set('state.langues', v.join(', ')))">
-                        <x-label value="{{ __('Langues') }}" />
-                        <div class="mt-2 flex flex-wrap gap-2">
+                    <div x-data="{ options: ['Français','Arabe','Anglais','Italien','Allemand'], custom:'', selected: (() => { const initial = @js(old('langues', $this->user->langues ?? '')) || ''; return initial.split(',').map(s=>s.trim()).filter(Boolean); })(), add(){ if(this.custom && !this.selected.includes(this.custom)) { this.selected.push(this.custom); this.custom=''; } }, toggle(lang){ const i=this.selected.indexOf(lang); if(i>-1){this.selected.splice(i,1)} else {this.selected.push(lang)} } }" x-init="$watch('selected', v => $wire.set('state.langues', v.join(', ')))" class="bg-white rounded-xl border border-gray-200 p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
+                        <x-label value="{{ __('Langues') }}" class="text-sm font-semibold text-gray-900" />
+                        <div class="mt-3 flex flex-wrap gap-2">
                             <template x-for="lang in options" :key="lang">
-                                <button type="button" class="px-3 py-1.5 rounded-full text-sm border shadow-sm" :class="selected.includes(lang) ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'" x-on:click="toggle(lang)" x-text="lang"></button>
+                                <button type="button" class="px-4 py-2 rounded-full text-sm border shadow-sm transition-all duration-200" :class="selected.includes(lang) ? 'bg-emerald-100 text-emerald-700 border-emerald-300 font-medium' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50 hover:border-gray-300'" x-on:click="toggle(lang)" x-text="lang"></button>
                             </template>
                         </div>
-                        <div class="mt-3 flex items-center gap-2">
-                            <input type="text" x-model="custom" placeholder="Ajouter une langue" class="flex-1 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" />
-                            <button type="button" class="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-emerald-600 text-white text-xs font-medium shadow-sm hover:bg-emerald-700" x-on:click="add()">➕ Ajouter</button>
+                        <div class="mt-4 flex items-center gap-2">
+                            <input type="text" x-model="custom" placeholder="Ajouter une langue" class="flex-1 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg shadow-sm px-4 py-2 transition-all duration-200" />
+                            <button type="button" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium shadow-sm hover:bg-emerald-700 transition-all duration-200" x-on:click="add()">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                <span>Ajouter</span>
+                            </button>
                         </div>
                         <input type="hidden" wire:model="state.langues" />
                         <x-input-error for="langues" class="mt-2" />
                     </div>
                 </div>
             @endif
+                </div>
+            </div>
         </div>
 
 

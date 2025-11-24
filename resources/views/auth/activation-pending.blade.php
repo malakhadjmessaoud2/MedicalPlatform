@@ -1,22 +1,40 @@
 <x-guest-layout>
-    <div class="min-h-screen flex items-center justify-center bg-gray-100">
-        <div class="bg-white p-8 rounded shadow w-full max-w-md text-center">
-            <h1 class="text-2xl font-semibold mb-4">Compte en attente d'activation</h1>
+    <div class="min-h-screen flex items-center justify-center bg-[#E0E0E0]">
+        <div class="bg-white p-10 rounded-2xl shadow-2xl w-full max-w-md text-center transform transition-transform hover:scale-105">
+
+            <!-- Titre -->
+            <h1 class="text-3xl font-bold mb-6 text-black">Compte en attente d'activation</h1>
+
+            <!-- Message session -->
             @if (session('status'))
-                <div class="mb-4 text-green-700">{{ session('status') }}</div>
+                <div class="mb-6 px-4 py-3 bg-green-100 text-[#a8f055] rounded-lg border border-green-200">
+                    {{ session('status') }}
+                </div>
             @else
-                <p class="mb-4">Votre compte médecin est en attente d'activation par l'administrateur.</p>
+                <p class="mb-4 text-gray-700">Votre compte médecin est en attente d'activation par l'administrateur.</p>
             @endif
-            <p class="text-sm text-gray-600 mb-6">Vous recevrez une notification dès que votre compte sera activé. Vous pourrez alors accéder à votre tableau de bord.</p>
-            <div class="flex items-center justify-center gap-4">
-                <a href="{{ route('welcome') }}" class="px-4 py-2 bg-gray-200 rounded">Retour à l'accueil</a>
-                <form method="POST" action="{{ route('logout') }}">
+
+            <!-- Description -->
+            <p class="text-sm text-gray-600 mb-8">
+                Vous recevrez une notification dès que votre compte sera activé. Vous pourrez alors accéder à votre tableau de bord.
+            </p>
+
+            <!-- Boutons -->
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+
+                <!-- Retour à l'accueil -->
+                <a href="{{ route('welcome') }}" class="w-full sm:w-auto px-6 py-3 bg-[#a8f055] text-black font-semibold rounded-xl shadow hover:bg-green-500 transition-colors">
+                    Retour à l'accueil
+                </a>
+
+                <!-- Déconnexion -->
+                <form method="POST" action="{{ route('logout') }}" class="w-full sm:w-auto">
                     @csrf
-                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded">Se déconnecter</button>
+                    <button type="submit" class="w-full sm:w-auto px-6 py-3 bg-black text-white font-semibold rounded-xl shadow hover:bg-gray-800 transition-colors">
+                        Se déconnecter
+                    </button>
                 </form>
             </div>
         </div>
     </div>
 </x-guest-layout>
-
-
